@@ -4,7 +4,7 @@
 
 `v0.2.0`, released on 2026-09-24 (`main`, tag `v0.2.0`). SDD-001 to
 SDD-016 implemented and validated. `develop` is building v0.3.0:
-SDD-017 implemented.
+SDD-017 and SDD-018 implemented.
 
 ## Implemented Product Capabilities
 
@@ -52,6 +52,10 @@ SDD-017 implemented.
     (realized, forecast, expenses by category, month-end observed
     balance). There are no charts over time, comparisons, projection, or
     personalization.
+-   **Recurrences (SDD-018):** monthly, weekly, or yearly series with
+    optional end date and non-business-day rule; occurrences are Pending
+    transactions created 12 months ahead and extended when browsing
+    (ADR-0014). Series cannot yet be edited or ended (SDD-019).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -80,7 +84,7 @@ SDD-017 implemented.
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
     `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`, `audit_event`,
-    `balance_snapshot`, `balance_reminder_setting`.
+    `balance_snapshot`, `balance_reminder_setting`, `recurrence_series`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -94,8 +98,7 @@ SDD-017 implemented.
 
 ## Active Target
 
-`v0.3.0` --- Planning and Recurrence (`docs/product/ROADMAP.md`); no SDDs
-yet.
+`v0.3.0` --- Planning and Recurrence (`docs/sdds/v0.3.0/`).
 
 ## Important Constraint
 
@@ -104,6 +107,6 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Project owner: review the domain decisions taken under delegation
-(`docs/sdds/v0.2.0/README.md`, DR-072 to DR-074). Then write the v0.3.0
-SDDs.
+`docs/sdds/v0.3.0/SDD-019-occurrence-independence.md`. Domain decisions
+taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
+`docs/sdds/v0.3.0/README.md`, DR-072 to DR-075).

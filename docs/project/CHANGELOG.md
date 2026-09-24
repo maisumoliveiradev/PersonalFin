@@ -6,6 +6,17 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Recurring Income and Expenses (SDD-018)
+
+-   "Repetir" in the new-transaction form creates a monthly, weekly, or
+    yearly series with optional end date and a weekend/holiday rule.
+-   Occurrences are Pending transactions (marked "↻ Recorrente"), so they
+    appear in the list, filters, and forecast; later months are created
+    when browsed (ADR-0014, DR-075).
+-   "Recorrências" screen lists the series of a space.
+-   `GET`/`POST .../recurrences` and `POST .../recurrences/materialize`;
+    migration `0011_recurrence_series`.
+
 ### Versioned Browser Journeys
 
 -   The 13 Chrome journeys used to validate every increment now live in

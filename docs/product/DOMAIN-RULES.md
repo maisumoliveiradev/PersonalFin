@@ -135,6 +135,13 @@ and following, or whole series.
 
 **DR-034** Non-business-day adjustment is configured per recurrence.
 
+**DR-075** *(SDD-018; decided under delegation.)* Recurrences repeat
+monthly, weekly, or yearly. Monthly series use the start day, or the last
+day of shorter months; yearly series on 29 February use 28 February in
+non-leap years. Each occurrence keeps its scheduled date and receives a
+financial date adjusted by the series' non-business-day rule
+(`docs/product/BUSINESS-DAYS.md`). Occurrences are created Pending.
+
 ## Cards and invoices
 
 **DR-035** A card purchase counts as expense in the month of the invoice
