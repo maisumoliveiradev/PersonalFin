@@ -516,6 +516,91 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/recurrences:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listRecurrences
+      summary: List recurring series of the space
+      responses:
+        '200':
+          description: Series, oldest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurrenceSeriesList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createRecurrence
+      summary: Create a recurring income or expense series
+      description: >
+        Creates the series and its Pending occurrences through the end of
+        the month 12 months after the current month. Each occurrence is an
+        ordinary transaction linked by recurrenceSeriesId.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecurrenceRequest'
+      responses:
+        '201':
+          description: The series and how many occurrences were created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurrenceSeriesCreated'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '422':
+          $ref: '#/components/responses/CategoryNotAvailable'
+  /financial-spaces/{spaceId}/recurrences/materialize:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    post:
+      operationId: materializeRecurrences
+      summary: Create missing occurrences of every series through a month
+      description: Idempotent. Never goes beyond 60 months after the current month.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - throughMonth
+              properties:
+                throughMonth:
+                  type: string
+                  pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+      responses:
+        '200':
+          description: Number of occurrences created by this call.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - occurrencesCreated
+                properties:
+                  occurrencesCreated:
+                    type: integer
+                    minimum: 0
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     TransactionId:
@@ -886,6 +971,7 @@ components:
         - createdAt
         - version
         - deletedAt
+        - recurrenceSeriesId
       properties:
         id:
           type: string
@@ -923,6 +1009,12 @@ components:
             - 'null'
           format: date-time
           description: When the transaction was soft-deleted; null when active.
+        recurrenceSeriesId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: The series this transaction is an occurrence of; null for one-off entries.
     VersionRequest:
       type: object
       additionalProperties: false
@@ -1154,6 +1246,137 @@ components:
                 observedOn:
                   $ref: '#/components/schemas/FinancialDate'
             - type: 'null'
+    RecurrenceFrequency:
+      type: string
+      enum:
+        - monthly
+        - weekly
+        - yearly
+    NonBusinessDayRule:
+      type: string
+      description: What to do when an occurrence falls on a non-business day.
+      enum:
+        - keep
+        - previous
+        - next
+    CreateRecurrenceRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - description
+        - amountMinor
+        - categoryId
+        - frequency
+        - nonBusinessDayRule
+        - startDate
+      properties:
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        description:
+          type: string
+          minLength: 1
+          maxLength: 140
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        categoryId:
+          type: string
+          format: uuid
+        subcategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        frequency:
+          $ref: '#/components/schemas/RecurrenceFrequency'
+        nonBusinessDayRule:
+          $ref: '#/components/schemas/NonBusinessDayRule'
+        startDate:
+          $ref: '#/components/schemas/FinancialDate'
+        endDate:
+          type:
+            - string
+            - 'null'
+          format: date
+    RecurrenceSeries:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - type
+        - description
+        - amountMinor
+        - currency
+        - categoryId
+        - subcategoryId
+        - frequency
+        - nonBusinessDayRule
+        - startDate
+        - endDate
+        - materializedThrough
+        - version
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        description:
+          type: string
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        categoryId:
+          type: string
+          format: uuid
+        subcategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        frequency:
+          $ref: '#/components/schemas/RecurrenceFrequency'
+        nonBusinessDayRule:
+          $ref: '#/components/schemas/NonBusinessDayRule'
+        startDate:
+          $ref: '#/components/schemas/FinancialDate'
+        endDate:
+          type:
+            - string
+            - 'null'
+          format: date
+        materializedThrough:
+          type:
+            - string
+            - 'null'
+          format: date
+        version:
+          type: integer
+          minimum: 1
+    RecurrenceSeriesCreated:
+      type: object
+      additionalProperties: false
+      required:
+        - series
+        - occurrencesCreated
+      properties:
+        series:
+          $ref: '#/components/schemas/RecurrenceSeries'
+        occurrencesCreated:
+          type: integer
+          minimum: 0
+    RecurrenceSeriesList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecurrenceSeries'
     ErrorResponse:
       type: object
       additionalProperties: false

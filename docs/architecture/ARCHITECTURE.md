@@ -9,7 +9,8 @@ Accepted platform and tooling decisions: ADR-0001 (single Expo client
 for Web/Android/iOS in a monorepo), ADR-0005 (API shell), ADR-0006
 (quality toolchain and local CI), ADR-0007 (authentication), ADR-0008
 (PostgreSQL and migrations), ADR-0009 (client application
-architecture), ADR-0013 (versioned browser journeys), ADR-0010 (Financial Space access model), ADR-0011
+architecture), ADR-0013 (versioned browser journeys), ADR-0014
+(recurrence materialization), ADR-0010 (Financial Space access model), ADR-0011
 (money and financial date formats, shared domain package), ADR-0012
 (audit log and optimistic concurrency).
 
@@ -30,7 +31,8 @@ apps/
                      migration runner, SQL migrations
     src/http/        Authentication hook, input validation, error contract
     src/modules/     Domain modules (financial-spaces/, categories/,
-                     transactions/, audit/, balance/, dashboard/):
+                     transactions/, audit/, balance/, dashboard/,
+                     recurrences/):
                      domain types, use cases, repository ports,
                      PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)

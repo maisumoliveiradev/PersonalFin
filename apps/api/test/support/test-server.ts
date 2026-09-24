@@ -8,6 +8,7 @@ import { createInMemoryBalanceSnapshotRepository } from './in-memory-balance-sna
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
+import { createInMemoryRecurrenceRepository } from './in-memory-recurrence-repository.ts';
 import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
 
 export const SESSION_COOKIE = 'personalfin.session_token';
@@ -44,6 +45,7 @@ export function createInMemoryRepositories() {
     transactions,
     audit: createInMemoryAuditRepository(),
     balanceSnapshots,
+    recurrences: createInMemoryRecurrenceRepository(transactions),
     dashboard: createInMemoryDashboardRepository(
       () => transactions.transactions,
       () => balanceSnapshots.snapshots,

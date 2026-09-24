@@ -26,3 +26,7 @@ export type RecordBalanceSnapshotRequest = components['schemas']['RecordBalanceS
 export type BalanceReminder = components['schemas']['BalanceReminder'];
 export type BalanceReminderSetting = components['schemas']['BalanceReminderSetting'];
 export type MonthlyDashboard = components['schemas']['MonthlyDashboard'];
+export type RecurrenceSeries = components['schemas']['RecurrenceSeries'];
+export type RecurrenceSeriesCreated = components['schemas']['RecurrenceSeriesCreated'];
+export type RecurrenceSeriesList = components['schemas']['RecurrenceSeriesList'];
+export type CreateRecurrenceRequest = components['schemas']['CreateRecurrenceRequest'];

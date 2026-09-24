@@ -222,6 +222,36 @@ export const messages = {
     definitionsHint:
       'Realizado considera lançamentos pagos/recebidos; previsto considera pendentes.',
   },
+  recurrences: {
+    repeatLabel: 'Repetir',
+    none: 'Não repetir',
+    monthly: 'Mensal',
+    weekly: 'Semanal',
+    yearly: 'Anual',
+    endDateLabel: 'Termina em (opcional)',
+    endDateHint: 'Deixe em branco para repetir sem data de término.',
+    startHint: 'A primeira ocorrência usa a data acima.',
+    ruleLabel: 'Se cair em fim de semana ou feriado',
+    keep: 'Manter a data',
+    previous: 'Dia útil anterior',
+    next: 'Próximo dia útil',
+    created: (count: number) =>
+      count === 1
+        ? 'Recorrência criada com 1 lançamento previsto.'
+        : `Recorrência criada com ${count} lançamentos previstos.`,
+    listTitle: 'Recorrências',
+    listAction: 'Recorrências',
+    empty: 'Nenhuma recorrência neste espaço.',
+    since: (date: string) => `desde ${date}`,
+    until: (date: string) => `até ${date}`,
+    noEnd: 'sem data de término',
+    tag: 'Recorrente',
+    errors: {
+      endDateInvalid: 'Data de término inválida. Use DD/MM/AAAA.',
+      endBeforeStart:
+        'A data de término deve ser igual ou posterior à data do primeiro lançamento.',
+    },
+  },
   spaces: {
     listTitle: 'Seus espaços financeiros',
     firstSpaceTitle: 'Crie seu primeiro espaço financeiro',

@@ -36,6 +36,7 @@ export function createInMemoryTransactionRepository(
         createdAt: new Date(Date.UTC(2026, 0, 1, 12, 0, transactions.length)),
         version: 1,
         deletedAt: null,
+        recurrenceSeriesId: null,
       };
       transactions.push(created);
       return created;

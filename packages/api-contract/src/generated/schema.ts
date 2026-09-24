@@ -252,6 +252,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/recurrences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List recurring series of the space */
+        get: operations["listRecurrences"];
+        put?: never;
+        /**
+         * Create a recurring income or expense series
+         * @description Creates the series and its Pending occurrences through the end of the month 12 months after the current month. Each occurrence is an ordinary transaction linked by recurrenceSeriesId.
+         */
+        post: operations["createRecurrence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/recurrences/materialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create missing occurrences of every series through a month
+         * @description Idempotent. Never goes beyond 60 months after the current month.
+         */
+        post: operations["materializeRecurrences"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -394,6 +439,11 @@ export interface components {
              * @description When the transaction was soft-deleted; null when active.
              */
             deletedAt: string | null;
+            /**
+             * Format: uuid
+             * @description The series this transaction is an occurrence of; null for one-off entries.
+             */
+            recurrenceSeriesId: string | null;
         };
         VersionRequest: {
             version: number;
@@ -476,6 +526,54 @@ export interface components {
                 amountMinor: number;
                 observedOn: components["schemas"]["FinancialDate"];
             } | null;
+        };
+        /** @enum {string} */
+        RecurrenceFrequency: "monthly" | "weekly" | "yearly";
+        /**
+         * @description What to do when an occurrence falls on a non-business day.
+         * @enum {string}
+         */
+        NonBusinessDayRule: "keep" | "previous" | "next";
+        CreateRecurrenceRequest: {
+            type: components["schemas"]["TransactionType"];
+            description: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            /** Format: uuid */
+            categoryId: string;
+            /** Format: uuid */
+            subcategoryId?: string | null;
+            frequency: components["schemas"]["RecurrenceFrequency"];
+            nonBusinessDayRule: components["schemas"]["NonBusinessDayRule"];
+            startDate: components["schemas"]["FinancialDate"];
+            /** Format: date */
+            endDate?: string | null;
+        };
+        RecurrenceSeries: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["TransactionType"];
+            description: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            currency: string;
+            /** Format: uuid */
+            categoryId: string;
+            /** Format: uuid */
+            subcategoryId: string | null;
+            frequency: components["schemas"]["RecurrenceFrequency"];
+            nonBusinessDayRule: components["schemas"]["NonBusinessDayRule"];
+            startDate: components["schemas"]["FinancialDate"];
+            /** Format: date */
+            endDate: string | null;
+            /** Format: date */
+            materializedThrough: string | null;
+            version: number;
+        };
+        RecurrenceSeriesCreated: {
+            series: components["schemas"]["RecurrenceSeries"];
+            occurrencesCreated: number;
+        };
+        RecurrenceSeriesList: {
+            items: components["schemas"]["RecurrenceSeries"][];
         };
         ErrorResponse: {
             error: {
@@ -1118,6 +1216,93 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MonthlyDashboard"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    listRecurrences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Series, oldest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurrenceSeriesList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    createRecurrence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecurrenceRequest"];
+            };
+        };
+        responses: {
+            /** @description The series and how many occurrences were created. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurrenceSeriesCreated"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            422: components["responses"]["CategoryNotAvailable"];
+        };
+    };
+    materializeRecurrences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    throughMonth: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Number of occurrences created by this call. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        occurrencesCreated: number;
+                    };
                 };
             };
             400: components["responses"]["ValidationFailed"];

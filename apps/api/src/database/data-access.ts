@@ -10,6 +10,8 @@ import type { DashboardRepository } from '../modules/dashboard/dashboard-reposit
 import { createPostgresDashboardRepository } from '../modules/dashboard/postgres-dashboard-repository.ts';
 import type { FinancialSpaceRepository } from '../modules/financial-spaces/financial-space-repository.ts';
 import { createPostgresFinancialSpaceRepository } from '../modules/financial-spaces/postgres-financial-space-repository.ts';
+import { createPostgresRecurrenceRepository } from '../modules/recurrences/postgres-recurrence-repository.ts';
+import type { RecurrenceRepository } from '../modules/recurrences/recurrence-repository.ts';
 import { createPostgresTransactionRepository } from '../modules/transactions/postgres-transaction-repository.ts';
 import type { TransactionRepository } from '../modules/transactions/transaction-repository.ts';
 import { type DatabasePool, type Queryable, withTransaction } from './pool.ts';
@@ -22,6 +24,7 @@ export interface Repositories {
   balanceSnapshots: BalanceSnapshotRepository;
   balanceReminders: BalanceReminderRepository;
   dashboard: DashboardRepository;
+  recurrences: RecurrenceRepository;
 }
 
 export interface DataAccess {
@@ -38,6 +41,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     balanceSnapshots: createPostgresBalanceSnapshotRepository(db),
     balanceReminders: createPostgresBalanceReminderRepository(db),
     dashboard: createPostgresDashboardRepository(db),
+    recurrences: createPostgresRecurrenceRepository(db),
   };
 }
 

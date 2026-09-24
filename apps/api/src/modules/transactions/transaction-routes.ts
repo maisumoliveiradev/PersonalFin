@@ -103,6 +103,7 @@ export function toTransactionResponse(transaction: FinancialTransaction): Transa
     createdAt: transaction.createdAt.toISOString(),
     version: transaction.version,
     deletedAt: transaction.deletedAt?.toISOString() ?? null,
+    recurrenceSeriesId: transaction.recurrenceSeriesId,
   };
 }
 

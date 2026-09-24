@@ -3,4 +3,5 @@ export * from './business-days.ts';
 export * from './financial-date.ts';
 export * from './money.ts';
 export * from './month.ts';
+export * from './recurrence.ts';
 export * from './transaction.ts';
