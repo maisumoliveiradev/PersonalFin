@@ -18,6 +18,11 @@ platform before the product needs it.
     under distant timezones, for example
     `TZ=Pacific/Kiritimati npm run test:integration` and
     `TZ=Pacific/Pago_Pago npm test -w @personalfin/domain`.
+-   **Browser journeys** (`e2e/journeys`, ADR-0013) drive the Web app in
+    Chrome through the main user flows. Start the database, API, and Web
+    client, then run `npm run test:e2e` (or `npm run test:e2e -- dashboard`
+    for one journey). Required before merging client or API changes and
+    in release validation; not part of `validate`.
 -   `apps/client` has no test runner yet. React Native component tests
     will need a React Native-capable runner (for example `jest-expo`)
     when the first UI test is justified (ADR-0006).
