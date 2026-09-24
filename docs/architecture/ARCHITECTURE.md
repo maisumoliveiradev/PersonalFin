@@ -30,7 +30,7 @@ apps/
                      migration runner, SQL migrations
     src/http/        Authentication hook, input validation, error contract
     src/modules/     Domain modules (financial-spaces/, categories/,
-                     transactions/, audit/, balance/):
+                     transactions/, audit/, balance/, dashboard/):
                      domain types, use cases, repository ports,
                      PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)
@@ -183,6 +183,13 @@ Observed balances are stored in `balance_snapshot`, append-only at the
 database level. The current balance is the most recent snapshot by
 observed date, then recording instant. Snapshots are never transactions
 and never enter transaction totals.
+
+### Metrics (DR-066, DR-067)
+
+Built-in metrics are defined once in `docs/product/METRICS.md` and
+computed only by the API (`modules/dashboard`, SQL aggregates over
+integer minor units). Clients display the returned values and never
+recompute them.
 
 ## Offline evolution
 

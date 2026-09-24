@@ -3,7 +3,8 @@
 ## Current Version
 
 `v0.1.0` released on 2026-09-24 (`main`, tag `v0.1.0`). `develop` is
-building v0.2.0: SDD-008 to SDD-014 implemented.
+building v0.2.0: SDD-008 to SDD-015 implemented; SDD-016 (release
+validation) pending.
 
 ## Implemented Product Capabilities
 
@@ -46,6 +47,11 @@ building v0.2.0: SDD-008 to SDD-014 implemented.
 -   **Balance reminder (SDD-014):** an in-app prompt on the space screen
     when an update is due (DR-074), with per-user, per-space frequency.
     There are no push or email notifications.
+-   **Monthly dashboard (SDD-015):** the space screen summarizes the
+    selected month with the metrics defined in `docs/product/METRICS.md`
+    (realized, forecast, expenses by category, month-end observed
+    balance). There are no charts over time, comparisons, projection, or
+    personalization.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -82,7 +88,6 @@ building v0.2.0: SDD-008 to SDD-014 implemented.
 
 ## Not Yet Present
 
--   Dashboard (SDD-015).
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
 
@@ -97,4 +102,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.2.0/SDD-015-current-month-dashboard.md`.
+`docs/sdds/v0.2.0/SDD-016-release-validation.md`.

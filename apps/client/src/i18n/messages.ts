@@ -205,6 +205,23 @@ export const messages = {
       unexpected: 'Não foi possível salvar o saldo. Tente novamente.',
     },
   },
+  dashboard: {
+    title: 'Resumo do mês',
+    realizedIncome: 'Receitas realizadas',
+    realizedExpenses: 'Despesas realizadas',
+    realizedNet: 'Resultado realizado',
+    forecastTitle: 'Previsto (pendente)',
+    forecastIncome: 'Receitas previstas',
+    forecastExpenses: 'Despesas previstas',
+    byCategoryTitle: 'Despesas realizadas por categoria',
+    noExpenses: 'Nenhuma despesa realizada neste mês.',
+    monthEndBalance: 'Saldo observado até o fim do mês',
+    monthEndBalanceDate: (date: string) => `Informado para ${date}`,
+    noMonthEndBalance: 'Nenhum saldo informado até o fim deste mês.',
+    loadError: 'Não foi possível carregar o resumo do mês.',
+    definitionsHint:
+      'Realizado considera lançamentos pagos/recebidos; previsto considera pendentes.',
+  },
   spaces: {
     listTitle: 'Seus espaços financeiros',
     firstSpaceTitle: 'Crie seu primeiro espaço financeiro',

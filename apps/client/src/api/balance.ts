@@ -5,6 +5,7 @@ import type {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient, expectData } from './api-client';
+import { dashboardKeys } from './dashboard';
 
 export const balanceKeys = {
   forSpace: (spaceId: string) => ['financial-spaces', spaceId, 'balance-snapshots'] as const,
@@ -60,7 +61,10 @@ export function useRecordBalanceSnapshot(spaceId: string) {
         }),
       ),
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: balanceKeys.forSpace(spaceId) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: balanceKeys.forSpace(spaceId) }),
+        queryClient.invalidateQueries({ queryKey: dashboardKeys.forSpace(spaceId) }),
+      ]);
     },
   });
 }
