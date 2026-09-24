@@ -1,3 +1,5 @@
+import type { CreateTransactionRequest } from '@personalfin/api-contract';
+import { type FinancialDate, monthOf } from '@personalfin/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
@@ -21,11 +23,23 @@ export default function NewTransactionScreen() {
   const createTransaction = useCreateTransaction(spaceId);
   const [initialValues] = useState(emptyTransactionFormValues);
 
-  function backToSpace(saved: boolean): void {
+  function backToSpace(savedDate?: FinancialDate): void {
     router.dismissTo({
       pathname: '/spaces/[spaceId]',
-      params: saved ? { spaceId, saved: 'created' } : { spaceId },
+      params:
+        savedDate === undefined
+          ? { spaceId }
+          : { spaceId, saved: 'created', month: monthOf(savedDate) },
     });
+  }
+
+  async function handleSubmit(request: CreateTransactionRequest): Promise<void> {
+    try {
+      const created = await createTransaction.mutateAsync(request);
+      backToSpace(created.financialDate);
+    } catch {
+      return;
+    }
   }
 
   if (categories.isPending) {
@@ -46,10 +60,8 @@ export default function NewTransactionScreen() {
           initialValues={initialValues}
           submitting={createTransaction.isPending}
           submitError={createTransaction.error}
-          onSubmit={(request) =>
-            createTransaction.mutate(request, { onSuccess: () => backToSpace(true) })
-          }
-          onCancel={() => backToSpace(false)}
+          onSubmit={handleSubmit}
+          onCancel={() => backToSpace()}
         />
       )}
     </Screen>

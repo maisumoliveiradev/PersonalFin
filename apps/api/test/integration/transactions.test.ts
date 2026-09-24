@@ -178,7 +178,14 @@ describe('listing transactions', () => {
     );
     await repository.create(other.transaction({ description: 'Outro espaço' }));
 
-    const listed = await repository.listRecentForSpace(own.spaceId, 10);
+    const listed = (
+      await repository.list({
+        financialSpaceId: own.spaceId,
+        state: 'active',
+        limit: 10,
+        cursor: null,
+      })
+    ).items;
 
     expect(listed.map((item) => item.description)).toEqual(['Recente 2', 'Recente', 'Antigo']);
   });
@@ -189,7 +196,14 @@ describe('listing transactions', () => {
       await data.repositories.transactions.create(transaction({ financialDate: `2026-01-${day}` }));
     }
 
-    const listed = await data.repositories.transactions.listRecentForSpace(spaceId, 2);
+    const listed = (
+      await data.repositories.transactions.list({
+        financialSpaceId: spaceId,
+        state: 'active',
+        limit: 2,
+        cursor: null,
+      })
+    ).items;
 
     expect(listed.map((item) => item.financialDate)).toEqual(['2026-01-03', '2026-01-02']);
   });

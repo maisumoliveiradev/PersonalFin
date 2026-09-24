@@ -220,6 +220,44 @@ paths:
               - active
               - deleted
             default: active
+        - name: month
+          in: query
+          required: false
+          description: Calendar month of the financial date (YYYY-MM).
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        - name: type
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TransactionStatus'
+        - name: categoryId
+          in: query
+          required: false
+          description: Matches the category or the subcategory.
+          schema:
+            type: string
+            format: uuid
+        - name: q
+          in: query
+          required: false
+          description: Case- and accent-insensitive search in the description.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque cursor from a previous page's nextCursor.
+          schema:
+            type: string
       responses:
         '200':
           description: The most recent transactions of the space.
@@ -811,6 +849,7 @@ components:
       required:
         - items
         - hasMore
+        - nextCursor
       properties:
         items:
           type: array
@@ -818,7 +857,12 @@ components:
             $ref: '#/components/schemas/Transaction'
         hasMore:
           type: boolean
-          description: True when older transactions exist beyond the limit.
+          description: True when more transactions match beyond this page.
+        nextCursor:
+          type:
+            - string
+            - 'null'
+          description: Pass as cursor to fetch the next page; null on the last page.
     ErrorResponse:
       type: object
       additionalProperties: false

@@ -49,7 +49,7 @@ function DeletedRow({
 
 export default function TrashScreen() {
   const router = useRouter();
-  const { spaceId } = useLocalSearchParams<{ spaceId: string }>();
+  const { spaceId, month } = useLocalSearchParams<{ spaceId: string; month?: string }>();
   const deleted = useDeletedTransactions(spaceId);
   const restore = useRestoreTransaction(spaceId);
 
@@ -80,7 +80,12 @@ export default function TrashScreen() {
       <Button
         label={messages.spaces.backToSpace}
         variant="link"
-        onPress={() => router.dismissTo({ pathname: '/spaces/[spaceId]', params: { spaceId } })}
+        onPress={() =>
+          router.dismissTo({
+            pathname: '/spaces/[spaceId]',
+            params: month === undefined ? { spaceId } : { spaceId, month },
+          })
+        }
       />
     </Screen>
   );

@@ -1,6 +1,9 @@
 import type { Category } from '../../src/modules/categories/category.ts';
 import type { FinancialTransaction } from '../../src/modules/transactions/transaction.ts';
-import type { TransactionRepository } from '../../src/modules/transactions/transaction-repository.ts';
+import {
+  InvalidCursorError,
+  type TransactionRepository,
+} from '../../src/modules/transactions/transaction-repository.ts';
 
 export function createInMemoryTransactionRepository(
   categories: readonly Category[],
@@ -37,19 +40,6 @@ export function createInMemoryTransactionRepository(
       transactions.push(created);
       return created;
     },
-    async listRecentForSpace(financialSpaceId, limit) {
-      return transactions
-        .filter(
-          (transaction) =>
-            transaction.financialSpaceId === financialSpaceId && transaction.deletedAt === null,
-        )
-        .sort(
-          (left, right) =>
-            right.financialDate.localeCompare(left.financialDate) ||
-            right.createdAt.getTime() - left.createdAt.getTime(),
-        )
-        .slice(0, limit);
-    },
     async findInSpace(financialSpaceId, transactionId) {
       return find(financialSpaceId, transactionId) ?? null;
     },
@@ -83,13 +73,42 @@ export function createInMemoryTransactionRepository(
       current.version += 1;
       return current;
     },
-    async listDeletedForSpace(financialSpaceId, limit) {
-      return transactions
-        .filter(
-          (transaction) =>
-            transaction.financialSpaceId === financialSpaceId && transaction.deletedAt !== null,
-        )
-        .slice(0, limit);
+    async list(query) {
+      const text = query.text?.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+      const matches = transactions.filter(
+        (transaction) =>
+          transaction.financialSpaceId === query.financialSpaceId &&
+          (query.state === 'active') === (transaction.deletedAt === null) &&
+          (query.range === undefined ||
+            (transaction.financialDate >= query.range.start &&
+              transaction.financialDate < query.range.endExclusive)) &&
+          (query.type === undefined || transaction.type === query.type) &&
+          (query.status === undefined || transaction.status === query.status) &&
+          (query.categoryId === undefined ||
+            transaction.category.id === query.categoryId ||
+            transaction.subcategory?.id === query.categoryId) &&
+          (text === undefined ||
+            transaction.description
+              .normalize('NFD')
+              .replace(/\p{M}/gu, '')
+              .toLowerCase()
+              .includes(text)),
+      );
+      const sorted =
+        query.state === 'active'
+          ? matches.sort(
+              (left, right) =>
+                right.financialDate.localeCompare(left.financialDate) ||
+                right.createdAt.getTime() - left.createdAt.getTime(),
+            )
+          : matches;
+      const offset = query.cursor === null ? 0 : Number(query.cursor);
+      if (!Number.isInteger(offset) || offset < 0) {
+        throw new InvalidCursorError();
+      }
+      const items = sorted.slice(offset, offset + query.limit);
+      const nextOffset = offset + items.length;
+      return { items, nextCursor: nextOffset < sorted.length ? String(nextOffset) : null };
     },
   };
 }

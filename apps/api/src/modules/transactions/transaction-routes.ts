@@ -6,7 +6,9 @@ import {
   DEFAULT_TRANSACTION_STATUS,
   isValidAmountMinor,
   isValidFinancialDate,
+  isValidMonth,
   MAX_AMOUNT_MINOR,
+  monthRange,
   normalizeTransactionDescription,
   TRANSACTION_DESCRIPTION_MAX_LENGTH,
   TRANSACTION_STATUSES,
@@ -17,11 +19,13 @@ import { z } from 'zod';
 
 import type { DataAccess } from '../../database/data-access.ts';
 import { requireAuthenticatedUser } from '../../http/authenticate.ts';
+import { ValidationError } from '../../http/errors.ts';
 import { isUuid, parseInput } from '../../http/validation.ts';
 import { requireAccessibleSpace } from '../financial-spaces/financial-space-access.ts';
 import { createTransaction } from './create-transaction.ts';
 import type { FinancialTransaction } from './transaction.ts';
 import { deleteTransaction, restoreTransaction } from './transaction-deletion.ts';
+import { InvalidCursorError } from './transaction-repository.ts';
 import { TransactionNotFoundError, updateTransaction } from './update-transaction.ts';
 
 const createTransactionSchema = z.strictObject({
@@ -71,6 +75,12 @@ const versionBodySchema = z.strictObject({ version: z.number().int().min(1) });
 
 const listTransactionsQuerySchema = z.object({
   state: z.enum(['active', 'deleted']).default('active'),
+  month: z.string().refine(isValidMonth, 'must be a month (YYYY-MM)').optional(),
+  type: z.enum(TRANSACTION_TYPES).optional(),
+  status: z.enum(TRANSACTION_STATUSES).optional(),
+  categoryId: z.uuid().optional(),
+  q: z.string().trim().min(1).max(100).optional(),
+  cursor: z.string().min(1).max(500).optional(),
   limit: z.coerce
     .number()
     .int()
@@ -206,16 +216,30 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         user.id,
         spaceId,
       );
-      const { limit, state } = parseInput(listTransactionsQuerySchema, request.query);
-      const repository = data.repositories.transactions;
-      const transactions =
-        state === 'active'
-          ? await repository.listRecentForSpace(space.id, limit + 1)
-          : await repository.listDeletedForSpace(space.id, limit + 1);
-      return {
-        items: transactions.slice(0, limit).map(toTransactionResponse),
-        hasMore: transactions.length > limit,
-      };
+      const filters = parseInput(listTransactionsQuerySchema, request.query);
+      try {
+        const page = await data.repositories.transactions.list({
+          financialSpaceId: space.id,
+          state: filters.state,
+          limit: filters.limit,
+          cursor: filters.cursor ?? null,
+          ...(filters.month === undefined ? {} : { range: monthRange(filters.month) }),
+          ...(filters.type === undefined ? {} : { type: filters.type }),
+          ...(filters.status === undefined ? {} : { status: filters.status }),
+          ...(filters.categoryId === undefined ? {} : { categoryId: filters.categoryId }),
+          ...(filters.q === undefined ? {} : { text: filters.q }),
+        });
+        return {
+          items: page.items.map(toTransactionResponse),
+          hasMore: page.nextCursor !== null,
+          nextCursor: page.nextCursor,
+        };
+      } catch (error) {
+        if (error instanceof InvalidCursorError) {
+          throw new ValidationError('cursor: invalid');
+        }
+        throw error;
+      }
     },
   );
 

@@ -6,6 +6,20 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Transaction Filters and Search (SDD-012)
+
+-   The transaction list is organized by month (current month by default,
+    with previous/next navigation; the month is kept in the URL) and
+    jumps to the month of a transaction after it is saved.
+-   Optional filters: type, status, category (including subcategory
+    matches), and case- and accent-insensitive search in descriptions.
+-   Cursor pagination with "Carregar mais"; every matching transaction
+    appears exactly once.
+-   `GET .../transactions` accepts `month`, `type`, `status`,
+    `categoryId`, `q`, and `cursor`, and returns `nextCursor`.
+-   Migration `0008_transaction_search` enables the PostgreSQL `unaccent`
+    extension.
+
 ### Category Management (SDD-011)
 
 -   New "Categorias" screen per space: create categories (with kind) and

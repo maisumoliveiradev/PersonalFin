@@ -7,8 +7,8 @@ import { messages } from '../../i18n/messages';
 import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
 import { FormError } from '../../ui/FormError';
-import { SectionTitle } from '../../ui/SectionTitle';
 import { fontSize, radius, spacing, usePalette } from '../../ui/theme';
+import { hasOptionalFilters, type TransactionFilters } from './transaction-filters';
 import {
   statusToggle,
   transactionAmountLabel,
@@ -96,16 +96,20 @@ function TransactionRow({
 
 interface TransactionListProps {
   spaceId: string;
+  filters: TransactionFilters;
 }
 
-export function TransactionList({ spaceId }: TransactionListProps) {
+export function TransactionList({ spaceId, filters }: TransactionListProps) {
   const palette = usePalette();
-  const transactions = useTransactions(spaceId);
+  const transactions = useTransactions(spaceId, filters);
   const changeStatus = useChangeTransactionStatus(spaceId);
+  const items = transactions.data?.pages.flatMap((page) => page.items) ?? [];
+  const emptyMessage = hasOptionalFilters(filters)
+    ? messages.transactions.emptyFiltered
+    : messages.transactions.emptyMonth;
 
   return (
     <View style={styles.container}>
-      <SectionTitle>{messages.transactions.listTitle}</SectionTitle>
       {transactions.isPending && (
         <ActivityIndicator aria-label={messages.common.loading} color={palette.primary} />
       )}
@@ -118,11 +122,9 @@ export function TransactionList({ spaceId }: TransactionListProps) {
       <FormError
         message={changeStatus.isError ? messages.transactions.errors.statusFailed : null}
       />
-      {transactions.isSuccess && transactions.data.items.length === 0 && (
-        <BodyText muted>{messages.transactions.empty}</BodyText>
-      )}
+      {transactions.isSuccess && items.length === 0 && <BodyText muted>{emptyMessage}</BodyText>}
       {transactions.isSuccess &&
-        transactions.data.items.map((transaction) => (
+        items.map((transaction) => (
           <TransactionRow
             key={transaction.id}
             spaceId={spaceId}
@@ -139,10 +141,13 @@ export function TransactionList({ spaceId }: TransactionListProps) {
             }
           />
         ))}
-      {transactions.isSuccess && transactions.data.hasMore && (
-        <BodyText muted>
-          {messages.transactions.showingRecent(transactions.data.items.length)}
-        </BodyText>
+      {transactions.hasNextPage && (
+        <Button
+          label={messages.transactions.loadMoreAction}
+          variant="link"
+          loading={transactions.isFetchingNextPage}
+          onPress={() => transactions.fetchNextPage()}
+        />
       )}
     </View>
   );
