@@ -29,4 +29,122 @@ implemented yet.
 
 ## Current debt
 
-No technical debt has been recorded before implementation.
+### TD-001 --- Validation is enforced locally, not by the server
+
+-   **Status:** Accepted
+-   **Priority:** Medium
+-   **Origin:** SDD-001
+-   **Reason:** The project owner chose not to use hosted CI because of
+    cost and notification concerns (ADR-0006).
+-   **Impact:** `git push --no-verify` skips validation, and GitHub does
+    not block merging a Pull Request whose branch fails validation.
+-   **Resolution:** Run `npm run validate` before every merge. Revisit
+    if a free, notification-free server-side check becomes acceptable.
+-   **Target version:** None.
+
+### TD-002 --- openapi-typescript peer dependency overridden to TypeScript 6
+
+-   **Status:** Open
+-   **Priority:** Low
+-   **Origin:** SDD-001
+-   **Reason:** `openapi-typescript` 7.13 declares `typescript@^5` as a
+    peer, but Expo SDK 57 pins TypeScript 6. The root `package.json`
+    `overrides` entry makes it use the workspace TypeScript.
+    Generation and `contract:check` were verified to work.
+-   **Impact:** An untested combination could break type generation
+    after upgrades.
+-   **Resolution:** Remove the override when `openapi-typescript`
+    officially supports the workspace TypeScript version.
+-   **Target version:** Next dependency upgrade.
+
+### TD-003 --- Moderate `uuid` advisory in Expo build tooling
+
+-   **Status:** Accepted
+-   **Priority:** Low
+-   **Origin:** SDD-001
+-   **Reason:** `npm audit` reports GHSA-w5hq-g745-h8pq (`uuid` < 11.1.1)
+    through `@expo/config-plugins`. The package is only used by build
+    tooling, not by the shipped app. The advisory only applies when a
+    buffer argument is passed to v3/v5/v6. `npm audit fix --force` would
+    downgrade Expo.
+-   **Impact:** None known for the running application.
+-   **Resolution:** Resolved by an Expo release that updates the
+    dependency; re-check `npm audit` on each Expo upgrade.
+-   **Target version:** Next Expo SDK upgrade.
+
+### TD-004 --- UI text is pt-BR only
+
+-   **Status:** Open
+-   **Priority:** Medium
+-   **Origin:** SDD-002
+-   **Reason:** FR-107 requires pt-BR and English, but no SDD has
+    delivered localization yet. Strings are centralized in
+    `apps/client/src/i18n/messages.ts` to keep the migration mechanical.
+-   **Impact:** English-speaking users see Portuguese text.
+-   **Resolution:** Introduce locale detection/selection and an English
+    catalog in a localization SDD.
+-   **Target version:** Before public release.
+
+### TD-005 --- Theme follows the operating system only
+
+-   **Status:** Open
+-   **Priority:** Low
+-   **Origin:** SDD-002
+-   **Reason:** FR-106 requires Light, Dark, and System options stored in
+    the user profile. The client implements only the System behavior.
+-   **Impact:** Users cannot override the OS theme.
+-   **Resolution:** Add a theme preference to the profile and a selector.
+-   **Target version:** With profile settings.
+
+### TD-006 --- Integration tests are not part of the pre-push hook
+
+-   **Status:** Accepted
+-   **Priority:** Medium
+-   **Origin:** SDD-002
+-   **Reason:** They need a running PostgreSQL (Docker); requiring it on
+    every push would block pushes whenever Docker is stopped.
+-   **Impact:** A persistence or auth regression can be pushed if
+    `npm run test:integration` is skipped.
+-   **Resolution:** Run it before merging changes to persistence or
+    authentication; reconsider making it part of `validate`.
+-   **Target version:** None.
+
+### TD-007 --- Sign-up reveals whether an email is registered
+
+-   **Status:** Open
+-   **Priority:** Low
+-   **Origin:** SDD-002
+-   **Reason:** Better Auth answers `USER_ALREADY_EXISTS` on duplicate
+    sign-up; hiding it properly requires email verification, which is
+    outside SDD-002.
+-   **Impact:** Allows account enumeration (mitigated by production rate
+    limiting).
+-   **Resolution:** Revisit when email verification is introduced.
+-   **Target version:** Email verification SDD.
+
+### TD-008 --- Client form logic has no automated tests
+
+-   **Status:** Open
+-   **Priority:** Medium
+-   **Origin:** SDD-005
+-   **Reason:** `apps/client` has no React Native test runner yet
+    (ADR-0006). The underlying parsing rules are tested in
+    `packages/domain`, but the form mapping
+    (`features/transactions/transaction-form.ts`) and screens were
+    verified only through manual browser automation.
+-   **Impact:** UI regressions in forms are caught only manually.
+-   **Resolution:** Introduce `jest-expo` (or move pure form mapping into
+    a tested package) and cover the transaction form.
+-   **Target version:** v0.2.0.
+
+### TD-009 --- Date entry is a plain text field
+
+-   **Status:** Open
+-   **Priority:** Low
+-   **Origin:** SDD-005
+-   **Reason:** A cross-platform date picker would need a new
+    dependency. Typing `DD/MM/AAAA` (defaulting to today) is enough for
+    the v0.1.0 flow.
+-   **Impact:** Slower date entry, especially on mobile.
+-   **Resolution:** Adopt a date picker when the Design System adds one.
+-   **Target version:** v0.2.0.

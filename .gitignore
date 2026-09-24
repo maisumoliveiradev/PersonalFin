@@ -1,1 +1,8 @@
 .DS_Store
+node_modules/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.idea/
