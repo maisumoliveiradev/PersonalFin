@@ -1,12 +1,17 @@
 import { randomUUID } from 'node:crypto';
 
 import type {
+  BalanceReminder,
   BalanceSnapshotList,
   BalanceSnapshot as BalanceSnapshotResponse,
 } from '@personalfin/api-contract';
 import {
+  BALANCE_REMINDER_FREQUENCIES,
+  type BalanceReminderSetting,
+  DEFAULT_BALANCE_REMINDER,
   DEFAULT_CURRENCY,
   isValidBalanceMinor,
+  isValidBalanceReminder,
   isValidFinancialDate,
   MAX_AMOUNT_MINOR,
 } from '@personalfin/domain';
@@ -42,6 +47,19 @@ const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(200).default(100),
 });
 
+const reminderSchema = z
+  .strictObject({
+    frequency: z.enum(BALANCE_REMINDER_FREQUENCIES),
+    intervalDays: z.number().int().nullable(),
+  })
+  .refine(isValidBalanceReminder, {
+    message: 'intervalDays must be 1 to 90 for every_n_days and null otherwise',
+  });
+
+function toReminderResponse(setting: BalanceReminderSetting, isDefault: boolean): BalanceReminder {
+  return { frequency: setting.frequency, intervalDays: setting.intervalDays, isDefault };
+}
+
 function toResponse(snapshot: BalanceSnapshot): BalanceSnapshotResponse {
   return {
     id: snapshot.id,
@@ -68,6 +86,39 @@ export function registerBalanceRoutes(server: FastifyInstance, data: DataAccess)
       const snapshots = await data.repositories.balanceSnapshots.listForSpace(space.id, limit + 1);
       const items = snapshots.slice(0, limit).map(toResponse);
       return { items, current: items[0] ?? null, hasMore: snapshots.length > limit };
+    },
+  );
+
+  server.get(
+    '/financial-spaces/:spaceId/balance-reminder',
+    async (request): Promise<BalanceReminder> => {
+      const user = requireAuthenticatedUser(request);
+      const { spaceId } = parseInput(spaceParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        spaceId,
+      );
+      const setting = await data.repositories.balanceReminders.find(user.id, space.id);
+      return setting === null
+        ? toReminderResponse(DEFAULT_BALANCE_REMINDER, true)
+        : toReminderResponse(setting, false);
+    },
+  );
+
+  server.put(
+    '/financial-spaces/:spaceId/balance-reminder',
+    async (request): Promise<BalanceReminder> => {
+      const user = requireAuthenticatedUser(request);
+      const { spaceId } = parseInput(spaceParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        spaceId,
+      );
+      const setting = parseInput(reminderSchema, request.body);
+      await data.repositories.balanceReminders.save(user.id, space.id, setting);
+      return toReminderResponse(setting, false);
     },
   );
 

@@ -23,3 +23,5 @@ export type UpdateCategoryRequest = components['schemas']['UpdateCategoryRequest
 export type BalanceSnapshot = components['schemas']['BalanceSnapshot'];
 export type BalanceSnapshotList = components['schemas']['BalanceSnapshotList'];
 export type RecordBalanceSnapshotRequest = components['schemas']['RecordBalanceSnapshotRequest'];
+export type BalanceReminder = components['schemas']['BalanceReminder'];
+export type BalanceReminderSetting = components['schemas']['BalanceReminderSetting'];

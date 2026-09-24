@@ -1,7 +1,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { useBalanceSnapshots } from '../../../../../api/balance';
+import { useBalanceReminder, useBalanceSnapshots } from '../../../../../api/balance';
+import { BalanceReminderSettings } from '../../../../../features/balance/BalanceReminderSettings';
 import {
   balanceAmountLabel,
   balanceDateLabel,
@@ -20,6 +21,7 @@ export default function BalanceHistoryScreen() {
   const router = useRouter();
   const { spaceId } = useLocalSearchParams<{ spaceId: string }>();
   const snapshots = useBalanceSnapshots(spaceId);
+  const reminder = useBalanceReminder(spaceId);
 
   if (snapshots.isPending) {
     return <LoadingScreen />;
@@ -54,6 +56,7 @@ export default function BalanceHistoryScreen() {
             </Text>
           </View>
         ))}
+      {reminder.isSuccess && <BalanceReminderSettings spaceId={spaceId} current={reminder.data} />}
       <Button label={messages.spaces.backToSpace} variant="link" onPress={() => router.back()} />
     </Screen>
   );

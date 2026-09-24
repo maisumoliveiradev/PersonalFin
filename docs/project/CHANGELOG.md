@@ -6,6 +6,18 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Balance Update Prompt (SDD-014)
+
+-   The space screen asks "Qual é o seu saldo hoje?" when the balance
+    reminder is due (DR-074), with "Informar saldo" and "Depois" (hidden
+    until the next app start).
+-   Each user configures the frequency per space in the balance history
+    screen: on app start, daily, every N days (1--90), or never; default
+    every 7 days.
+-   `GET` and `PUT /financial-spaces/{spaceId}/balance-reminder`;
+    migration `0010_balance_reminder_settings`; due-date rules in
+    `packages/domain`.
+
 ### Consolidated Balance Snapshots (SDD-013)
 
 -   Each space shows its observed consolidated balance ("Saldo

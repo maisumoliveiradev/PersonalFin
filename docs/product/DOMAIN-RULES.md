@@ -99,6 +99,13 @@ snapshots.
 
 **DR-025** Projection must not be presented as observed balance.
 
+**DR-074** *(SDD-014.)* The balance reminder is due when the space has
+no snapshot, or when the calendar days between the latest observed date
+and today reach the configured frequency: every app start (unless a
+balance for today exists), daily, every N days (1--90; default 7), or
+never. The setting belongs to each user in each space. "Later" hides the
+reminder until the next app start.
+
 ## Realized, Forecast, Projection
 
 **DR-026** Realized represents financial events that have actually
