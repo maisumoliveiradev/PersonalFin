@@ -7,6 +7,7 @@ import { useMaterializeRecurrences } from '../../../../api/recurrences';
 import { BalanceSummary } from '../../../../features/balance/BalanceSummary';
 import { BalanceUpdatePrompt } from '../../../../features/balance/BalanceUpdatePrompt';
 import { MonthlyDashboard } from '../../../../features/dashboard/MonthlyDashboard';
+import { ProjectionSeries } from '../../../../features/dashboard/ProjectionSeries';
 import { MonthNavigator } from '../../../../features/transactions/MonthNavigator';
 import { TransactionFiltersPanel } from '../../../../features/transactions/TransactionFiltersPanel';
 import { TransactionList } from '../../../../features/transactions/TransactionList';
@@ -98,6 +99,7 @@ export default function FinancialSpaceHomeScreen() {
         onChange={(nextMonth) => changeFilters({ ...filters, month: nextMonth })}
       />
       <MonthlyDashboard spaceId={space.data.id} month={month} />
+      <ProjectionSeries spaceId={space.data.id} fromMonth={month} />
       <SectionTitle>{messages.transactions.listTitle}</SectionTitle>
       <Button
         label={

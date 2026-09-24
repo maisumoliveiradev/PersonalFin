@@ -18,12 +18,41 @@ export interface MonthTotals {
   forecastExpenses: number;
 }
 
+export interface FlowTotals {
+  income: number;
+  expenses: number;
+}
+
+export interface ProjectionComponents {
+  afterObservation: FlowTotals;
+  pendingUpToObservation: FlowTotals;
+}
+
+export interface Projection extends ProjectionComponents {
+  amountMinor: number;
+  base: ObservedBalance;
+}
+
 export interface MonthlyDashboard extends MonthTotals {
   month: Month;
   currency: CurrencyCode;
   realizedNet: number;
   realizedExpensesByCategory: CategoryTotal[];
   observedBalance: ObservedBalance | null;
+  projection: Projection | null;
+}
+
+export function computeProjection(
+  base: ObservedBalance,
+  components: ProjectionComponents,
+): Projection {
+  const net = (flow: FlowTotals) => flow.income - flow.expenses;
+  return {
+    base,
+    ...components,
+    amountMinor:
+      base.amountMinor + net(components.afterObservation) + net(components.pendingUpToObservation),
+  };
 }
 
 export function toSafeAmount(value: string | number | null): number {

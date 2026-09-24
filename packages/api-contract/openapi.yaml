@@ -676,6 +676,40 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/projection:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getProjectionSeries
+      summary: Projected month-end balances (M-008) for consecutive months
+      parameters:
+        - name: fromMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        - name: months
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+            default: 6
+      responses:
+        '200':
+          description: One projected month-end balance per month (null without an observed balance).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionSeries'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
   /financial-spaces/{spaceId}/commitments:
     parameters:
       - $ref: '#/components/parameters/SpaceId'
@@ -1328,6 +1362,7 @@ components:
         - forecastExpenses
         - realizedExpensesByCategory
         - observedBalance
+        - projection
       properties:
         month:
           type: string
@@ -1380,6 +1415,11 @@ components:
                   type: integer
                 observedOn:
                   $ref: '#/components/schemas/FinancialDate'
+            - type: 'null'
+        projection:
+          description: M-008 projected month-end balance; null without an observed balance.
+          oneOf:
+            - $ref: '#/components/schemas/Projection'
             - type: 'null'
     RecurrenceFrequency:
       type: string
@@ -1550,6 +1590,69 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RecurrenceSeries'
+    FlowTotals:
+      type: object
+      additionalProperties: false
+      required:
+        - income
+        - expenses
+      properties:
+        income:
+          type: integer
+        expenses:
+          type: integer
+    Projection:
+      type: object
+      additionalProperties: false
+      description: >
+        M-008. amountMinor = base.amountMinor + (afterObservation.income -
+        afterObservation.expenses) + (pendingUpToObservation.income -
+        pendingUpToObservation.expenses). A calculation, never an observed
+        balance.
+      required:
+        - amountMinor
+        - base
+        - afterObservation
+        - pendingUpToObservation
+      properties:
+        amountMinor:
+          type: integer
+        base:
+          type: object
+          additionalProperties: false
+          required:
+            - amountMinor
+            - observedOn
+          properties:
+            amountMinor:
+              type: integer
+            observedOn:
+              $ref: '#/components/schemas/FinancialDate'
+        afterObservation:
+          $ref: '#/components/schemas/FlowTotals'
+        pendingUpToObservation:
+          $ref: '#/components/schemas/FlowTotals'
+    ProjectionSeries:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - month
+              - projectedBalance
+            properties:
+              month:
+                type: string
+              projectedBalance:
+                type:
+                  - integer
+                  - 'null'
     CommitmentSection:
       type: object
       additionalProperties: false

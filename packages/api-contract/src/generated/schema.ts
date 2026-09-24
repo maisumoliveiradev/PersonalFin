@@ -343,6 +343,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/projection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Projected month-end balances (M-008) for consecutive months */
+        get: operations["getProjectionSeries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/financial-spaces/{spaceId}/commitments": {
         parameters: {
             query?: never;
@@ -599,6 +618,8 @@ export interface components {
                 amountMinor: number;
                 observedOn: components["schemas"]["FinancialDate"];
             } | null;
+            /** @description M-008 projected month-end balance; null without an observed balance. */
+            projection: components["schemas"]["Projection"] | null;
         };
         /** @enum {string} */
         RecurrenceFrequency: "monthly" | "weekly" | "yearly";
@@ -661,6 +682,26 @@ export interface components {
         };
         RecurrenceSeriesList: {
             items: components["schemas"]["RecurrenceSeries"][];
+        };
+        FlowTotals: {
+            income: number;
+            expenses: number;
+        };
+        /** @description M-008. amountMinor = base.amountMinor + (afterObservation.income - afterObservation.expenses) + (pendingUpToObservation.income - pendingUpToObservation.expenses). A calculation, never an observed balance. */
+        Projection: {
+            amountMinor: number;
+            base: {
+                amountMinor: number;
+                observedOn: components["schemas"]["FinancialDate"];
+            };
+            afterObservation: components["schemas"]["FlowTotals"];
+            pendingUpToObservation: components["schemas"]["FlowTotals"];
+        };
+        ProjectionSeries: {
+            items: {
+                month: string;
+                projectedBalance: number | null;
+            }[];
         };
         CommitmentSection: {
             items: components["schemas"]["Transaction"][];
@@ -1480,6 +1521,34 @@ export interface operations {
                     "application/json": {
                         occurrencesCreated: number;
                     };
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getProjectionSeries: {
+        parameters: {
+            query: {
+                fromMonth: string;
+                months?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One projected month-end balance per month (null without an observed balance). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectionSeries"];
                 };
             };
             400: components["responses"]["ValidationFailed"];

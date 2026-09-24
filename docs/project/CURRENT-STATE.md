@@ -4,7 +4,8 @@
 
 `v0.2.0`, released on 2026-09-24 (`main`, tag `v0.2.0`). SDD-001 to
 SDD-016 implemented and validated. `develop` is building v0.3.0:
-SDD-017 to SDD-020 implemented.
+SDD-017 to SDD-021 implemented; SDD-022 (release validation)
+pending.
 
 ## Implemented Product Capabilities
 
@@ -42,16 +43,16 @@ SDD-017 to SDD-020 implemented.
     restore are audited. There is no permanent deletion.
 -   **Balance snapshots (SDD-013):** each space shows its latest observed
     consolidated balance and date; users record new snapshots (zero or
-    negative allowed) and view the append-only history. There is no
-    projection.
+    negative allowed) and view the append-only history.
 -   **Balance reminder (SDD-014):** an in-app prompt on the space screen
     when an update is due (DR-074), with per-user, per-space frequency.
     There are no push or email notifications.
 -   **Monthly dashboard (SDD-015):** the space screen summarizes the
     selected month with the metrics defined in `docs/product/METRICS.md`
     (realized, forecast, expenses by category, month-end observed
-    balance). There are no charts over time, comparisons, projection, or
-    personalization.
+    balance) and the projected month-end balance with its components
+    (SDD-021, M-008), plus a six-month projection list. There are no
+    charts, comparisons, scenarios, or personalization.
 -   **Recurrences (SDD-018):** monthly, weekly, or yearly series with
     optional end date and non-business-day rule; occurrences are Pending
     transactions created 12 months ahead and extended when browsing
@@ -113,6 +114,6 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.3.0/SDD-021-monthly-projection.md`. Domain decisions
+`docs/sdds/v0.3.0/SDD-022-release-validation.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, DR-072 to DR-076).
+`docs/sdds/v0.3.0/README.md`, DR-072 to DR-077).

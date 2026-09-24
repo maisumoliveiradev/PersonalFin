@@ -221,6 +221,14 @@ export const messages = {
     loadError: 'Não foi possível carregar o resumo do mês.',
     definitionsHint:
       'Realizado considera lançamentos pagos/recebidos; previsto considera pendentes.',
+    projectionTitle: 'Projeção (cálculo, não é saldo observado)',
+    projectionBase: (date: string) => `Base: saldo observado em ${date}`,
+    projectionAfter: 'Lançamentos após a observação',
+    projectionPending: 'Pendentes até a observação',
+    projectedBalance: 'Saldo projetado no fim do mês',
+    noProjection: 'Informe um saldo observado para ver a projeção.',
+    seriesTitle: 'Projeção dos próximos meses',
+    seriesNone: '—',
   },
   recurrences: {
     repeatLabel: 'Repetir',
