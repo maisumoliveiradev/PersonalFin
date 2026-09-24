@@ -1,4 +1,5 @@
 import type {
+  RecurrenceSeriesChanged,
   RecurrenceSeriesCreated,
   RecurrenceSeriesList,
   RecurrenceSeries as RecurrenceSeriesResponse,
@@ -23,9 +24,15 @@ import { z } from 'zod';
 
 import type { DataAccess } from '../../database/data-access.ts';
 import { requireAuthenticatedUser } from '../../http/authenticate.ts';
-import { parseInput } from '../../http/validation.ts';
+import { isUuid, parseInput } from '../../http/validation.ts';
 import { requireAccessibleSpace } from '../financial-spaces/financial-space-access.ts';
-import { createRecurrenceSeries, materializeSpace } from './recurrence-management.ts';
+import {
+  createRecurrenceSeries,
+  endSeries,
+  materializeSpace,
+  RecurrenceNotFoundError,
+  updateSeriesFrom,
+} from './recurrence-management.ts';
 import type { RecurrenceSeries } from './recurrence-series.ts';
 
 const spaceParamsSchema = z.object({ spaceId: z.string() });
@@ -49,6 +56,36 @@ const createRecurrenceSchema = z.strictObject({
   startDate: financialDateSchema,
   endDate: financialDateSchema.nullable().optional(),
 });
+
+const seriesParamsSchema = z.object({ spaceId: z.string(), seriesId: z.string() });
+
+const updateSeriesSchema = z.strictObject({
+  version: z.number().int().min(1),
+  fromOccurrenceDate: financialDateSchema,
+  description: z
+    .string()
+    .transform(normalizeTransactionDescription)
+    .pipe(z.string().min(1).max(TRANSACTION_DESCRIPTION_MAX_LENGTH))
+    .optional(),
+  amountMinor: z
+    .number()
+    .refine(isValidAmountMinor, `must be an integer between 1 and ${MAX_AMOUNT_MINOR}`)
+    .optional(),
+  categoryId: z.uuid().optional(),
+  subcategoryId: z.uuid().nullable().optional(),
+});
+
+const endSeriesSchema = z.strictObject({
+  version: z.number().int().min(1),
+  endDate: financialDateSchema,
+});
+
+function requireSeriesId(seriesId: string): string {
+  if (!isUuid(seriesId)) {
+    throw new RecurrenceNotFoundError();
+  }
+  return seriesId;
+}
 
 const materializeSchema = z.strictObject({
   throughMonth: z.string().refine(isValidMonth, 'must be a month (YYYY-MM)'),
@@ -119,6 +156,56 @@ export function registerRecurrenceRoutes(server: FastifyInstance, data: DataAcce
       });
       reply.status(201);
       return { series: toResponse(series), occurrencesCreated };
+    },
+  );
+
+  server.patch(
+    '/financial-spaces/:spaceId/recurrences/:seriesId',
+    async (request): Promise<RecurrenceSeriesChanged> => {
+      const user = requireAuthenticatedUser(request);
+      const params = parseInput(seriesParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        params.spaceId,
+      );
+      const { version, fromOccurrenceDate, ...changes } = parseInput(
+        updateSeriesSchema,
+        request.body,
+      );
+      const result = await updateSeriesFrom(data, {
+        financialSpaceId: space.id,
+        seriesId: requireSeriesId(params.seriesId),
+        actorUserId: user.id,
+        expectedVersion: version,
+        fromOccurrenceDate,
+        changes: Object.fromEntries(
+          Object.entries(changes).filter(([, value]) => value !== undefined),
+        ),
+      });
+      return { series: toResponse(result.series), occurrencesAffected: result.occurrencesUpdated };
+    },
+  );
+
+  server.post(
+    '/financial-spaces/:spaceId/recurrences/:seriesId/end',
+    async (request): Promise<RecurrenceSeriesChanged> => {
+      const user = requireAuthenticatedUser(request);
+      const params = parseInput(seriesParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        params.spaceId,
+      );
+      const { version, endDate } = parseInput(endSeriesSchema, request.body);
+      const result = await endSeries(data, {
+        financialSpaceId: space.id,
+        seriesId: requireSeriesId(params.seriesId),
+        actorUserId: user.id,
+        expectedVersion: version,
+        endDate,
+      });
+      return { series: toResponse(result.series), occurrencesAffected: result.occurrencesRemoved };
     },
   );
 

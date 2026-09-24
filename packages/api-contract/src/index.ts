@@ -30,3 +30,5 @@ export type RecurrenceSeries = components['schemas']['RecurrenceSeries'];
 export type RecurrenceSeriesCreated = components['schemas']['RecurrenceSeriesCreated'];
 export type RecurrenceSeriesList = components['schemas']['RecurrenceSeriesList'];
 export type CreateRecurrenceRequest = components['schemas']['CreateRecurrenceRequest'];
+export type UpdateRecurrenceRequest = components['schemas']['UpdateRecurrenceRequest'];
+export type RecurrenceSeriesChanged = components['schemas']['RecurrenceSeriesChanged'];

@@ -12,9 +12,177 @@ import {
 } from '@personalfin/domain';
 
 import type { DataAccess, Repositories } from '../../database/data-access.ts';
-import { ValidationError } from '../../http/errors.ts';
+import { NotFoundError, ValidationError } from '../../http/errors.ts';
+import { diffFields } from '../audit/audit-event.ts';
 import { assertCategorySelection } from '../transactions/category-selection.ts';
-import type { RecurrenceSeries } from './recurrence-series.ts';
+import { VersionConflictError } from '../transactions/update-transaction.ts';
+import type { RecurrenceSeries, SeriesDefaults } from './recurrence-series.ts';
+
+export class RecurrenceNotFoundError extends NotFoundError {
+  constructor() {
+    super('RECURRENCE_NOT_FOUND', 'Recurring series not found');
+  }
+}
+
+async function lockSeries(
+  repositories: Repositories,
+  financialSpaceId: string,
+  seriesId: string,
+  expectedVersion: number,
+): Promise<RecurrenceSeries> {
+  const series = await repositories.recurrences.lockForMaterialization(financialSpaceId, seriesId);
+  if (series === null) {
+    throw new RecurrenceNotFoundError();
+  }
+  if (series.version !== expectedVersion) {
+    throw new VersionConflictError();
+  }
+  return series;
+}
+
+function defaultsOf(value: SeriesDefaults): SeriesDefaults {
+  return {
+    description: value.description,
+    amountMinor: value.amountMinor,
+    categoryId: value.categoryId,
+    subcategoryId: value.subcategoryId,
+  };
+}
+
+export interface UpdateSeriesInput {
+  financialSpaceId: string;
+  seriesId: string;
+  actorUserId: string;
+  expectedVersion: number;
+  fromOccurrenceDate: FinancialDate;
+  changes: Partial<SeriesDefaults>;
+}
+
+export async function updateSeriesFrom(
+  data: DataAccess,
+  input: UpdateSeriesInput,
+): Promise<{ series: RecurrenceSeries; occurrencesUpdated: number }> {
+  return data.transaction(async (repositories) => {
+    const series = await lockSeries(
+      repositories,
+      input.financialSpaceId,
+      input.seriesId,
+      input.expectedVersion,
+    );
+    const before = defaultsOf(series);
+    const after: SeriesDefaults = { ...before, ...input.changes };
+    const changes = diffFields({ ...before }, { ...after });
+    if (Object.keys(changes).length === 0) {
+      return { series, occurrencesUpdated: 0 };
+    }
+    await assertCategorySelection(repositories.categories, {
+      financialSpaceId: input.financialSpaceId,
+      type: series.type,
+      categoryId: after.categoryId,
+      subcategoryId: after.subcategoryId,
+    });
+    const updated = await repositories.recurrences.updateDefaults(series, after, series.endDate);
+    if (updated === null) {
+      throw new VersionConflictError();
+    }
+    const occurrences = await repositories.recurrences.listFollowingOccurrences(
+      series.id,
+      input.fromOccurrenceDate,
+      true,
+    );
+    await repositories.recurrences.applyDefaultsToOccurrences(
+      occurrences.map((occurrence) => occurrence.id),
+      after,
+      input.actorUserId,
+    );
+    await repositories.audit.record({
+      financialSpaceId: input.financialSpaceId,
+      entityType: 'recurrence_series',
+      entityId: series.id,
+      action: 'update',
+      actorUserId: input.actorUserId,
+      changes: {
+        ...changes,
+        fromOccurrenceDate: { before: null, after: input.fromOccurrenceDate },
+      },
+    });
+    for (const occurrence of occurrences) {
+      const occurrenceChanges = diffFields({ ...defaultsOf(occurrence) }, { ...after });
+      if (Object.keys(occurrenceChanges).length > 0) {
+        await repositories.audit.record({
+          financialSpaceId: input.financialSpaceId,
+          entityType: 'financial_transaction',
+          entityId: occurrence.id,
+          action: 'update',
+          actorUserId: input.actorUserId,
+          changes: occurrenceChanges,
+        });
+      }
+    }
+    return { series: updated, occurrencesUpdated: occurrences.length };
+  });
+}
+
+export interface EndSeriesInput {
+  financialSpaceId: string;
+  seriesId: string;
+  actorUserId: string;
+  expectedVersion: number;
+  endDate: FinancialDate;
+}
+
+export async function endSeries(
+  data: DataAccess,
+  input: EndSeriesInput,
+): Promise<{ series: RecurrenceSeries; occurrencesRemoved: number }> {
+  return data.transaction(async (repositories) => {
+    const series = await lockSeries(
+      repositories,
+      input.financialSpaceId,
+      input.seriesId,
+      input.expectedVersion,
+    );
+    if (input.endDate < series.startDate) {
+      throw new ValidationError('endDate: must not be before the series start date');
+    }
+    const updated = await repositories.recurrences.updateDefaults(
+      series,
+      defaultsOf(series),
+      input.endDate,
+    );
+    if (updated === null) {
+      throw new VersionConflictError();
+    }
+    const occurrences = await repositories.recurrences.listFollowingOccurrences(
+      series.id,
+      input.endDate,
+      false,
+    );
+    await repositories.recurrences.softDeleteOccurrences(
+      occurrences.map((occurrence) => occurrence.id),
+      input.actorUserId,
+    );
+    await repositories.audit.record({
+      financialSpaceId: input.financialSpaceId,
+      entityType: 'recurrence_series',
+      entityId: series.id,
+      action: 'update',
+      actorUserId: input.actorUserId,
+      changes: { endDate: { before: series.endDate, after: input.endDate } },
+    });
+    for (const occurrence of occurrences) {
+      await repositories.audit.record({
+        financialSpaceId: input.financialSpaceId,
+        entityType: 'financial_transaction',
+        entityId: occurrence.id,
+        action: 'delete',
+        actorUserId: input.actorUserId,
+        changes: { reason: { before: null, after: 'series_ended' } },
+      });
+    }
+    return { series: updated, occurrencesRemoved: occurrences.length };
+  });
+}
 
 export interface CreateRecurrenceInput {
   financialSpaceId: string;

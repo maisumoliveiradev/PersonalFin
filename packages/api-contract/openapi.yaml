@@ -561,6 +561,81 @@ paths:
           $ref: '#/components/responses/FinancialSpaceNotFound'
         '422':
           $ref: '#/components/responses/CategoryNotAvailable'
+  /financial-spaces/{spaceId}/recurrences/{seriesId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/SeriesId'
+    patch:
+      operationId: updateRecurrenceFrom
+      summary: Change the series defaults for this and following occurrences
+      description: >
+        Updates the series and every Pending, non-deleted occurrence on or
+        after fromOccurrenceDate that was not individually modified. Paid,
+        past-edited, and deleted occurrences are never rewritten. Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRecurrenceRequest'
+      responses:
+        '200':
+          description: The series after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurrenceSeriesChanged'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/RecurrenceNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+        '422':
+          $ref: '#/components/responses/CategoryNotAvailable'
+  /financial-spaces/{spaceId}/recurrences/{seriesId}/end:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/SeriesId'
+    post:
+      operationId: endRecurrence
+      summary: End a series on a date
+      description: >
+        Sets the end date and moves to the trash every Pending, unmodified
+        occurrence scheduled after it. Everything else is kept. Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - version
+                - endDate
+              properties:
+                version:
+                  type: integer
+                  minimum: 1
+                endDate:
+                  $ref: '#/components/schemas/FinancialDate'
+      responses:
+        '200':
+          description: The ended series.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecurrenceSeriesChanged'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/RecurrenceNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
   /financial-spaces/{spaceId}/recurrences/materialize:
     parameters:
       - $ref: '#/components/parameters/SpaceId'
@@ -603,6 +678,13 @@ paths:
           $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
+    SeriesId:
+      name: seriesId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     TransactionId:
       name: transactionId
       in: path
@@ -626,6 +708,12 @@ components:
         Session cookie issued by Better Auth. Native clients send the same
         cookie through the Cookie header.
   responses:
+    RecurrenceNotFound:
+      description: The series does not exist in this space (code RECURRENCE_NOT_FOUND).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     CategoryNotFound:
       description: The category does not exist in this space (code CATEGORY_NOT_FOUND).
       content:
@@ -972,6 +1060,7 @@ components:
         - version
         - deletedAt
         - recurrenceSeriesId
+        - occurrenceDate
       properties:
         id:
           type: string
@@ -1015,6 +1104,12 @@ components:
             - 'null'
           format: uuid
           description: The series this transaction is an occurrence of; null for one-off entries.
+        occurrenceDate:
+          type:
+            - string
+            - 'null'
+          format: date
+          description: Scheduled (unadjusted) date of the occurrence; null for one-off entries.
     VersionRequest:
       type: object
       additionalProperties: false
@@ -1365,6 +1460,44 @@ components:
         series:
           $ref: '#/components/schemas/RecurrenceSeries'
         occurrencesCreated:
+          type: integer
+          minimum: 0
+    UpdateRecurrenceRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+        - fromOccurrenceDate
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        fromOccurrenceDate:
+          $ref: '#/components/schemas/FinancialDate'
+        description:
+          type: string
+          minLength: 1
+          maxLength: 140
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        categoryId:
+          type: string
+          format: uuid
+        subcategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+    RecurrenceSeriesChanged:
+      type: object
+      additionalProperties: false
+      required:
+        - series
+        - occurrencesAffected
+      properties:
+        series:
+          $ref: '#/components/schemas/RecurrenceSeries'
+        occurrencesAffected:
           type: integer
           minimum: 0
     RecurrenceSeriesList:

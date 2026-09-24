@@ -152,6 +152,85 @@ export function createPostgresRecurrenceRepository(db: Queryable): RecurrenceRep
       return result.rowCount ?? 0;
     },
 
+    async updateDefaults(series, defaults, endDate) {
+      const { rows } = await db.query<SeriesRow>(
+        `UPDATE recurrence_series SET description = $3, amount_minor = $4, category_id = $5,
+           subcategory_id = $6, end_date = $7, version = version + 1, updated_at = now()
+         WHERE id = $1 AND version = $2
+         RETURNING ${COLUMNS}`,
+        [
+          series.id,
+          series.version,
+          defaults.description,
+          String(defaults.amountMinor),
+          defaults.categoryId,
+          defaults.subcategoryId,
+          endDate,
+        ],
+      );
+      const [row] = rows;
+      return row === undefined ? null : toSeries(row);
+    },
+
+    async listFollowingOccurrences(seriesId, fromOccurrenceDate, inclusive) {
+      const { rows } = await db.query<{
+        id: string;
+        occurrence_date: FinancialDate;
+        description: string;
+        amount_minor: string;
+        category_id: string;
+        subcategory_id: string | null;
+      }>(
+        `SELECT id, occurrence_date, description, amount_minor, category_id, subcategory_id
+         FROM financial_transaction
+         WHERE recurrence_series_id = $1
+           AND occurrence_date ${inclusive ? '>=' : '>'} $2::date
+           AND status = 'pending' AND deleted_at IS NULL AND NOT individually_modified
+         ORDER BY occurrence_date
+         FOR UPDATE`,
+        [seriesId, fromOccurrenceDate],
+      );
+      return rows.map((row) => ({
+        id: row.id,
+        occurrenceDate: row.occurrence_date,
+        description: row.description,
+        amountMinor: Number(row.amount_minor),
+        categoryId: row.category_id,
+        subcategoryId: row.subcategory_id,
+      }));
+    },
+
+    async applyDefaultsToOccurrences(ids, defaults, actorUserId) {
+      if (ids.length === 0) {
+        return;
+      }
+      await db.query(
+        `UPDATE financial_transaction SET description = $2, amount_minor = $3, category_id = $4,
+           subcategory_id = $5, updated_by_user_id = $6, version = version + 1, updated_at = now()
+         WHERE id = ANY($1::uuid[])`,
+        [
+          ids,
+          defaults.description,
+          String(defaults.amountMinor),
+          defaults.categoryId,
+          defaults.subcategoryId,
+          actorUserId,
+        ],
+      );
+    },
+
+    async softDeleteOccurrences(ids, actorUserId) {
+      if (ids.length === 0) {
+        return;
+      }
+      await db.query(
+        `UPDATE financial_transaction SET deleted_at = now(), deleted_by_user_id = $2,
+           version = version + 1, updated_at = now()
+         WHERE id = ANY($1::uuid[])`,
+        [ids, actorUserId],
+      );
+    },
+
     async setMaterializedThrough(seriesId, through) {
       await db.query(
         `UPDATE recurrence_series

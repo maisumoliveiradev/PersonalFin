@@ -26,6 +26,8 @@ export interface FinancialTransaction {
   version: number;
   deletedAt: Date | null;
   recurrenceSeriesId: string | null;
+  occurrenceDate: FinancialDate | null;
+  individuallyModified: boolean;
 }
 
 export interface NewFinancialTransaction {
