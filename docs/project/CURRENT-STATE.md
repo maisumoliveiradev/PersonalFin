@@ -3,7 +3,7 @@
 ## Current Version
 
 `v0.1.0` released on 2026-09-24 (`main`, tag `v0.1.0`). `develop` is
-building v0.2.0: SDD-008 and SDD-009 implemented.
+building v0.2.0: SDD-008 to SDD-010 implemented.
 
 ## Implemented Product Capabilities
 
@@ -38,6 +38,8 @@ building v0.2.0: SDD-008 and SDD-009 implemented.
 -   **Soft delete (SDD-009):** transactions can be deleted (with
     confirmation) and restored from the space's Lixeira; deletion and
     restore are audited. There is no permanent deletion.
+-   **Quick status change (SDD-010):** each list item toggles between
+    Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006):** the space screen lists the space's
     most recent transactions (up to 100; API limit up to 200 with
     `hasMore`), newest financial date first, with type, description,
@@ -85,4 +87,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.2.0/SDD-010-transaction-status.md`.
+`docs/sdds/v0.2.0/SDD-011-category-management.md`.

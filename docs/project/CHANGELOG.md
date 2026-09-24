@@ -6,6 +6,12 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Quick Status Change (SDD-010)
+
+-   Each transaction in the list has a button to mark it as Paid/Received
+    or back to Pending; the change is version-checked and audited, and a
+    conflicting change shows an error and refreshes the list.
+
 ### Transaction Soft Delete and Restore (SDD-009)
 
 -   Transactions can be deleted from the edit screen after confirmation;
