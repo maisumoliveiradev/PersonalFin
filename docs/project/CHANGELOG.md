@@ -6,7 +6,11 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
-Nothing yet.
+### Business-Day Calendar Foundation (SDD-017)
+
+-   `packages/domain` computes Brazilian national holidays (including
+    Good Friday via Easter) and adjusts dates to the previous or next
+    business day (`docs/product/BUSINESS-DAYS.md`).
 
 ## \[0.2.0\] --- 2026-09-24
 
