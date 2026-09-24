@@ -25,7 +25,7 @@ interface TransactionRowProps {
   onToggleStatus: () => void;
 }
 
-function TransactionRow({
+export function TransactionRow({
   spaceId,
   transaction,
   changingStatus,

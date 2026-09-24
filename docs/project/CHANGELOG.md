@@ -6,6 +6,13 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Future Commitments (SDD-020)
+
+-   "Próximos compromissos" screen: overdue pending items and pending
+    items of the next 7, 30, or 90 days, with exact totals of income to
+    receive and expenses to pay, and quick "Marcar como pago".
+-   `GET /financial-spaces/{spaceId}/commitments?from=&days=`.
+
 ### Independent Occurrences and Series Changes (SDD-019)
 
 -   Editing an occurrence offers "Apenas este" or "Este e os próximos";

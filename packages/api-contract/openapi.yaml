@@ -676,6 +676,46 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/commitments:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getCommitments
+      summary: Pending income and expenses that are overdue or coming up
+      description: >
+        overdue = Pending, non-deleted transactions dated before from;
+        upcoming = those dated from `from` through from + days - 1. Items
+        are ordered by financial date; each section returns at most 200
+        items plus exact totals.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          description: The user's current calendar date.
+          schema:
+            type: string
+            format: date
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 7
+            maximum: 365
+            default: 30
+      responses:
+        '200':
+          description: Overdue and upcoming commitments.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Commitments'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     SeriesId:
@@ -1510,6 +1550,44 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RecurrenceSeries'
+    CommitmentSection:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - hasMore
+        - income
+        - expenses
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        hasMore:
+          type: boolean
+        income:
+          type: integer
+          description: Sum of pending income in the section, minor units.
+        expenses:
+          type: integer
+          description: Sum of pending expenses in the section, minor units.
+    Commitments:
+      type: object
+      additionalProperties: false
+      required:
+        - from
+        - through
+        - overdue
+        - upcoming
+      properties:
+        from:
+          $ref: '#/components/schemas/FinancialDate'
+        through:
+          $ref: '#/components/schemas/FinancialDate'
+        overdue:
+          $ref: '#/components/schemas/CommitmentSection'
+        upcoming:
+          $ref: '#/components/schemas/CommitmentSection'
     ErrorResponse:
       type: object
       additionalProperties: false
