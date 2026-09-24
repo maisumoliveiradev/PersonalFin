@@ -140,6 +140,11 @@ export default function FinancialSpaceHomeScreen() {
         }
       />
       <Button
+        label={messages.cards.action}
+        variant="link"
+        onPress={() => router.push({ pathname: '/spaces/[spaceId]/cards', params: { spaceId } })}
+      />
+      <Button
         label={messages.recurrences.listAction}
         variant="link"
         onPress={() =>

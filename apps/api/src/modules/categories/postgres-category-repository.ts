@@ -1,19 +1,10 @@
 import { randomUUID } from 'node:crypto';
 
+import { isDatabaseError } from '../../database/database-error.ts';
 import type { Queryable } from '../../database/pool.ts';
 import type { Category, CategoryKind } from './category.ts';
 import { CategoryDeletionBlockedError, CategoryNameTakenError } from './category-errors.ts';
 import type { CategoryRepository } from './category-repository.ts';
-
-function isDatabaseError(error: unknown, code: string, constraint?: string): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === code &&
-    (constraint === undefined || ('constraint' in error && error.constraint === constraint))
-  );
-}
 
 async function translateNameConflict<T>(work: Promise<T>): Promise<T> {
   try {

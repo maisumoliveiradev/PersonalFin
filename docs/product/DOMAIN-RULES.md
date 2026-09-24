@@ -177,6 +177,13 @@ without changing card defaults.
 
 **DR-039** Partial invoice payment leaves an outstanding invoice amount.
 
+**DR-078** *(SDD-023; decided under delegation.)* A card has a closing
+day and a due day from 1 to 31; in months without that day, the last day
+of the month is used. The card limit is an append-only history of values
+with effective dates: the limit on a date is the latest value effective
+on or before it (ties: latest recorded). Card names are unique per space,
+ignoring case. Cards are archived rather than deleted.
+
 **DR-040** Interest/fees may be represented as separate expenses rather
 than inferred automatically.
 

@@ -5,6 +5,7 @@ import { buildServer } from '../../src/server.ts';
 import { createInMemoryAuditRepository } from './in-memory-audit-repository.ts';
 import { createInMemoryBalanceReminderRepository } from './in-memory-balance-reminder-repository.ts';
 import { createInMemoryBalanceSnapshotRepository } from './in-memory-balance-snapshot-repository.ts';
+import { createInMemoryCardRepository } from './in-memory-card-repository.ts';
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
@@ -51,6 +52,7 @@ export function createInMemoryRepositories() {
       () => balanceSnapshots.snapshots,
     ),
     balanceReminders: createInMemoryBalanceReminderRepository(),
+    cards: createInMemoryCardRepository(),
   };
 }
 
