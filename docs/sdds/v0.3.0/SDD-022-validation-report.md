@@ -25,7 +25,7 @@
 |---|---|---|
 | Clean setup | Pass | `npm ci`; git hooks enabled by `prepare`. |
 | Lint, typecheck, contract | Pass | `npm run validate` (215 files, contract up to date). |
-| Unit tests | Pass | 179 (API) + 146 (domain). |
+| Unit tests | Pass | 184 (API) + 146 (domain). |
 | Integration tests | Pass | 78 against PostgreSQL; repeated with `TZ=Pacific/Kiritimati`; domain tests repeated with `TZ=Pacific/Pago_Pago`. |
 | Migrations from clean database | Pass | `0001` to `0012` applied; second run applied nothing. |
 | Business-day calendar (SDD-017) | Pass | Domain tests: national holidays including Good Friday, previous/next business day. |
@@ -34,7 +34,7 @@
 | Future commitments (SDD-020) | Pass | Browser: overdue and 7/30/90-day windows, exact totals, quick "Marcar como pago". |
 | Monthly projection (SDD-021) | Pass | Browser: projection components and six-month series; no projection without observed balance. Integration: exact M-008 values. |
 | v0.1.0 and v0.2.0 journeys (regression) | Pass | Auth, spaces, categories, entry, list, edit, trash, status, category management, filters, balance, reminder, dashboard. |
-| User/space isolation | Pass | API tests: other users receive 404 for recurrences, commitments, and projection, as for earlier resources. |
+| User/space isolation | Pass | API tests: other users receive 404 for recurrences, commitments, and projection (projection route test added during this validation), as for earlier resources. |
 | iOS startup | Not re-run | Verified for v0.1.0; no native module was added in v0.3.0. |
 | Android startup | Pass (startup only) | Expo Go (SDK 57) on the `Phone` emulator renders the sign-in screen against the release instance. |
 

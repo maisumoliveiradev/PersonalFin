@@ -86,3 +86,46 @@ describe('GET /financial-spaces/:spaceId/dashboard', () => {
     expect((await dashboard('2026-02', asBruno)).statusCode).toBe(404);
   });
 });
+
+describe('GET /financial-spaces/:spaceId/projection', () => {
+  async function setUp() {
+    const spaceId: string = (
+      await server.inject({
+        method: 'POST',
+        url: '/financial-spaces',
+        headers: asAna,
+        payload: { name: 'Pessoal' },
+      })
+    ).json().id;
+    return (query: string, headers = asAna) =>
+      server.inject({
+        method: 'GET',
+        url: `/financial-spaces/${spaceId}/projection?${query}`,
+        headers,
+      });
+  }
+
+  it('returns one projection per requested month', async () => {
+    const projection = await setUp();
+
+    const response = await projection('fromMonth=2026-02&months=3');
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().items).toHaveLength(3);
+  });
+
+  it.each(['fromMonth=2026-13', 'fromMonth=2026-02&months=0', 'fromMonth=2026-02&months=25'])(
+    'rejects %s',
+    async (query) => {
+      const projection = await setUp();
+
+      expect((await projection(query)).statusCode).toBe(400);
+    },
+  );
+
+  it("hides another user's projection", async () => {
+    const projection = await setUp();
+
+    expect((await projection('fromMonth=2026-02', asBruno)).statusCode).toBe(404);
+  });
+});
