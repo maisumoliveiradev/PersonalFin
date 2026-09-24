@@ -2,9 +2,9 @@
 
 ## Current Version
 
-`v0.1.0` release candidate. SDD-001 to SDD-007 implemented and
-validated (`docs/sdds/v0.1.0/SDD-007-validation-report.md`); release
-happens when the candidate is merged to `main`.
+`v0.1.0`, released on 2026-09-24 (`main`, tag `v0.1.0`). SDD-001 to
+SDD-007 implemented and validated
+(`docs/sdds/v0.1.0/SDD-007-validation-report.md`).
 
 ## Implemented Product Capabilities
 
@@ -70,12 +70,7 @@ happens when the candidate is merged to `main`.
 
 ## Active Target
 
-Release `v0.1.0`; the next increment (`v0.2.0`, Core Financial Control)
-has no SDDs yet.
-
-Target user flow:
-
-`Authenticate → Create Financial Space → Receive Initial Categories → Create Manual Income/Expense → View Saved Transaction`
+`v0.2.0` --- Core Financial Control (`docs/product/ROADMAP.md`).
 
 ## Important Constraint
 
@@ -84,5 +79,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Project owner: merge PRs #1 to #7 in order, confirm or reject DR-072,
-and verify Android startup manually. Then write the v0.2.0 SDDs.
+Write and execute the v0.2.0 SDDs (`docs/sdds/v0.2.0/`).

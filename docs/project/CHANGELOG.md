@@ -8,11 +8,10 @@ The project follows incremental semantic-style product versions.
 
 Nothing yet.
 
-## \[0.1.0\] --- Release candidate
+## \[0.1.0\] --- 2026-09-24
 
-Validated on 2026-09-24 (SDD-007,
-`docs/sdds/v0.1.0/SDD-007-validation-report.md`). The release date is
-set when the candidate is merged to `main`.
+Released to `main` and tagged `v0.1.0`. Validated in SDD-007
+(`docs/sdds/v0.1.0/SDD-007-validation-report.md`).
 
 First usable vertical slice: authenticate, create a Financial Space,
 receive default categories, register income and expenses, and list

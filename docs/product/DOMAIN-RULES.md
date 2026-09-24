@@ -69,8 +69,9 @@ safe.
 **DR-020** Reclassification must explicitly distinguish forward-only
 changes from historical reclassification.
 
-**DR-072** *(Proposed in SDD-004; pending project-owner confirmation.
-Enforced by the API and database since SDD-005.)*
+**DR-072** *(Proposed in SDD-004; accepted on 2026-09-24 under the
+project owner's delegation. Enforced by the API and database since
+SDD-005.)*
 Every category has a kind, Expense or Income, and a transaction may only
 use a category (and subcategory) of its own type. A subcategory has the
 same kind and Financial Space as its parent, and classification has at
