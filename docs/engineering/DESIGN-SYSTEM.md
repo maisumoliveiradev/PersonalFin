@@ -42,6 +42,11 @@ Location: `apps/client/src/ui`.
     and `StatusMessage` (success alert with `success` color token;
     SDD-005).
 
+Navigation after destructive mutations: await `mutateAsync` and then
+navigate. Per-call `mutate` callbacks do not run if the screen unmounts
+because the refreshed data no longer contains the deleted record (found
+in SDD-011).
+
 Accessibility props: use the cross-platform `role` and `aria-*` props
 (`aria-label`, `aria-checked`, `aria-disabled`, `aria-busy`). React
 Native Web 0.21 ignores `accessibilityState`, so selected/disabled

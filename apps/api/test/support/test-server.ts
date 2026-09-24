@@ -32,11 +32,12 @@ export function createFakeSessionResolver(
 const unusedAuthHandler: AuthHandler = async () => new Response(null, { status: 404 });
 
 export function createInMemoryRepositories() {
-  const categories = createInMemoryCategoryRepository();
+  const categories = createInMemoryCategoryRepository(() => transactions.transactions);
+  const transactions = createInMemoryTransactionRepository(categories.categories);
   return {
     financialSpaces: createInMemoryFinancialSpaceRepository(),
     categories,
-    transactions: createInMemoryTransactionRepository(categories.categories),
+    transactions,
     audit: createInMemoryAuditRepository(),
   };
 }

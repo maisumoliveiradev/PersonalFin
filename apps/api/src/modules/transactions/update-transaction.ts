@@ -63,10 +63,11 @@ export async function updateTransaction(
       return current;
     }
 
-    await assertCategorySelection(categories, {
-      financialSpaceId: input.financialSpaceId,
-      ...after,
-    });
+    await assertCategorySelection(
+      categories,
+      { financialSpaceId: input.financialSpaceId, ...after },
+      { categoryId: before.categoryId, subcategoryId: before.subcategoryId },
+    );
     const updated = await transactions.update({
       financialSpaceId: input.financialSpaceId,
       transactionId: input.transactionId,

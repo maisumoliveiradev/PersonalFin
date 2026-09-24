@@ -80,14 +80,21 @@ export function TransactionForm({
   const [status, setStatus] = useState<TransactionStatus>(initialValues.status);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const categoriesForType = categories.filter((category) => category.kind === type);
+  const categoriesForType = categories.filter(
+    (category) =>
+      category.kind === type && (!category.archived || category.id === initialValues.categoryId),
+  );
   const selectedCategory = categoriesForType.find((category) => category.id === categoryId);
   const subcategoryOptions: Option<string>[] = [
     { value: NO_SUBCATEGORY, label: messages.transactions.noSubcategory },
-    ...(selectedCategory?.subcategories ?? []).map((subcategory) => ({
-      value: subcategory.id,
-      label: subcategory.name,
-    })),
+    ...(selectedCategory?.subcategories ?? [])
+      .filter(
+        (subcategory) => !subcategory.archived || subcategory.id === initialValues.subcategoryId,
+      )
+      .map((subcategory) => ({
+        value: subcategory.id,
+        label: subcategory.name,
+      })),
   ];
 
   function handleTypeChange(nextType: TransactionType): void {
@@ -160,7 +167,7 @@ export function TransactionForm({
         selected={categoryId}
         onSelect={handleCategoryChange}
       />
-      {selectedCategory !== undefined && selectedCategory.subcategories.length > 0 && (
+      {subcategoryOptions.length > 1 && (
         <OptionGroup
           label={messages.transactions.subcategoryLabel}
           options={subcategoryOptions}

@@ -1,7 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useFinancialSpace } from '../../../../api/financial-spaces';
-import { CategoryOverview } from '../../../../features/categories/CategoryOverview';
 import { TransactionList } from '../../../../features/transactions/TransactionList';
 import { messages } from '../../../../i18n/messages';
 import { BodyText } from '../../../../ui/BodyText';
@@ -57,7 +56,13 @@ export default function FinancialSpaceHomeScreen() {
         onPress={() => router.push({ pathname: '/spaces/[spaceId]/trash', params: { spaceId } })}
       />
       {backToSpaces}
-      <CategoryOverview spaceId={space.data.id} />
+      <Button
+        label={messages.categories.manageAction}
+        variant="link"
+        onPress={() =>
+          router.push({ pathname: '/spaces/[spaceId]/categories', params: { spaceId } })
+        }
+      />
     </Screen>
   );
 }

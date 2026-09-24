@@ -93,7 +93,8 @@ paths:
       summary: List the categories of an accessible Financial Space
       description: >
         Top-level categories ordered by position, each with its
-        subcategories. Every new space receives the default catalog once.
+        subcategories, including archived ones (flagged). Every new space
+        receives the default catalog once.
       responses:
         '200':
           description: The category tree of the space.
@@ -105,6 +106,90 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createCategory
+      summary: Create a category, or a subcategory when parentCategoryId is set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: The created category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '409':
+          $ref: '#/components/responses/CategoryConflict'
+        '422':
+          description: The parent is not an active top-level category of the same kind (code PARENT_CATEGORY_NOT_AVAILABLE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/categories/{categoryId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - name: categoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateCategory
+      summary: Rename, archive, or unarchive a category (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          description: The category after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CategoryNotFound'
+        '409':
+          $ref: '#/components/responses/CategoryConflict'
+    delete:
+      operationId: deleteCategory
+      summary: Permanently delete a never-used category without subcategories
+      parameters:
+        - name: version
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CategoryNotFound'
+        '409':
+          $ref: '#/components/responses/CategoryConflict'
   /financial-spaces/{spaceId}/transactions:
     parameters:
       - $ref: '#/components/parameters/SpaceId'
@@ -299,6 +384,21 @@ components:
         Session cookie issued by Better Auth. Native clients send the same
         cookie through the Cookie header.
   responses:
+    CategoryNotFound:
+      description: The category does not exist in this space (code CATEGORY_NOT_FOUND).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    CategoryConflict:
+      description: >
+        VERSION_CONFLICT, CATEGORY_NAME_TAKEN (sibling with the same name),
+        CATEGORY_IN_USE (used by transactions, including deleted ones;
+        archive instead), or CATEGORY_HAS_SUBCATEGORIES.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     CategoryNotAvailable:
       description: >
         The category is not a top-level category of this space with the
@@ -431,12 +531,19 @@ components:
       required:
         - id
         - name
+        - archived
+        - version
       properties:
         id:
           type: string
           format: uuid
         name:
           type: string
+        archived:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
     CategoryTreeItem:
       type: object
       additionalProperties: false
@@ -444,6 +551,8 @@ components:
         - id
         - name
         - kind
+        - archived
+        - version
         - subcategories
       properties:
         id:
@@ -453,10 +562,78 @@ components:
           type: string
         kind:
           $ref: '#/components/schemas/CategoryKind'
+        archived:
+          type: boolean
+          description: Archived categories are kept on existing transactions but not offered for new ones.
+        version:
+          type: integer
+          minimum: 1
         subcategories:
           type: array
           items:
             $ref: '#/components/schemas/Subcategory'
+    Category:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - kind
+        - parentCategoryId
+        - archived
+        - version
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        kind:
+          $ref: '#/components/schemas/CategoryKind'
+        parentCategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        archived:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
+    CreateCategoryRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        kind:
+          allOf:
+            - $ref: '#/components/schemas/CategoryKind'
+          description: Required for top-level categories; subcategories inherit the parent kind.
+        parentCategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+    UpdateCategoryRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        archived:
+          type: boolean
     CategoryList:
       type: object
       additionalProperties: false

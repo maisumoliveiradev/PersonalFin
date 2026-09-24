@@ -22,6 +22,15 @@ export function DeleteTransactionSection({
   const [confirming, setConfirming] = useState(false);
   const deleteTransaction = useDeleteTransaction(spaceId, transactionId);
 
+  async function handleDelete(): Promise<void> {
+    try {
+      await deleteTransaction.mutateAsync(version);
+      onDeleted();
+    } catch {
+      return;
+    }
+  }
+
   if (!confirming) {
     return (
       <Button
@@ -42,7 +51,7 @@ export function DeleteTransactionSection({
         label={messages.transactions.confirmDeleteAction}
         variant="danger"
         loading={deleteTransaction.isPending}
-        onPress={() => deleteTransaction.mutate(version, { onSuccess: onDeleted })}
+        onPress={handleDelete}
       />
       <Button
         label={messages.transactions.keepAction}
