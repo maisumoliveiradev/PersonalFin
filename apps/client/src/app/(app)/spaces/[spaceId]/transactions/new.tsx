@@ -61,7 +61,7 @@ export default function NewTransactionScreen() {
           submitting={createTransaction.isPending}
           submitError={createTransaction.error}
           onSubmit={handleSubmit}
-          onCancel={() => backToSpace()}
+          onCancel={() => router.back()}
         />
       )}
     </Screen>

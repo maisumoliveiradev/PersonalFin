@@ -69,7 +69,7 @@ export default function EditTransactionScreen() {
         submitting={updateTransaction.isPending}
         submitError={updateTransaction.error}
         onSubmit={handleSubmit}
-        onCancel={() => backToSpace()}
+        onCancel={() => router.back()}
       />
       <DeleteTransactionSection
         spaceId={spaceId}
