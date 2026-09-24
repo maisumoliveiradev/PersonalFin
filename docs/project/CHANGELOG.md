@@ -6,6 +6,11 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Versioned Browser Journeys
+
+-   The 13 Chrome journeys used to validate every increment now live in
+    `e2e/` and run with `npm run test:e2e` (ADR-0013).
+
 ### Business-Day Calendar Foundation (SDD-017)
 
 -   `packages/domain` computes Brazilian national holidays (including
