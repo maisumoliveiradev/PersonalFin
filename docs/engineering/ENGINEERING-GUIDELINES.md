@@ -1,0 +1,100 @@
+# ENGINEERING-GUIDELINES.md
+
+## General
+
+-   TypeScript strict mode.
+-   No `any` unless an unavoidable external boundary is isolated and
+    justified.
+-   Semantic English identifiers in source code.
+-   Small cohesive modules.
+-   Prefer explicit types for domain concepts.
+-   Avoid speculative abstractions.
+-   Avoid nested ternaries.
+-   Avoid unnecessary `useEffect`.
+-   Prefer optional chaining where it improves clarity.
+-   Keep imports consistently sorted.
+-   No source-code comments by default; use naming, types, tests, and
+    living docs.
+-   Validate untrusted/external input at boundaries.
+-   Errors must be explicit and typed where useful.
+
+## Architecture
+
+-   UI must not own financial business rules.
+-   Domain logic must be testable without UI/network.
+-   Infrastructure implements ports rather than defining domain
+    behavior.
+-   Cross-module dependencies should be explicit.
+-   Architectural changes require ADR review.
+
+## Frontend
+
+-   Build accessible, responsive interfaces.
+-   Use Design System tokens/components as they become available.
+-   Forms expose minimal required fields first and progressive optional
+    detail.
+-   Keep platform-specific behavior isolated where necessary.
+-   Do not force Web to mimic native UX.
+-   State ownership must be intentional: local UI state stays local;
+    server state and durable client state use the selected project
+    patterns.
+-   Do not introduce global state for convenience alone.
+
+## React / React Native
+
+-   Prefer functional components and hooks.
+-   Keep components focused on presentation/orchestration.
+-   Extract domain logic from components.
+-   Handlers must be typed.
+-   Avoid effects for values that can be derived during render.
+-   Respect safe areas and platform accessibility APIs.
+-   Prevent text/layout behavior that harms readability across screen
+    sizes.
+
+## API
+
+-   OpenAPI is source of truth once API exists.
+-   Prefer generated client/types.
+-   Use typed errors.
+-   Do not expose persistence models directly as public API contracts.
+-   Authorization is enforced server-side.
+
+## Data
+
+-   No binary floating point for money.
+-   Financial dates are date-only semantics.
+-   Technical timestamps are UTC instants.
+-   Schema changes use migrations.
+-   Preserve audit/history required by domain rules.
+-   Avoid N+1 and unbounded queries.
+
+## Security
+
+-   No secrets in repository.
+-   No sensitive financial data in unnecessary logs.
+-   Least privilege.
+-   Explicit authorization at protected server boundaries.
+-   Sanitize/validate file uploads and external data.
+
+## Dependencies
+
+Add a dependency only when it solves a current requirement better than a
+small local implementation. Evaluate maintenance, security, size,
+platform compatibility, and architecture impact.
+
+## Tests
+
+Prioritize deterministic tests for business rules. Add regression tests
+for fixed defects when practical. Do not test implementation details
+unnecessarily.
+
+## Documentation
+
+An implementation is incomplete when required living documentation is
+stale. Update only affected docs.
+
+## Formatting and automation
+
+Use automated formatter/linter rules selected by the foundation. Agents
+must run the configured lint, typecheck, and test commands before
+claiming completion.
