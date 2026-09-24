@@ -43,6 +43,7 @@ export default function FinancialSpaceHomeScreen() {
       <BodyText muted>{messages.spaces.ownerRole}</BodyText>
       {saved === 'created' && <StatusMessage>{messages.transactions.saved}</StatusMessage>}
       {saved === 'updated' && <StatusMessage>{messages.transactions.updated}</StatusMessage>}
+      {saved === 'deleted' && <StatusMessage>{messages.transactions.deleted}</StatusMessage>}
       <Button
         label={messages.transactions.newAction}
         onPress={() =>
@@ -50,6 +51,11 @@ export default function FinancialSpaceHomeScreen() {
         }
       />
       <TransactionList spaceId={space.data.id} />
+      <Button
+        label={messages.transactions.trashAction}
+        variant="link"
+        onPress={() => router.push({ pathname: '/spaces/[spaceId]/trash', params: { spaceId } })}
+      />
       {backToSpaces}
       <CategoryOverview spaceId={space.data.id} />
     </Screen>

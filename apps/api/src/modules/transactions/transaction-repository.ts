@@ -4,6 +4,14 @@ import type {
   TransactionFields,
 } from './transaction.ts';
 
+export interface TransactionDeletionChange {
+  financialSpaceId: string;
+  transactionId: string;
+  expectedVersion: number;
+  deleted: boolean;
+  actorUserId: string;
+}
+
 export interface TransactionUpdate {
   financialSpaceId: string;
   transactionId: string;
@@ -21,4 +29,6 @@ export interface TransactionRepository {
     options?: { lock: boolean },
   ): Promise<FinancialTransaction | null>;
   update(update: TransactionUpdate): Promise<FinancialTransaction | null>;
+  setDeleted(change: TransactionDeletionChange): Promise<FinancialTransaction | null>;
+  listDeletedForSpace(financialSpaceId: string, limit: number): Promise<FinancialTransaction[]>;
 }

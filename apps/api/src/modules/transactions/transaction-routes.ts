@@ -21,6 +21,7 @@ import { isUuid, parseInput } from '../../http/validation.ts';
 import { requireAccessibleSpace } from '../financial-spaces/financial-space-access.ts';
 import { createTransaction } from './create-transaction.ts';
 import type { FinancialTransaction } from './transaction.ts';
+import { deleteTransaction, restoreTransaction } from './transaction-deletion.ts';
 import { TransactionNotFoundError, updateTransaction } from './update-transaction.ts';
 
 const createTransactionSchema = z.strictObject({
@@ -65,7 +66,11 @@ const updateTransactionSchema = z.strictObject({
 export const DEFAULT_TRANSACTION_LIST_LIMIT = 100;
 export const MAX_TRANSACTION_LIST_LIMIT = 200;
 
+const versionQuerySchema = z.object({ version: z.coerce.number().int().min(1) });
+const versionBodySchema = z.strictObject({ version: z.number().int().min(1) });
+
 const listTransactionsQuerySchema = z.object({
+  state: z.enum(['active', 'deleted']).default('active'),
   limit: z.coerce
     .number()
     .int()
@@ -87,6 +92,7 @@ export function toTransactionResponse(transaction: FinancialTransaction): Transa
     subcategory: transaction.subcategory,
     createdAt: transaction.createdAt.toISOString(),
     version: transaction.version,
+    deletedAt: transaction.deletedAt?.toISOString() ?? null,
   };
 }
 
@@ -113,6 +119,54 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       if (transaction === null) {
         throw new TransactionNotFoundError();
       }
+      return toTransactionResponse(transaction);
+    },
+  );
+
+  server.delete(
+    '/financial-spaces/:spaceId/transactions/:transactionId',
+    async (request): Promise<TransactionResponse> => {
+      const user = requireAuthenticatedUser(request);
+      const { spaceId, transactionId } = parseInput(transactionParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        spaceId,
+      );
+      if (!isUuid(transactionId)) {
+        throw new TransactionNotFoundError();
+      }
+      const { version } = parseInput(versionQuerySchema, request.query);
+      const transaction = await deleteTransaction(data, {
+        financialSpaceId: space.id,
+        transactionId,
+        actorUserId: user.id,
+        expectedVersion: version,
+      });
+      return toTransactionResponse(transaction);
+    },
+  );
+
+  server.post(
+    '/financial-spaces/:spaceId/transactions/:transactionId/restore',
+    async (request): Promise<TransactionResponse> => {
+      const user = requireAuthenticatedUser(request);
+      const { spaceId, transactionId } = parseInput(transactionParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        spaceId,
+      );
+      if (!isUuid(transactionId)) {
+        throw new TransactionNotFoundError();
+      }
+      const { version } = parseInput(versionBodySchema, request.body);
+      const transaction = await restoreTransaction(data, {
+        financialSpaceId: space.id,
+        transactionId,
+        actorUserId: user.id,
+        expectedVersion: version,
+      });
       return toTransactionResponse(transaction);
     },
   );
@@ -152,11 +206,12 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         user.id,
         spaceId,
       );
-      const { limit } = parseInput(listTransactionsQuerySchema, request.query);
-      const transactions = await data.repositories.transactions.listRecentForSpace(
-        space.id,
-        limit + 1,
-      );
+      const { limit, state } = parseInput(listTransactionsQuerySchema, request.query);
+      const repository = data.repositories.transactions;
+      const transactions =
+        state === 'active'
+          ? await repository.listRecentForSpace(space.id, limit + 1)
+          : await repository.listDeletedForSpace(space.id, limit + 1);
       return {
         items: transactions.slice(0, limit).map(toTransactionResponse),
         hasMore: transactions.length > limit,

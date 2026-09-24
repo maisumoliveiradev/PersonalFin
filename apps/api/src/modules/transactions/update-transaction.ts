@@ -30,6 +30,14 @@ export class VersionConflictError extends AppError {
   }
 }
 
+export class TransactionDeletedError extends AppError {
+  override name = 'TransactionDeletedError';
+
+  constructor() {
+    super(409, 'TRANSACTION_DELETED', 'Deleted transactions cannot be edited; restore it first');
+  }
+}
+
 export async function updateTransaction(
   data: DataAccess,
   input: UpdateTransactionInput,
@@ -40,6 +48,9 @@ export async function updateTransaction(
     });
     if (current === null) {
       throw new TransactionNotFoundError();
+    }
+    if (current.deletedAt !== null) {
+      throw new TransactionDeletedError();
     }
     if (current.version !== input.expectedVersion) {
       throw new VersionConflictError();

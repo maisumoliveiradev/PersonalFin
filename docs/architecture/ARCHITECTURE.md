@@ -172,6 +172,11 @@ record, checks the client's `version`, applies the change, and appends
 an `audit_event` with actor and before/after values. `audit_event` is
 append-only at the database level.
 
+Transactions use soft deletion (`deleted_at`, `deleted_by_user_id`,
+both required together). Deleted rows are excluded from every active
+query and listed only in the space trash, from which they can be
+restored; there is no permanent deletion yet.
+
 ## Offline evolution
 
 Do not build full offline synchronization in v0.1.0.

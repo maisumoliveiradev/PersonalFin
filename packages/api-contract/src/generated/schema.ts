@@ -134,7 +134,8 @@ export interface paths {
         get: operations["getTransaction"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Soft delete a transaction (restorable, audited) */
+        delete: operations["deleteTransaction"];
         options?: never;
         head?: never;
         /**
@@ -142,6 +143,26 @@ export interface paths {
          * @description Only the fields present are changed. The final state must satisfy the same rules as creation. Every effective change is recorded in the audit log; a request that changes nothing is accepted without a new version.
          */
         patch: operations["updateTransaction"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/transactions/{transactionId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore a soft-deleted transaction (audited) */
+        post: operations["restoreTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
 }
@@ -254,6 +275,14 @@ export interface components {
             createdAt: string;
             /** @description Incremented on every effective edit; send it back when editing. */
             version: number;
+            /**
+             * Format: date-time
+             * @description When the transaction was soft-deleted; null when active.
+             */
+            deletedAt: string | null;
+        };
+        VersionRequest: {
+            version: number;
         };
         UpdateTransactionRequest: {
             /** @description The version the client edited. */
@@ -301,8 +330,8 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description The record changed since the version sent by the client (code VERSION_CONFLICT). Reload it and retry. */
-        VersionConflict: {
+        /** @description The request conflicts with the record's current state: the version is outdated (VERSION_CONFLICT), the transaction is deleted and cannot be edited (TRANSACTION_DELETED), or it is already deleted / not deleted (TRANSACTION_ALREADY_DELETED, TRANSACTION_NOT_DELETED). */
+        StateConflict: {
             headers: {
                 [name: string]: unknown;
             };
@@ -488,6 +517,8 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: number;
+                /** @description active (default) lists non-deleted transactions by financial date; deleted lists the trash, most recently deleted first. */
+                state?: "active" | "deleted";
             };
             header?: never;
             path: {
@@ -566,6 +597,35 @@ export interface operations {
             404: components["responses"]["TransactionNotFound"];
         };
     };
+    deleteTransaction: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The deleted transaction (deletedAt set). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TransactionNotFound"];
+            409: components["responses"]["StateConflict"];
+        };
+    };
     updateTransaction: {
         parameters: {
             query?: never;
@@ -594,8 +654,39 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["TransactionNotFound"];
-            409: components["responses"]["VersionConflict"];
+            409: components["responses"]["StateConflict"];
             422: components["responses"]["CategoryNotAvailable"];
+        };
+    };
+    restoreTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description The restored transaction. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TransactionNotFound"];
+            409: components["responses"]["StateConflict"];
         };
     };
 }
