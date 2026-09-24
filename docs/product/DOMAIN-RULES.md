@@ -77,6 +77,13 @@ use a category (and subcategory) of its own type. A subcategory has the
 same kind and Financial Space as its parent, and classification has at
 most two levels.
 
+**DR-073** *(SDD-011.)* An archived category or subcategory is not
+offered for new classification, but transactions that already use it
+keep it and can still be edited without changing it. A category can be
+permanently deleted only if no transaction (including soft-deleted ones)
+uses it and it has no subcategories. A category's kind never changes
+after creation.
+
 ## Consolidated Balance
 
 **DR-021** The system does not require individual bank-account balances

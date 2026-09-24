@@ -3,7 +3,7 @@
 ## Current Version
 
 `v0.1.0` released on 2026-09-24 (`main`, tag `v0.1.0`). `develop` is
-building v0.2.0: SDD-008 to SDD-010 implemented.
+building v0.2.0: SDD-008 to SDD-011 implemented.
 
 ## Implemented Product Capabilities
 
@@ -20,11 +20,12 @@ building v0.2.0: SDD-008 to SDD-010 implemented.
     invitation. The selected space is carried in the URL
     (`/spaces/{spaceId}`), not persisted as a preference.
 
--   **Categories (SDD-004):** each new space receives the default pt-BR
-    catalog once (`docs/product/DEFAULT-CATEGORY-CATALOG.md`). Categories
-    have a kind (Expense/Income) and optional subcategories (two levels
-    at most). They can be read (API and space screen) but not created,
-    renamed, archived, or deleted.
+-   **Categories (SDD-004, SDD-011):** each new space receives the default
+    pt-BR catalog once (`docs/product/DEFAULT-CATEGORY-CATALOG.md`).
+    Categories have a kind (Expense/Income) and optional subcategories
+    (two levels at most). Users create, rename, archive/unarchive, and
+    delete never-used categories (DR-073); changes are audited. There is
+    no reordering, merging, or historical reclassification.
 
 -   **Transactions (SDD-005):** users register Expense or Income with
     description, amount (BRL), financial date, category matching the
@@ -71,7 +72,7 @@ building v0.2.0: SDD-008 to SDD-010 implemented.
 
 ## Not Yet Present
 
--   Category management; filters and pagination;
+-   Filters and pagination;
     balance; dashboard (v0.2.0 SDDs).
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
@@ -87,4 +88,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.2.0/SDD-011-category-management.md`.
+`docs/sdds/v0.2.0/SDD-012-transaction-filters.md`.

@@ -6,6 +6,19 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Category Management (SDD-011)
+
+-   New "Categorias" screen per space: create categories (with kind) and
+    subcategories, rename, archive/unarchive, and permanently delete
+    never-used ones. Changes are audited and version-checked.
+-   Archived categories are hidden from new transactions but kept on
+    existing ones (DR-073); used categories cannot be deleted
+    (`409 CATEGORY_IN_USE`).
+-   `POST .../categories`, `PATCH` and `DELETE .../categories/{id}`;
+    category items expose `archived` and `version`.
+-   The read-only category overview on the space screen was replaced by a
+    link to the management screen.
+
 ### Quick Status Change (SDD-010)
 
 -   Each transaction in the list has a button to mark it as Paid/Received
