@@ -6,7 +6,9 @@ import type { AppEnvironment, LogLevel } from './config.ts';
 import type { DataAccess } from './database/data-access.ts';
 import { createAuthenticationHook } from './http/authenticate.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
+import { registerBalanceRoutes } from './modules/balance/balance-routes.ts';
 import { registerCategoryRoutes } from './modules/categories/category-routes.ts';
+import { registerDashboardRoutes } from './modules/dashboard/dashboard-routes.ts';
 import { registerFinancialSpaceRoutes } from './modules/financial-spaces/financial-space-routes.ts';
 import { registerTransactionRoutes } from './modules/transactions/transaction-routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './routes/auth.ts';
@@ -55,6 +57,8 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerFinancialSpaceRoutes(authenticated, options.data);
     registerCategoryRoutes(authenticated, options.data);
     registerTransactionRoutes(authenticated, options.data);
+    registerBalanceRoutes(authenticated, options.data);
+    registerDashboardRoutes(authenticated, options.data);
   });
 
   return server;

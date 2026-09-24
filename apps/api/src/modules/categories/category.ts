@@ -10,6 +10,14 @@ export interface Category {
   name: string;
   position: number;
   defaultKey: string | null;
+  archivedAt: Date | null;
+  version: number;
+}
+
+export const CATEGORY_NAME_MAX_LENGTH = 60;
+
+export function normalizeCategoryName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ');
 }
 
 export interface CategoryTreeNode {

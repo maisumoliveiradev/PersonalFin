@@ -8,6 +8,101 @@ The project follows incremental semantic-style product versions.
 
 Nothing yet.
 
+## \[0.2.0\] --- 2026-09-24
+
+Core Financial Control. Released to `main` and tagged `v0.2.0`;
+validated in SDD-016 (`docs/sdds/v0.2.0/SDD-016-validation-report.md`).
+
+### Current-Month Dashboard (SDD-015)
+
+-   "Resumo do mês" card on the space screen, following the selected
+    month: realized income, expenses, and net; forecast (pending) income
+    and expenses; realized expenses by category; and, for past months,
+    the balance observed up to the end of the month.
+-   Metric catalog `docs/product/METRICS.md` (M-001 to M-007); values are
+    computed only by `GET /financial-spaces/{spaceId}/dashboard?month=`.
+-   Fixed: recording a balance now refreshes the dashboard.
+
+### Balance Update Prompt (SDD-014)
+
+-   The space screen asks "Qual é o seu saldo hoje?" when the balance
+    reminder is due (DR-074), with "Informar saldo" and "Depois" (hidden
+    until the next app start).
+-   Each user configures the frequency per space in the balance history
+    screen: on app start, daily, every N days (1--90), or never; default
+    every 7 days.
+-   `GET` and `PUT /financial-spaces/{spaceId}/balance-reminder`;
+    migration `0010_balance_reminder_settings`; due-date rules in
+    `packages/domain`.
+
+### Consolidated Balance Snapshots (SDD-013)
+
+-   Each space shows its observed consolidated balance ("Saldo
+    observado") with the date it refers to; users record a new balance
+    (zero or negative allowed, optional note) and see the full history.
+-   Snapshots are append-only: new records never overwrite earlier ones,
+    enforced by the database (DR-024). They are not transactions.
+-   `GET` and `POST /financial-spaces/{spaceId}/balance-snapshots`;
+    migration `0009_balance_snapshots`.
+-   `packages/domain` parses signed balance input.
+
+### Transaction Filters and Search (SDD-012)
+
+-   The transaction list is organized by month (current month by default,
+    with previous/next navigation; the month is kept in the URL) and
+    jumps to the month of a transaction after it is saved.
+-   Optional filters: type, status, category (including subcategory
+    matches), and case- and accent-insensitive search in descriptions.
+-   Cursor pagination with "Carregar mais"; every matching transaction
+    appears exactly once.
+-   `GET .../transactions` accepts `month`, `type`, `status`,
+    `categoryId`, `q`, and `cursor`, and returns `nextCursor`.
+-   Migration `0008_transaction_search` enables the PostgreSQL `unaccent`
+    extension.
+
+### Category Management (SDD-011)
+
+-   New "Categorias" screen per space: create categories (with kind) and
+    subcategories, rename, archive/unarchive, and permanently delete
+    never-used ones. Changes are audited and version-checked.
+-   Archived categories are hidden from new transactions but kept on
+    existing ones (DR-073); used categories cannot be deleted
+    (`409 CATEGORY_IN_USE`).
+-   `POST .../categories`, `PATCH` and `DELETE .../categories/{id}`;
+    category items expose `archived` and `version`.
+-   The read-only category overview on the space screen was replaced by a
+    link to the management screen.
+
+### Quick Status Change (SDD-010)
+
+-   Each transaction in the list has a button to mark it as Paid/Received
+    or back to Pending; the change is version-checked and audited, and a
+    conflicting change shows an error and refreshes the list.
+
+### Transaction Soft Delete and Restore (SDD-009)
+
+-   Transactions can be deleted from the edit screen after confirmation;
+    they move to the space's Lixeira (trash) and can be restored with
+    identical values.
+-   Deleted transactions are excluded from the list and cannot be edited
+    (`409 TRANSACTION_DELETED`); delete and restore are audited and
+    version-checked.
+-   `DELETE .../transactions/{id}?version=`, `POST .../restore`, and
+    `GET .../transactions?state=deleted`.
+
+### Transaction Edit (SDD-008)
+
+-   Transactions can be edited (all fields) from the list; the form is
+    shared with creation.
+-   Every effective edit is recorded in the append-only audit log with
+    actor and before/after values (ADR-0012).
+-   Optimistic concurrency: edits based on an outdated version are
+    rejected with `409 VERSION_CONFLICT` instead of overwriting.
+-   `GET` and `PATCH /financial-spaces/{spaceId}/transactions/{transactionId}`;
+    transactions now expose `version`.
+-   Fixed: option groups and buttons now expose their selected, disabled,
+    and busy states to Web screen readers.
+
 ## \[0.1.0\] --- 2026-09-24
 
 Released to `main` and tagged `v0.1.0`. Validated in SDD-007

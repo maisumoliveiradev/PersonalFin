@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: PersonalFin Application API
-  version: 0.1.0
+  version: 0.2.0
   description: >
     Application API contract. Authentication endpoints (sign-up, sign-in,
     sign-out, session) are served by Better Auth under /api/auth and are
@@ -93,7 +93,8 @@ paths:
       summary: List the categories of an accessible Financial Space
       description: >
         Top-level categories ordered by position, each with its
-        subcategories. Every new space receives the default catalog once.
+        subcategories, including archived ones (flagged). Every new space
+        receives the default catalog once.
       responses:
         '200':
           description: The category tree of the space.
@@ -105,6 +106,90 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createCategory
+      summary: Create a category, or a subcategory when parentCategoryId is set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: The created category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '409':
+          $ref: '#/components/responses/CategoryConflict'
+        '422':
+          description: The parent is not an active top-level category of the same kind (code PARENT_CATEGORY_NOT_AVAILABLE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/categories/{categoryId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - name: categoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateCategory
+      summary: Rename, archive, or unarchive a category (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          description: The category after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CategoryNotFound'
+        '409':
+          $ref: '#/components/responses/CategoryConflict'
+    delete:
+      operationId: deleteCategory
+      summary: Permanently delete a never-used category without subcategories
+      parameters:
+        - name: version
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '204':
+          description: Deleted.
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CategoryNotFound'
+        '409':
+          $ref: '#/components/responses/CategoryConflict'
   /financial-spaces/{spaceId}/transactions:
     parameters:
       - $ref: '#/components/parameters/SpaceId'
@@ -123,6 +208,56 @@ paths:
             minimum: 1
             maximum: 200
             default: 100
+        - name: state
+          in: query
+          required: false
+          description: >
+            active (default) lists non-deleted transactions by financial date;
+            deleted lists the trash, most recently deleted first.
+          schema:
+            type: string
+            enum:
+              - active
+              - deleted
+            default: active
+        - name: month
+          in: query
+          required: false
+          description: Calendar month of the financial date (YYYY-MM).
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        - name: type
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TransactionType'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TransactionStatus'
+        - name: categoryId
+          in: query
+          required: false
+          description: Matches the category or the subcategory.
+          schema:
+            type: string
+            format: uuid
+        - name: q
+          in: query
+          required: false
+          description: Case- and accent-insensitive search in the description.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque cursor from a previous page's nextCursor.
+          schema:
+            type: string
       responses:
         '200':
           description: The most recent transactions of the space.
@@ -159,16 +294,237 @@ paths:
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
         '422':
-          description: >
-            The category is not a top-level category of this space with the
-            same kind as the transaction type, or the subcategory does not
-            belong to it (code CATEGORY_NOT_AVAILABLE).
+          $ref: '#/components/responses/CategoryNotAvailable'
+  /financial-spaces/{spaceId}/transactions/{transactionId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/TransactionId'
+    get:
+      operationId: getTransaction
+      summary: Return one transaction of an accessible Financial Space
+      responses:
+        '200':
+          description: The transaction.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+    patch:
+      operationId: updateTransaction
+      summary: Edit a transaction (partial update with optimistic concurrency)
+      description: >
+        Only the fields present are changed. The final state must satisfy
+        the same rules as creation. Every effective change is recorded in
+        the audit log; a request that changes nothing is accepted without
+        a new version.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTransactionRequest'
+      responses:
+        '200':
+          description: The transaction after the edit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+        '422':
+          $ref: '#/components/responses/CategoryNotAvailable'
+    delete:
+      operationId: deleteTransaction
+      summary: Soft delete a transaction (restorable, audited)
+      parameters:
+        - name: version
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: The deleted transaction (deletedAt set).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+  /financial-spaces/{spaceId}/transactions/{transactionId}/restore:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/TransactionId'
+    post:
+      operationId: restoreTransaction
+      summary: Restore a soft-deleted transaction (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+      responses:
+        '200':
+          description: The restored transaction.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+  /financial-spaces/{spaceId}/balance-snapshots:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listBalanceSnapshots
+      summary: List observed balance snapshots, most recent first
+      description: >
+        Ordered by observed date, then recording instant (newest first).
+        current is the first item: the latest observed consolidated balance.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+      responses:
+        '200':
+          description: Snapshot history of the space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceSnapshotList'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: recordBalanceSnapshot
+      summary: Record an observed consolidated balance (append-only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordBalanceSnapshotRequest'
+      responses:
+        '201':
+          description: The recorded snapshot. Earlier snapshots are never changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceSnapshot'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/balance-reminder:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getBalanceReminder
+      summary: Return the user's balance reminder setting for the space
+      description: Returns the default (every 7 days) with isDefault true when never saved.
+      responses:
+        '200':
+          description: The effective setting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceReminder'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    put:
+      operationId: setBalanceReminder
+      summary: Save the user's balance reminder setting for the space
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalanceReminderSetting'
+      responses:
+        '200':
+          description: The saved setting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceReminder'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/dashboard:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getMonthlyDashboard
+      summary: Built-in metrics of one month (see docs/product/METRICS.md)
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+      responses:
+        '200':
+          description: Metric values M-001 to M-007 for the month.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthlyDashboard'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
+    TransactionId:
+      name: transactionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     SpaceId:
       name: spaceId
       in: path
@@ -185,6 +541,46 @@ components:
         Session cookie issued by Better Auth. Native clients send the same
         cookie through the Cookie header.
   responses:
+    CategoryNotFound:
+      description: The category does not exist in this space (code CATEGORY_NOT_FOUND).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    CategoryConflict:
+      description: >
+        VERSION_CONFLICT, CATEGORY_NAME_TAKEN (sibling with the same name),
+        CATEGORY_IN_USE (used by transactions, including deleted ones;
+        archive instead), or CATEGORY_HAS_SUBCATEGORIES.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    CategoryNotAvailable:
+      description: >
+        The category is not a top-level category of this space with the
+        same kind as the transaction type, or the subcategory does not
+        belong to it (code CATEGORY_NOT_AVAILABLE).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TransactionNotFound:
+      description: The transaction does not exist in this space (code TRANSACTION_NOT_FOUND).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    StateConflict:
+      description: >
+        The request conflicts with the record's current state: the version
+        is outdated (VERSION_CONFLICT), the transaction is deleted and cannot
+        be edited (TRANSACTION_DELETED), or it is already deleted / not
+        deleted (TRANSACTION_ALREADY_DELETED, TRANSACTION_NOT_DELETED).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     ValidationFailed:
       description: The request is invalid (code VALIDATION_FAILED).
       content:
@@ -292,12 +688,19 @@ components:
       required:
         - id
         - name
+        - archived
+        - version
       properties:
         id:
           type: string
           format: uuid
         name:
           type: string
+        archived:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
     CategoryTreeItem:
       type: object
       additionalProperties: false
@@ -305,6 +708,8 @@ components:
         - id
         - name
         - kind
+        - archived
+        - version
         - subcategories
       properties:
         id:
@@ -314,10 +719,78 @@ components:
           type: string
         kind:
           $ref: '#/components/schemas/CategoryKind'
+        archived:
+          type: boolean
+          description: Archived categories are kept on existing transactions but not offered for new ones.
+        version:
+          type: integer
+          minimum: 1
         subcategories:
           type: array
           items:
             $ref: '#/components/schemas/Subcategory'
+    Category:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - kind
+        - parentCategoryId
+        - archived
+        - version
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        kind:
+          $ref: '#/components/schemas/CategoryKind'
+        parentCategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+        archived:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
+    CreateCategoryRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        kind:
+          allOf:
+            - $ref: '#/components/schemas/CategoryKind'
+          description: Required for top-level categories; subcategories inherit the parent kind.
+        parentCategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+    UpdateCategoryRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        archived:
+          type: boolean
     CategoryList:
       type: object
       additionalProperties: false
@@ -411,6 +884,8 @@ components:
         - category
         - subcategory
         - createdAt
+        - version
+        - deletedAt
       properties:
         id:
           type: string
@@ -438,12 +913,62 @@ components:
         createdAt:
           type: string
           format: date-time
+        version:
+          type: integer
+          minimum: 1
+          description: Incremented on every effective edit; send it back when editing.
+        deletedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: When the transaction was soft-deleted; null when active.
+    VersionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+    UpdateTransactionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+          description: The version the client edited.
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        description:
+          type: string
+          minLength: 1
+          maxLength: 140
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        financialDate:
+          $ref: '#/components/schemas/FinancialDate'
+        categoryId:
+          type: string
+          format: uuid
+        subcategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
     TransactionList:
       type: object
       additionalProperties: false
       required:
         - items
         - hasMore
+        - nextCursor
       properties:
         items:
           type: array
@@ -451,7 +976,184 @@ components:
             $ref: '#/components/schemas/Transaction'
         hasMore:
           type: boolean
-          description: True when older transactions exist beyond the limit.
+          description: True when more transactions match beyond this page.
+        nextCursor:
+          type:
+            - string
+            - 'null'
+          description: Pass as cursor to fetch the next page; null on the last page.
+    RecordBalanceSnapshotRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - amountMinor
+        - observedOn
+      properties:
+        amountMinor:
+          type: integer
+          minimum: -99999999999
+          maximum: 99999999999
+          description: Observed balance in minor units; may be zero or negative.
+        observedOn:
+          $ref: '#/components/schemas/FinancialDate'
+        note:
+          type:
+            - string
+            - 'null'
+          maxLength: 140
+    BalanceSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - amountMinor
+        - currency
+        - observedOn
+        - note
+        - recordedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        amountMinor:
+          type: integer
+          minimum: -99999999999
+          maximum: 99999999999
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        observedOn:
+          $ref: '#/components/schemas/FinancialDate'
+        note:
+          type:
+            - string
+            - 'null'
+        recordedAt:
+          type: string
+          format: date-time
+    BalanceSnapshotList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - current
+        - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BalanceSnapshot'
+        current:
+          oneOf:
+            - $ref: '#/components/schemas/BalanceSnapshot'
+            - type: 'null'
+        hasMore:
+          type: boolean
+    BalanceReminderFrequency:
+      type: string
+      enum:
+        - app_start
+        - daily
+        - every_n_days
+        - never
+    BalanceReminderSetting:
+      type: object
+      additionalProperties: false
+      required:
+        - frequency
+        - intervalDays
+      properties:
+        frequency:
+          $ref: '#/components/schemas/BalanceReminderFrequency'
+        intervalDays:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+          maximum: 90
+          description: Required (1 to 90) for every_n_days; null otherwise.
+    BalanceReminder:
+      type: object
+      additionalProperties: false
+      required:
+        - frequency
+        - intervalDays
+        - isDefault
+      properties:
+        frequency:
+          $ref: '#/components/schemas/BalanceReminderFrequency'
+        intervalDays:
+          type:
+            - integer
+            - 'null'
+        isDefault:
+          type: boolean
+    MonthlyDashboard:
+      type: object
+      additionalProperties: false
+      required:
+        - month
+        - currency
+        - realizedIncome
+        - realizedExpenses
+        - realizedNet
+        - forecastIncome
+        - forecastExpenses
+        - realizedExpensesByCategory
+        - observedBalance
+      properties:
+        month:
+          type: string
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        realizedIncome:
+          type: integer
+          description: M-001, minor units.
+        realizedExpenses:
+          type: integer
+          description: M-002, minor units.
+        realizedNet:
+          type: integer
+          description: M-003 = M-001 - M-002; may be negative.
+        forecastIncome:
+          type: integer
+          description: M-004, minor units.
+        forecastExpenses:
+          type: integer
+          description: M-005, minor units.
+        realizedExpensesByCategory:
+          type: array
+          description: M-006, sorted by amount (desc), then name.
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - categoryId
+              - name
+              - amountMinor
+            properties:
+              categoryId:
+                type: string
+                format: uuid
+              name:
+                type: string
+              amountMinor:
+                type: integer
+        observedBalance:
+          description: M-007, the latest observed balance dated within or before the month.
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required:
+                - amountMinor
+                - observedOn
+              properties:
+                amountMinor:
+                  type: integer
+                observedOn:
+                  $ref: '#/components/schemas/FinancialDate'
+            - type: 'null'
     ErrorResponse:
       type: object
       additionalProperties: false

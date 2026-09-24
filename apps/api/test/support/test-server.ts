@@ -2,7 +2,11 @@ import type { AuthenticatedUser, SessionResolver } from '../../src/auth/authenti
 import type { DataAccess } from '../../src/database/data-access.ts';
 import type { AuthHandler } from '../../src/routes/auth.ts';
 import { buildServer } from '../../src/server.ts';
+import { createInMemoryAuditRepository } from './in-memory-audit-repository.ts';
+import { createInMemoryBalanceReminderRepository } from './in-memory-balance-reminder-repository.ts';
+import { createInMemoryBalanceSnapshotRepository } from './in-memory-balance-snapshot-repository.ts';
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
+import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
 import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
 
@@ -31,11 +35,20 @@ export function createFakeSessionResolver(
 const unusedAuthHandler: AuthHandler = async () => new Response(null, { status: 404 });
 
 export function createInMemoryRepositories() {
-  const categories = createInMemoryCategoryRepository();
+  const categories = createInMemoryCategoryRepository(() => transactions.transactions);
+  const transactions = createInMemoryTransactionRepository(categories.categories);
+  const balanceSnapshots = createInMemoryBalanceSnapshotRepository();
   return {
     financialSpaces: createInMemoryFinancialSpaceRepository(),
     categories,
-    transactions: createInMemoryTransactionRepository(categories.categories),
+    transactions,
+    audit: createInMemoryAuditRepository(),
+    balanceSnapshots,
+    dashboard: createInMemoryDashboardRepository(
+      () => transactions.transactions,
+      () => balanceSnapshots.snapshots,
+    ),
+    balanceReminders: createInMemoryBalanceReminderRepository(),
   };
 }
 

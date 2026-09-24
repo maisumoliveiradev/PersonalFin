@@ -24,15 +24,15 @@ export function OptionGroup<Value extends string>({
   return (
     <View style={styles.group}>
       <Text style={[styles.label, { color: palette.text }]}>{label}</Text>
-      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.options}>
+      <View role="radiogroup" aria-label={label} style={styles.options}>
         {options.map((option) => {
           const isSelected = option.value === selected;
           return (
             <Pressable
               key={option.value}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: isSelected }}
-              accessibilityLabel={option.label}
+              role="radio"
+              aria-checked={isSelected}
+              aria-label={option.label}
               onPress={() => onSelect(option.value)}
               style={[
                 styles.option,

@@ -86,15 +86,37 @@ export interface paths {
         };
         /**
          * List the categories of an accessible Financial Space
-         * @description Top-level categories ordered by position, each with its subcategories. Every new space receives the default catalog once.
+         * @description Top-level categories ordered by position, each with its subcategories, including archived ones (flagged). Every new space receives the default catalog once.
          */
         get: operations["listCategories"];
         put?: never;
-        post?: never;
+        /** Create a category, or a subcategory when parentCategoryId is set */
+        post: operations["createCategory"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/categories/{categoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Permanently delete a never-used category without subcategories */
+        delete: operations["deleteCategory"];
+        options?: never;
+        head?: never;
+        /** Rename, archive, or unarchive a category (audited) */
+        patch: operations["updateCategory"];
         trace?: never;
     };
     "/financial-spaces/{spaceId}/transactions": {
@@ -114,6 +136,116 @@ export interface paths {
         put?: never;
         /** Register a manual income or expense in an accessible Financial Space */
         post: operations["createTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/transactions/{transactionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        /** Return one transaction of an accessible Financial Space */
+        get: operations["getTransaction"];
+        put?: never;
+        post?: never;
+        /** Soft delete a transaction (restorable, audited) */
+        delete: operations["deleteTransaction"];
+        options?: never;
+        head?: never;
+        /**
+         * Edit a transaction (partial update with optimistic concurrency)
+         * @description Only the fields present are changed. The final state must satisfy the same rules as creation. Every effective change is recorded in the audit log; a request that changes nothing is accepted without a new version.
+         */
+        patch: operations["updateTransaction"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/transactions/{transactionId}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore a soft-deleted transaction (audited) */
+        post: operations["restoreTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/balance-snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List observed balance snapshots, most recent first
+         * @description Ordered by observed date, then recording instant (newest first). current is the first item: the latest observed consolidated balance.
+         */
+        get: operations["listBalanceSnapshots"];
+        put?: never;
+        /** Record an observed consolidated balance (append-only) */
+        post: operations["recordBalanceSnapshot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/balance-reminder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Return the user's balance reminder setting for the space
+         * @description Returns the default (every 7 days) with isDefault true when never saved.
+         */
+        get: operations["getBalanceReminder"];
+        /** Save the user's balance reminder setting for the space */
+        put: operations["setBalanceReminder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Built-in metrics of one month (see docs/product/METRICS.md) */
+        get: operations["getMonthlyDashboard"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -165,13 +297,40 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            archived: boolean;
+            version: number;
         };
         CategoryTreeItem: {
             /** Format: uuid */
             id: string;
             name: string;
             kind: components["schemas"]["CategoryKind"];
+            /** @description Archived categories are kept on existing transactions but not offered for new ones. */
+            archived: boolean;
+            version: number;
             subcategories: components["schemas"]["Subcategory"][];
+        };
+        Category: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["CategoryKind"];
+            /** Format: uuid */
+            parentCategoryId: string | null;
+            archived: boolean;
+            version: number;
+        };
+        CreateCategoryRequest: {
+            name: string;
+            /** @description Required for top-level categories; subcategories inherit the parent kind. */
+            kind?: components["schemas"]["CategoryKind"];
+            /** Format: uuid */
+            parentCategoryId?: string | null;
+        };
+        UpdateCategoryRequest: {
+            version: number;
+            name?: string;
+            archived?: boolean;
         };
         CategoryList: {
             items: components["schemas"]["CategoryTreeItem"][];
@@ -228,11 +387,95 @@ export interface components {
             subcategory: components["schemas"]["CategoryReference"] | null;
             /** Format: date-time */
             createdAt: string;
+            /** @description Incremented on every effective edit; send it back when editing. */
+            version: number;
+            /**
+             * Format: date-time
+             * @description When the transaction was soft-deleted; null when active.
+             */
+            deletedAt: string | null;
+        };
+        VersionRequest: {
+            version: number;
+        };
+        UpdateTransactionRequest: {
+            /** @description The version the client edited. */
+            version: number;
+            type?: components["schemas"]["TransactionType"];
+            status?: components["schemas"]["TransactionStatus"];
+            description?: string;
+            amountMinor?: components["schemas"]["AmountMinor"];
+            financialDate?: components["schemas"]["FinancialDate"];
+            /** Format: uuid */
+            categoryId?: string;
+            /** Format: uuid */
+            subcategoryId?: string | null;
         };
         TransactionList: {
             items: components["schemas"]["Transaction"][];
-            /** @description True when older transactions exist beyond the limit. */
+            /** @description True when more transactions match beyond this page. */
             hasMore: boolean;
+            /** @description Pass as cursor to fetch the next page; null on the last page. */
+            nextCursor: string | null;
+        };
+        RecordBalanceSnapshotRequest: {
+            /** @description Observed balance in minor units; may be zero or negative. */
+            amountMinor: number;
+            observedOn: components["schemas"]["FinancialDate"];
+            note?: string | null;
+        };
+        BalanceSnapshot: {
+            /** Format: uuid */
+            id: string;
+            amountMinor: number;
+            currency: string;
+            observedOn: components["schemas"]["FinancialDate"];
+            note: string | null;
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        BalanceSnapshotList: {
+            items: components["schemas"]["BalanceSnapshot"][];
+            current: components["schemas"]["BalanceSnapshot"] | null;
+            hasMore: boolean;
+        };
+        /** @enum {string} */
+        BalanceReminderFrequency: "app_start" | "daily" | "every_n_days" | "never";
+        BalanceReminderSetting: {
+            frequency: components["schemas"]["BalanceReminderFrequency"];
+            /** @description Required (1 to 90) for every_n_days; null otherwise. */
+            intervalDays: number | null;
+        };
+        BalanceReminder: {
+            frequency: components["schemas"]["BalanceReminderFrequency"];
+            intervalDays: number | null;
+            isDefault: boolean;
+        };
+        MonthlyDashboard: {
+            month: string;
+            currency: string;
+            /** @description M-001, minor units. */
+            realizedIncome: number;
+            /** @description M-002, minor units. */
+            realizedExpenses: number;
+            /** @description M-003 = M-001 - M-002; may be negative. */
+            realizedNet: number;
+            /** @description M-004, minor units. */
+            forecastIncome: number;
+            /** @description M-005, minor units. */
+            forecastExpenses: number;
+            /** @description M-006, sorted by amount (desc), then name. */
+            realizedExpensesByCategory: {
+                /** Format: uuid */
+                categoryId: string;
+                name: string;
+                amountMinor: number;
+            }[];
+            /** @description M-007, the latest observed balance dated within or before the month. */
+            observedBalance: {
+                amountMinor: number;
+                observedOn: components["schemas"]["FinancialDate"];
+            } | null;
         };
         ErrorResponse: {
             error: {
@@ -244,6 +487,51 @@ export interface components {
         };
     };
     responses: {
+        /** @description The category does not exist in this space (code CATEGORY_NOT_FOUND). */
+        CategoryNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description VERSION_CONFLICT, CATEGORY_NAME_TAKEN (sibling with the same name), CATEGORY_IN_USE (used by transactions, including deleted ones; archive instead), or CATEGORY_HAS_SUBCATEGORIES. */
+        CategoryConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description The category is not a top-level category of this space with the same kind as the transaction type, or the subcategory does not belong to it (code CATEGORY_NOT_AVAILABLE). */
+        CategoryNotAvailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description The transaction does not exist in this space (code TRANSACTION_NOT_FOUND). */
+        TransactionNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description The request conflicts with the record's current state: the version is outdated (VERSION_CONFLICT), the transaction is deleted and cannot be edited (TRANSACTION_DELETED), or it is already deleted / not deleted (TRANSACTION_ALREADY_DELETED, TRANSACTION_NOT_DELETED). */
+        StateConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description The request is invalid (code VALIDATION_FAILED). */
         ValidationFailed: {
             headers: {
@@ -273,6 +561,7 @@ export interface components {
         };
     };
     parameters: {
+        TransactionId: string;
         SpaceId: string;
     };
     requestBodies: never;
@@ -417,10 +706,119 @@ export interface operations {
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
+    createCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCategoryRequest"];
+            };
+        };
+        responses: {
+            /** @description The created category. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            409: components["responses"]["CategoryConflict"];
+            /** @description The parent is not an active top-level category of the same kind (code PARENT_CATEGORY_NOT_AVAILABLE). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteCategory: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CategoryNotFound"];
+            409: components["responses"]["CategoryConflict"];
+        };
+    };
+    updateCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCategoryRequest"];
+            };
+        };
+        responses: {
+            /** @description The category after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CategoryNotFound"];
+            409: components["responses"]["CategoryConflict"];
+        };
+    };
     listTransactions: {
         parameters: {
             query?: {
                 limit?: number;
+                /** @description active (default) lists non-deleted transactions by financial date; deleted lists the trash, most recently deleted first. */
+                state?: "active" | "deleted";
+                /** @description Calendar month of the financial date (YYYY-MM). */
+                month?: string;
+                type?: components["schemas"]["TransactionType"];
+                status?: components["schemas"]["TransactionStatus"];
+                /** @description Matches the category or the subcategory. */
+                categoryId?: string;
+                /** @description Case- and accent-insensitive search in the description. */
+                q?: string;
+                /** @description Opaque cursor from a previous page's nextCursor. */
+                cursor?: string;
             };
             header?: never;
             path: {
@@ -471,15 +869,260 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["FinancialSpaceNotFound"];
-            /** @description The category is not a top-level category of this space with the same kind as the transaction type, or the subcategory does not belong to it (code CATEGORY_NOT_AVAILABLE). */
-            422: {
+            422: components["responses"]["CategoryNotAvailable"];
+        };
+    };
+    getTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The transaction. */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["Transaction"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TransactionNotFound"];
+        };
+    };
+    deleteTransaction: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The deleted transaction (deletedAt set). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TransactionNotFound"];
+            409: components["responses"]["StateConflict"];
+        };
+    };
+    updateTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTransactionRequest"];
+            };
+        };
+        responses: {
+            /** @description The transaction after the edit. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TransactionNotFound"];
+            409: components["responses"]["StateConflict"];
+            422: components["responses"]["CategoryNotAvailable"];
+        };
+    };
+    restoreTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description The restored transaction. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TransactionNotFound"];
+            409: components["responses"]["StateConflict"];
+        };
+    };
+    listBalanceSnapshots: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Snapshot history of the space. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceSnapshotList"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    recordBalanceSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordBalanceSnapshotRequest"];
+            };
+        };
+        responses: {
+            /** @description The recorded snapshot. Earlier snapshots are never changed. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceSnapshot"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getBalanceReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The effective setting. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceReminder"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    setBalanceReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BalanceReminderSetting"];
+            };
+        };
+        responses: {
+            /** @description The saved setting. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceReminder"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getMonthlyDashboard: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metric values M-001 to M-007 for the month. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthlyDashboard"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
 }

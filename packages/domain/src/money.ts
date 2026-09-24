@@ -44,6 +44,15 @@ export function isValidAmountMinor(amountMinor: number): boolean {
   return Number.isSafeInteger(amountMinor) && amountMinor > 0 && amountMinor <= MAX_AMOUNT_MINOR;
 }
 
+export function isValidBalanceMinor(amountMinor: number): boolean {
+  return Number.isSafeInteger(amountMinor) && Math.abs(amountMinor) <= MAX_AMOUNT_MINOR;
+}
+
+export interface AmountParseOptions {
+  allowNegative?: boolean;
+  allowZero?: boolean;
+}
+
 function escapeForRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -52,13 +61,16 @@ export function parseAmountInput(
   input: string,
   currency: CurrencyCode,
   locale: SupportedLocale,
+  options: AmountParseOptions = {},
 ): AmountParseResult {
   const { decimalSeparator, groupSeparator } = NUMBER_FORMAT_SYMBOLS[locale];
   const { minorUnits } = SUPPORTED_CURRENCIES[currency];
-  const text = input.trim().replace(/\s/g, '');
-  if (text === '') {
+  const compact = input.trim().replace(/\s/g, '');
+  if (compact === '') {
     return { ok: false, error: 'empty' };
   }
+  const negative = options.allowNegative === true && /^[-−]/.test(compact);
+  const text = negative ? compact.slice(1) : compact;
 
   const group = escapeForRegExp(groupSeparator);
   const decimal = escapeForRegExp(decimalSeparator);
@@ -81,14 +93,14 @@ export function parseAmountInput(
   if (digits.length > String(MAX_AMOUNT_MINOR).length) {
     return { ok: false, error: 'too_large' };
   }
-  const amountMinor = Number(digits);
-  if (amountMinor === 0) {
+  const magnitude = Number(digits);
+  if (magnitude === 0 && options.allowZero !== true) {
     return { ok: false, error: 'not_positive' };
   }
-  if (amountMinor > MAX_AMOUNT_MINOR) {
+  if (magnitude > MAX_AMOUNT_MINOR) {
     return { ok: false, error: 'too_large' };
   }
-  return { ok: true, amountMinor };
+  return { ok: true, amountMinor: negative && magnitude !== 0 ? -magnitude : magnitude };
 }
 
 export function formatMoney(money: Money, locale: SupportedLocale): string {

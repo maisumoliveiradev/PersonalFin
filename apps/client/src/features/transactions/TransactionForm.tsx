@@ -1,4 +1,4 @@
-import type { CategoryTreeItem } from '@personalfin/api-contract';
+import type { CategoryTreeItem, CreateTransactionRequest } from '@personalfin/api-contract';
 import {
   DEFAULT_TRANSACTION_STATUS,
   financialDateFromLocalClock,
@@ -9,13 +9,12 @@ import {
 import { useState } from 'react';
 
 import { ApiRequestError } from '../../api/api-client';
-import { useCreateTransaction } from '../../api/transactions';
 import { messages } from '../../i18n/messages';
 import { Button } from '../../ui/Button';
 import { FormError } from '../../ui/FormError';
 import { type Option, OptionGroup } from '../../ui/OptionGroup';
 import { TextField } from '../../ui/TextField';
-import { toCreateTransactionRequest } from './transaction-form';
+import { type TransactionFormValues, toCreateTransactionRequest } from './transaction-form';
 
 const NO_SUBCATEGORY = 'none';
 
@@ -37,42 +36,65 @@ function describeSubmitError(error: Error): string {
   if (error instanceof ApiRequestError && error.code === 'CATEGORY_NOT_AVAILABLE') {
     return messages.transactions.errors.categoryNotAvailable;
   }
+  if (error instanceof ApiRequestError && error.code === 'VERSION_CONFLICT') {
+    return messages.transactions.errors.versionConflict;
+  }
   return messages.transactions.errors.unexpected;
 }
 
-interface NewTransactionFormProps {
-  spaceId: string;
+export function emptyTransactionFormValues(): TransactionFormValues {
+  return {
+    type: 'expense',
+    description: '',
+    amount: '',
+    date: formatDisplayDate(financialDateFromLocalClock(new Date()), 'pt-BR'),
+    categoryId: null,
+    subcategoryId: null,
+    status: DEFAULT_TRANSACTION_STATUS,
+  };
+}
+
+interface TransactionFormProps {
   categories: readonly CategoryTreeItem[];
-  onSaved: () => void;
+  initialValues: TransactionFormValues;
+  submitting: boolean;
+  submitError: Error | null;
+  onSubmit: (request: CreateTransactionRequest) => void;
   onCancel: () => void;
 }
 
-export function NewTransactionForm({
-  spaceId,
+export function TransactionForm({
   categories,
-  onSaved,
+  initialValues,
+  submitting,
+  submitError: submitFailure,
+  onSubmit,
   onCancel,
-}: NewTransactionFormProps) {
-  const [type, setType] = useState<TransactionType>('expense');
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [date, setDate] = useState(() =>
-    formatDisplayDate(financialDateFromLocalClock(new Date()), 'pt-BR'),
-  );
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [subcategoryId, setSubcategoryId] = useState<string | null>(null);
-  const [status, setStatus] = useState<TransactionStatus>(DEFAULT_TRANSACTION_STATUS);
+}: TransactionFormProps) {
+  const [type, setType] = useState<TransactionType>(initialValues.type);
+  const [description, setDescription] = useState(initialValues.description);
+  const [amount, setAmount] = useState(initialValues.amount);
+  const [date, setDate] = useState(initialValues.date);
+  const [categoryId, setCategoryId] = useState<string | null>(initialValues.categoryId);
+  const [subcategoryId, setSubcategoryId] = useState<string | null>(initialValues.subcategoryId);
+  const [status, setStatus] = useState<TransactionStatus>(initialValues.status);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const createTransaction = useCreateTransaction(spaceId);
 
-  const categoriesForType = categories.filter((category) => category.kind === type);
+  const categoriesForType = categories.filter(
+    (category) =>
+      category.kind === type && (!category.archived || category.id === initialValues.categoryId),
+  );
   const selectedCategory = categoriesForType.find((category) => category.id === categoryId);
   const subcategoryOptions: Option<string>[] = [
     { value: NO_SUBCATEGORY, label: messages.transactions.noSubcategory },
-    ...(selectedCategory?.subcategories ?? []).map((subcategory) => ({
-      value: subcategory.id,
-      label: subcategory.name,
-    })),
+    ...(selectedCategory?.subcategories ?? [])
+      .filter(
+        (subcategory) => !subcategory.archived || subcategory.id === initialValues.subcategoryId,
+      )
+      .map((subcategory) => ({
+        value: subcategory.id,
+        label: subcategory.name,
+      })),
   ];
 
   function handleTypeChange(nextType: TransactionType): void {
@@ -101,11 +123,10 @@ export function NewTransactionForm({
       return;
     }
     setValidationError(null);
-    createTransaction.mutate(result.request, { onSuccess: onSaved });
+    onSubmit(result.request);
   }
 
-  const submitError =
-    createTransaction.error === null ? null : describeSubmitError(createTransaction.error);
+  const submitError = submitFailure === null ? null : describeSubmitError(submitFailure);
 
   return (
     <>
@@ -146,7 +167,7 @@ export function NewTransactionForm({
         selected={categoryId}
         onSelect={handleCategoryChange}
       />
-      {selectedCategory !== undefined && selectedCategory.subcategories.length > 0 && (
+      {subcategoryOptions.length > 1 && (
         <OptionGroup
           label={messages.transactions.subcategoryLabel}
           options={subcategoryOptions}
@@ -164,7 +185,7 @@ export function NewTransactionForm({
       <Button
         label={messages.transactions.saveAction}
         onPress={handleSubmit}
-        loading={createTransaction.isPending}
+        loading={submitting}
       />
       <Button label={messages.transactions.cancelAction} variant="link" onPress={onCancel} />
     </>

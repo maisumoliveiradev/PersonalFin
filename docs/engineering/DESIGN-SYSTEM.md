@@ -33,7 +33,7 @@ Location: `apps/client/src/ui`.
     safe-area handling.
 -   **Components:** `Screen`, `Title` (header role), `TextField`
     (visible label, accessibility label and hint, 48 px minimum height),
-    `Button` (`primary` and `link` variants, busy/disabled states, 48 px
+    `Button` (`primary`, `danger` (SDD-009), and `link` variants, busy/disabled states, 48 px
     minimum height), `FormError` (alert role, polite live region),
     `LoadingScreen`, `BodyText` (regular and muted), `ListItem`
     (pressable row with title and subtitle, 56 px minimum height;
@@ -41,6 +41,16 @@ Location: `apps/client/src/ui`.
     (single-choice radio group rendered as chips, 44 px minimum height)
     and `StatusMessage` (success alert with `success` color token;
     SDD-005).
+
+Navigation after destructive mutations: await `mutateAsync` and then
+navigate. Per-call `mutate` callbacks do not run if the screen unmounts
+because the refreshed data no longer contains the deleted record (found
+in SDD-011).
+
+Accessibility props: use the cross-platform `role` and `aria-*` props
+(`aria-label`, `aria-checked`, `aria-disabled`, `aria-busy`). React
+Native Web 0.21 ignores `accessibilityState`, so selected/disabled
+states would not reach Web screen readers (found in SDD-008).
 
 ## Components
 

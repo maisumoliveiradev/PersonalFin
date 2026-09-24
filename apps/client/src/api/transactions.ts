@@ -1,21 +1,112 @@
-import type { CreateTransactionRequest } from '@personalfin/api-contract';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type {
+  CreateTransactionRequest,
+  TransactionStatus,
+  UpdateTransactionRequest,
+} from '@personalfin/api-contract';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import type { TransactionFilters } from '../features/transactions/transaction-filters';
 
 import { apiClient, expectData } from './api-client';
 
 export const transactionKeys = {
   forSpace: (spaceId: string) => ['financial-spaces', spaceId, 'transactions'] as const,
+  detail: (spaceId: string, transactionId: string) =>
+    ['financial-spaces', spaceId, 'transactions', transactionId] as const,
+  deleted: (spaceId: string) => ['financial-spaces', spaceId, 'transactions', 'deleted'] as const,
 };
 
-export function useTransactions(spaceId: string) {
+export function useDeletedTransactions(spaceId: string) {
   return useQuery({
-    queryKey: transactionKeys.forSpace(spaceId),
+    queryKey: transactionKeys.deleted(spaceId),
     queryFn: async () =>
       expectData(
         await apiClient.GET('/financial-spaces/{spaceId}/transactions', {
-          params: { path: { spaceId } },
+          params: { path: { spaceId }, query: { state: 'deleted' } },
         }),
       ),
+  });
+}
+
+export function useDeleteTransaction(spaceId: string, transactionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (version: number) =>
+      expectData(
+        await apiClient.DELETE('/financial-spaces/{spaceId}/transactions/{transactionId}', {
+          params: { path: { spaceId, transactionId }, query: { version } },
+        }),
+      ),
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+    },
+  });
+}
+
+export function useRestoreTransaction(spaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ transactionId, version }: { transactionId: string; version: number }) =>
+      expectData(
+        await apiClient.POST('/financial-spaces/{spaceId}/transactions/{transactionId}/restore', {
+          params: { path: { spaceId, transactionId } },
+          body: { version },
+        }),
+      ),
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+    },
+  });
+}
+
+export function useTransaction(spaceId: string, transactionId: string) {
+  return useQuery({
+    queryKey: transactionKeys.detail(spaceId, transactionId),
+    queryFn: async () =>
+      expectData(
+        await apiClient.GET('/financial-spaces/{spaceId}/transactions/{transactionId}', {
+          params: { path: { spaceId, transactionId } },
+        }),
+      ),
+  });
+}
+
+export function useUpdateTransaction(spaceId: string, transactionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: UpdateTransactionRequest) =>
+      expectData(
+        await apiClient.PATCH('/financial-spaces/{spaceId}/transactions/{transactionId}', {
+          params: { path: { spaceId, transactionId } },
+          body: input,
+        }),
+      ),
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+    },
+  });
+}
+
+const PAGE_SIZE = 50;
+
+export function useTransactions(spaceId: string, filters: TransactionFilters) {
+  return useInfiniteQuery({
+    queryKey: [...transactionKeys.forSpace(spaceId), 'list', filters] as const,
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam }) =>
+      expectData(
+        await apiClient.GET('/financial-spaces/{spaceId}/transactions', {
+          params: {
+            path: { spaceId },
+            query: {
+              ...filters,
+              limit: PAGE_SIZE,
+              ...(pageParam === null ? {} : { cursor: pageParam }),
+            },
+          },
+        }),
+      ),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 }
 
@@ -30,6 +121,26 @@ export function useCreateTransaction(spaceId: string) {
         }),
       ),
     onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+    },
+  });
+}
+
+export function useChangeTransactionStatus(spaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      transactionId: string;
+      version: number;
+      status: TransactionStatus;
+    }) =>
+      expectData(
+        await apiClient.PATCH('/financial-spaces/{spaceId}/transactions/{transactionId}', {
+          params: { path: { spaceId, transactionId: input.transactionId } },
+          body: { version: input.version, status: input.status },
+        }),
+      ),
+    onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
     },
   });

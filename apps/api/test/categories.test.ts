@@ -74,7 +74,13 @@ describe('default category catalog', () => {
 
 describe('buildCategoryTree', () => {
   it('nests subcategories under their parents ordered by position', () => {
-    const base = { financialSpaceId: 's', kind: 'expense' as const, defaultKey: null };
+    const base = {
+      financialSpaceId: 's',
+      kind: 'expense' as const,
+      defaultKey: null,
+      archivedAt: null,
+      version: 1,
+    };
     const categories: Category[] = [
       { ...base, id: 'b', parentCategoryId: null, name: 'B', position: 1 },
       { ...base, id: 'a2', parentCategoryId: 'a', name: 'A2', position: 1 },

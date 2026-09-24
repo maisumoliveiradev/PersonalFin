@@ -8,7 +8,7 @@ platform.
 1.  `product/PRODUCT-VISION.md`
 2.  `product/REQUIREMENTS.md`
 3.  `product/DOMAIN-RULES.md`
-4.  `product/ROADMAP.md`
+4.  `product/ROADMAP.md` (metric definitions: `product/METRICS.md`)
 5.  `architecture/ARCHITECTURE.md`
 6.  `architecture/C4.md`
 7.  `engineering/ENGINEERING-GUIDELINES.md`

@@ -55,7 +55,7 @@ describe('GET /financial-spaces/:spaceId/transactions', () => {
     const response = await list(asAna, spaceId);
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ items: [], hasMore: false });
+    expect(response.json()).toEqual({ items: [], hasMore: false, nextCursor: null });
   });
 
   it('shows a newly created transaction with all displayed fields', async () => {

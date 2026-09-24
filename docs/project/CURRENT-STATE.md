@@ -2,9 +2,8 @@
 
 ## Current Version
 
-`v0.1.0`, released on 2026-09-24 (`main`, tag `v0.1.0`). SDD-001 to
-SDD-007 implemented and validated
-(`docs/sdds/v0.1.0/SDD-007-validation-report.md`).
+`v0.2.0`, released on 2026-09-24 (`main`, tag `v0.2.0`). SDD-001 to
+SDD-016 implemented and validated.
 
 ## Implemented Product Capabilities
 
@@ -21,22 +20,46 @@ SDD-007 implemented and validated
     invitation. The selected space is carried in the URL
     (`/spaces/{spaceId}`), not persisted as a preference.
 
--   **Categories (SDD-004):** each new space receives the default pt-BR
-    catalog once (`docs/product/DEFAULT-CATEGORY-CATALOG.md`). Categories
-    have a kind (Expense/Income) and optional subcategories (two levels
-    at most). They can be read (API and space screen) but not created,
-    renamed, archived, or deleted.
+-   **Categories (SDD-004, SDD-011):** each new space receives the default
+    pt-BR catalog once (`docs/product/DEFAULT-CATEGORY-CATALOG.md`).
+    Categories have a kind (Expense/Income) and optional subcategories
+    (two levels at most). Users create, rename, archive/unarchive, and
+    delete never-used categories (DR-073); changes are audited. There is
+    no reordering, merging, or historical reclassification.
 
 -   **Transactions (SDD-005):** users register Expense or Income with
     description, amount (BRL), financial date, category matching the
     type, optional subcategory, and status (Paid/Received or Pending).
-    Transactions cannot be edited or deleted; there are no tags, notes,
-    attachments, recurrence, cards, or other currencies.
--   **Transaction list (SDD-006):** the space screen lists the space's
-    most recent transactions (up to 100; API limit up to 200 with
-    `hasMore`), newest financial date first, with type, description,
-    amount, date, category, and status. There is no search, filter,
-    pagination beyond the limit, or dashboard.
+    There are no tags, notes, attachments, recurrence, cards, or other
+    currencies.
+-   **Transaction edit (SDD-008):** every field can be edited from the
+    list; edits are audited (actor, instant, before/after) and protected
+    by optimistic concurrency (`version`, `409 VERSION_CONFLICT`). There
+    is no audit history screen.
+-   **Soft delete (SDD-009):** transactions can be deleted (with
+    confirmation) and restored from the space's Lixeira; deletion and
+    restore are audited. There is no permanent deletion.
+-   **Balance snapshots (SDD-013):** each space shows its latest observed
+    consolidated balance and date; users record new snapshots (zero or
+    negative allowed) and view the append-only history. There is no
+    projection.
+-   **Balance reminder (SDD-014):** an in-app prompt on the space screen
+    when an update is due (DR-074), with per-user, per-space frequency.
+    There are no push or email notifications.
+-   **Monthly dashboard (SDD-015):** the space screen summarizes the
+    selected month with the metrics defined in `docs/product/METRICS.md`
+    (realized, forecast, expenses by category, month-end observed
+    balance). There are no charts over time, comparisons, projection, or
+    personalization.
+-   **Quick status change (SDD-010):** each list item toggles between
+    Paid/Received and Pending (audited, version-checked).
+-   **Transaction list (SDD-006, SDD-012):** the space screen lists
+    transactions of one month at a time (current month by default,
+    navigable, kept in the URL), newest financial date first, with type,
+    description, amount, date, category, and status. Optional filters:
+    type, status, category, and accent-insensitive text search; results
+    are paged by cursor ("Carregar mais"). There is no cross-space search
+    or saved filters.
 
 ## Implemented Technical Foundation
 
@@ -54,7 +77,8 @@ SDD-007 implemented and validated
         transaction rules (ADR-0011).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
-    `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`.
+    `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`, `audit_event`,
+    `balance_snapshot`, `balance_reminder_setting`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -63,14 +87,13 @@ SDD-007 implemented and validated
 
 ## Not Yet Present
 
--   Transaction edit and deletion; category management; filters and
-    pagination.
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
 
 ## Active Target
 
-`v0.2.0` --- Core Financial Control (`docs/product/ROADMAP.md`).
+`v0.3.0` --- Planning and Recurrence (`docs/product/ROADMAP.md`); no SDDs
+yet.
 
 ## Important Constraint
 
@@ -79,4 +102,6 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Write and execute the v0.2.0 SDDs (`docs/sdds/v0.2.0/`).
+Project owner: review the domain decisions taken under delegation
+(`docs/sdds/v0.2.0/README.md`, DR-072 to DR-074). Then write the v0.3.0
+SDDs.

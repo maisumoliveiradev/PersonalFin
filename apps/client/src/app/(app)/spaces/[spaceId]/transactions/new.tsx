@@ -1,7 +1,14 @@
+import type { CreateTransactionRequest } from '@personalfin/api-contract';
+import { type FinancialDate, monthOf } from '@personalfin/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 
 import { useCategories } from '../../../../../api/categories';
-import { NewTransactionForm } from '../../../../../features/transactions/NewTransactionForm';
+import { useCreateTransaction } from '../../../../../api/transactions';
+import {
+  emptyTransactionFormValues,
+  TransactionForm,
+} from '../../../../../features/transactions/TransactionForm';
 import { messages } from '../../../../../i18n/messages';
 import { Button } from '../../../../../ui/Button';
 import { FormError } from '../../../../../ui/FormError';
@@ -13,12 +20,26 @@ export default function NewTransactionScreen() {
   const router = useRouter();
   const { spaceId } = useLocalSearchParams<{ spaceId: string }>();
   const categories = useCategories(spaceId);
+  const createTransaction = useCreateTransaction(spaceId);
+  const [initialValues] = useState(emptyTransactionFormValues);
 
-  function backToSpace(saved: boolean): void {
+  function backToSpace(savedDate?: FinancialDate): void {
     router.dismissTo({
       pathname: '/spaces/[spaceId]',
-      params: saved ? { spaceId, saved: '1' } : { spaceId },
+      params:
+        savedDate === undefined
+          ? { spaceId }
+          : { spaceId, saved: 'created', month: monthOf(savedDate) },
     });
+  }
+
+  async function handleSubmit(request: CreateTransactionRequest): Promise<void> {
+    try {
+      const created = await createTransaction.mutateAsync(request);
+      backToSpace(created.financialDate);
+    } catch {
+      return;
+    }
   }
 
   if (categories.isPending) {
@@ -34,11 +55,13 @@ export default function NewTransactionScreen() {
           <Button label={messages.common.retry} onPress={() => categories.refetch()} />
         </>
       ) : (
-        <NewTransactionForm
-          spaceId={spaceId}
+        <TransactionForm
           categories={categories.data}
-          onSaved={() => backToSpace(true)}
-          onCancel={() => backToSpace(false)}
+          initialValues={initialValues}
+          submitting={createTransaction.isPending}
+          submitError={createTransaction.error}
+          onSubmit={handleSubmit}
+          onCancel={() => router.back()}
         />
       )}
     </Screen>
