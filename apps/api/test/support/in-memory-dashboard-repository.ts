@@ -50,6 +50,24 @@ export function createInMemoryDashboardRepository(
           right.amountMinor - left.amountMinor || left.name.localeCompare(right.name),
       );
     },
+    async projectionComponents(financialSpaceId, observedOn, endExclusive) {
+      const active = transactions().filter(
+        (item) =>
+          item.financialSpaceId === financialSpaceId &&
+          item.deletedAt === null &&
+          item.financialDate < endExclusive,
+      );
+      const flow = (items: readonly FinancialTransaction[]) => ({
+        income: sum(items.filter((item) => item.type === 'income')),
+        expenses: sum(items.filter((item) => item.type === 'expense')),
+      });
+      return {
+        afterObservation: flow(active.filter((item) => item.financialDate > observedOn)),
+        pendingUpToObservation: flow(
+          active.filter((item) => item.financialDate <= observedOn && item.status === 'pending'),
+        ),
+      };
+    },
     async observedBalanceBefore(financialSpaceId, endExclusive) {
       const latest = snapshots()
         .filter(

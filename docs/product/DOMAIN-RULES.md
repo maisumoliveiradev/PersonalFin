@@ -120,6 +120,16 @@ observed balance plus expected financial movements.
 **DR-029** UI and reports must visually/semantically distinguish these
 concepts.
 
+**DR-077** *(SDD-021; decided under delegation.)* The projected balance
+at the end of a month starts from the latest observed balance dated up to
+that month's end, adds every non-deleted transaction dated after the
+observation date up to the month's end (income adds, expense subtracts,
+any status), and adds Pending transactions dated on or before the
+observation date (still expected). Paid transactions dated on or before
+the observation date are assumed to be already reflected in it. Without
+an observed balance there is no projection (M-008 in
+`docs/product/METRICS.md`).
+
 ## Recurrence
 
 **DR-030** A recurrence defines a series; occurrences remain
@@ -134,6 +144,22 @@ and following, or whole series.
 **DR-033** Recurrences may be indefinite or end on a configured date.
 
 **DR-034** Non-business-day adjustment is configured per recurrence.
+
+**DR-075** *(SDD-018; decided under delegation.)* Recurrences repeat
+monthly, weekly, or yearly. Monthly series use the start day, or the last
+day of shorter months; yearly series on 29 February use 28 February in
+non-leap years. Each occurrence keeps its scheduled date and receives a
+financial date adjusted by the series' non-business-day rule
+(`docs/product/BUSINESS-DAYS.md`). Occurrences are created Pending.
+
+**DR-076** *(SDD-019; decided under delegation.)* Editing or deleting one
+occurrence marks it as individually modified; later series changes never
+touch it. "This and following" changes the series description, amount,
+and category and applies them to Pending, non-deleted, unmodified
+occurrences scheduled on or after the chosen occurrence; date, type, and
+status changes are always per occurrence. Ending a series on a date
+moves its Pending, unmodified occurrences scheduled after that date to
+the trash; paid, edited, and earlier occurrences are kept.
 
 ## Cards and invoices
 

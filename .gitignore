@@ -6,3 +6,5 @@ coverage/
 .env.*
 !.env.example
 .idea/
+*.code-workspace
+e2e/.artifacts/

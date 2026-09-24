@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "e2e"
   ],
   "engines": {
     "node": ">=24.11.0"
@@ -20,6 +21,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:integration": "npm run test:integration --workspace @personalfin/api",
+    "test:e2e": "npm run journeys --workspace @personalfin/e2e --",
     "contract:generate": "npm run generate --workspace @personalfin/api-contract",
     "contract:check": "npm run check --workspace @personalfin/api-contract",
     "validate": "npm run lint && npm run typecheck && npm run contract:check && npm run test"

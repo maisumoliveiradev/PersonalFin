@@ -6,7 +6,60 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
-Nothing yet.
+## \[0.3.0\] --- 2026-09-24
+
+Planning and Recurrence. Released to `main` and tagged `v0.3.0`;
+validated in SDD-022 (`docs/sdds/v0.3.0/SDD-022-validation-report.md`).
+
+### Monthly Projection (SDD-021)
+
+-   The "Resumo do mês" card has a "Projeção" group with the projected
+    month-end balance (M-008) and its base and components, separate from
+    realized and forecast values (DR-077).
+-   "Projeção dos próximos meses" lists M-008 for six months from the
+    selected month.
+-   The dashboard response includes `projection`; new
+    `GET /financial-spaces/{spaceId}/projection?fromMonth=&months=`.
+
+### Future Commitments (SDD-020)
+
+-   "Próximos compromissos" screen: overdue pending items and pending
+    items of the next 7, 30, or 90 days, with exact totals of income to
+    receive and expenses to pay, and quick "Marcar como pago".
+-   `GET /financial-spaces/{spaceId}/commitments?from=&days=`.
+
+### Independent Occurrences and Series Changes (SDD-019)
+
+-   Editing an occurrence offers "Apenas este" or "Este e os próximos";
+    the latter updates description, amount, and category of the series
+    and of later pending occurrences not edited individually (DR-076).
+-   "Encerrar" on the Recorrências screen ends a series on a date and
+    moves later pending occurrences to the trash.
+-   `PATCH .../recurrences/{id}` and `POST .../recurrences/{id}/end`;
+    transactions expose `occurrenceDate`; migration
+    `0012_occurrence_independence`.
+
+### Recurring Income and Expenses (SDD-018)
+
+-   "Repetir" in the new-transaction form creates a monthly, weekly, or
+    yearly series with optional end date and a weekend/holiday rule.
+-   Occurrences are Pending transactions (marked "↻ Recorrente"), so they
+    appear in the list, filters, and forecast; later months are created
+    when browsed (ADR-0014, DR-075).
+-   "Recorrências" screen lists the series of a space.
+-   `GET`/`POST .../recurrences` and `POST .../recurrences/materialize`;
+    migration `0011_recurrence_series`.
+
+### Versioned Browser Journeys
+
+-   The 13 Chrome journeys used to validate every increment now live in
+    `e2e/` and run with `npm run test:e2e` (ADR-0013).
+
+### Business-Day Calendar Foundation (SDD-017)
+
+-   `packages/domain` computes Brazilian national holidays (including
+    Good Friday via Easter) and adjusts dates to the previous or next
+    business day (`docs/product/BUSINESS-DAYS.md`).
 
 ## \[0.2.0\] --- 2026-09-24
 

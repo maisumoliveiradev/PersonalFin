@@ -30,3 +30,7 @@ Do not execute later SDDs before dependencies are satisfied.
 ## v0.2.0 sequence
 
 See `v0.2.0/README.md` (SDD-008 to SDD-016).
+
+## v0.3.0 sequence
+
+See `v0.3.0/README.md` (SDD-017 to SDD-022).

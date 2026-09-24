@@ -2,8 +2,9 @@
 
 ## Current Version
 
-`v0.2.0`, released on 2026-09-24 (`main`, tag `v0.2.0`). SDD-001 to
-SDD-016 implemented and validated.
+`v0.3.0`, released on 2026-09-24 (`main`, tag `v0.3.0`). SDD-001 to
+SDD-022 implemented and validated
+(`docs/sdds/v0.3.0/SDD-022-validation-report.md`).
 
 ## Implemented Product Capabilities
 
@@ -41,16 +42,26 @@ SDD-016 implemented and validated.
     restore are audited. There is no permanent deletion.
 -   **Balance snapshots (SDD-013):** each space shows its latest observed
     consolidated balance and date; users record new snapshots (zero or
-    negative allowed) and view the append-only history. There is no
-    projection.
+    negative allowed) and view the append-only history.
 -   **Balance reminder (SDD-014):** an in-app prompt on the space screen
     when an update is due (DR-074), with per-user, per-space frequency.
     There are no push or email notifications.
 -   **Monthly dashboard (SDD-015):** the space screen summarizes the
     selected month with the metrics defined in `docs/product/METRICS.md`
     (realized, forecast, expenses by category, month-end observed
-    balance). There are no charts over time, comparisons, projection, or
-    personalization.
+    balance) and the projected month-end balance with its components
+    (SDD-021, M-008), plus a six-month projection list. There are no
+    charts, comparisons, scenarios, or personalization.
+-   **Recurrences (SDD-018):** monthly, weekly, or yearly series with
+    optional end date and non-business-day rule; occurrences are Pending
+    transactions created 12 months ahead and extended when browsing
+    (ADR-0014). Occurrences are independent; "Este e os próximos" and
+    "Encerrar" change the series without rewriting paid or individually
+    edited occurrences (DR-076). Frequency and start date cannot be
+    changed.
+-   **Future commitments (SDD-020):** overdue and upcoming pending
+    income/expenses (7, 30, or 90 days) with exact totals. There are no
+    notifications.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -73,12 +84,13 @@ SDD-016 implemented and validated.
         error body, validated configuration, structured logs.
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
-    -   `packages/domain` --- shared money, financial date, and
-        transaction rules (ADR-0011).
+    -   `packages/domain` --- shared money, financial date, transaction,
+        month, balance-reminder, and business-day rules (ADR-0011;
+        national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
     `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`, `audit_event`,
-    `balance_snapshot`, `balance_reminder_setting`.
+    `balance_snapshot`, `balance_reminder_setting`, `recurrence_series`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -92,7 +104,7 @@ SDD-016 implemented and validated.
 
 ## Active Target
 
-`v0.3.0` --- Planning and Recurrence (`docs/product/ROADMAP.md`); no SDDs
+`v0.4.0` --- Credit Cards (`docs/product/ROADMAP.md`). No SDD drafted
 yet.
 
 ## Important Constraint
@@ -102,6 +114,6 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Project owner: review the domain decisions taken under delegation
-(`docs/sdds/v0.2.0/README.md`, DR-072 to DR-074). Then write the v0.3.0
-SDDs.
+Draft the v0.4.0 SDDs (Credit Cards) from the roadmap. Domain decisions
+taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
+`docs/sdds/v0.3.0/README.md`, DR-072 to DR-077).

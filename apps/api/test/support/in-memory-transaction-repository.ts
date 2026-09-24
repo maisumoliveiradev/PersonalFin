@@ -36,6 +36,9 @@ export function createInMemoryTransactionRepository(
         createdAt: new Date(Date.UTC(2026, 0, 1, 12, 0, transactions.length)),
         version: 1,
         deletedAt: null,
+        recurrenceSeriesId: null,
+        occurrenceDate: null,
+        individuallyModified: false,
       };
       transactions.push(created);
       return created;
@@ -54,6 +57,7 @@ export function createInMemoryTransactionRepository(
       }
       const { categoryId, subcategoryId, ...rest } = fields;
       Object.assign(current, rest, {
+        individuallyModified: current.individuallyModified || current.recurrenceSeriesId !== null,
         category: reference(categoryId),
         subcategory: subcategoryId === null ? null : reference(subcategoryId),
         version: current.version + 1,
@@ -70,6 +74,9 @@ export function createInMemoryTransactionRepository(
         return null;
       }
       current.deletedAt = deleted ? new Date() : null;
+      if (deleted && current.recurrenceSeriesId !== null) {
+        current.individuallyModified = true;
+      }
       current.version += 1;
       return current;
     },

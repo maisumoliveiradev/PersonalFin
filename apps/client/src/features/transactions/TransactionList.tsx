@@ -25,7 +25,7 @@ interface TransactionRowProps {
   onToggleStatus: () => void;
 }
 
-function TransactionRow({
+export function TransactionRow({
   spaceId,
   transaction,
   changingStatus,
@@ -48,7 +48,10 @@ function TransactionRow({
           description: transaction.description,
           amount,
           date,
-          category,
+          category:
+            transaction.recurrenceSeriesId === null
+              ? category
+              : `${category}, ${messages.recurrences.tag.toLowerCase()}`,
           status,
         })}
         accessibilityHint={messages.transactions.editHint}
@@ -64,7 +67,11 @@ function TransactionRow({
           <Text style={[styles.description, { color: palette.text }]}>
             {transaction.description}
           </Text>
-          <Text style={[styles.meta, { color: palette.textMuted }]}>{`${date} · ${category}`}</Text>
+          <Text style={[styles.meta, { color: palette.textMuted }]}>
+            {transaction.recurrenceSeriesId === null
+              ? `${date} · ${category}`
+              : `${date} · ${category} · ↻ ${messages.recurrences.tag}`}
+          </Text>
         </View>
         <View style={styles.trailing}>
           <Text

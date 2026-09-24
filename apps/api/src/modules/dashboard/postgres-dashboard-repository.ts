@@ -51,6 +51,39 @@ export function createPostgresDashboardRepository(db: Queryable): DashboardRepos
       }));
     },
 
+    async projectionComponents(financialSpaceId, observedOn, endExclusive) {
+      const { rows } = await db.query<{
+        after_income: string | null;
+        after_expenses: string | null;
+        pending_income: string | null;
+        pending_expenses: string | null;
+      }>(
+        `SELECT
+           SUM(amount_minor) FILTER (WHERE type = 'income' AND financial_date > $2::date) AS after_income,
+           SUM(amount_minor) FILTER (WHERE type = 'expense' AND financial_date > $2::date) AS after_expenses,
+           SUM(amount_minor) FILTER (
+             WHERE type = 'income' AND status = 'pending' AND financial_date <= $2::date
+           ) AS pending_income,
+           SUM(amount_minor) FILTER (
+             WHERE type = 'expense' AND status = 'pending' AND financial_date <= $2::date
+           ) AS pending_expenses
+         FROM financial_transaction
+         WHERE financial_space_id = $1 AND deleted_at IS NULL AND financial_date < $3::date`,
+        [financialSpaceId, observedOn, endExclusive],
+      );
+      const row = rows[0];
+      return {
+        afterObservation: {
+          income: toSafeAmount(row?.after_income ?? null),
+          expenses: toSafeAmount(row?.after_expenses ?? null),
+        },
+        pendingUpToObservation: {
+          income: toSafeAmount(row?.pending_income ?? null),
+          expenses: toSafeAmount(row?.pending_expenses ?? null),
+        },
+      };
+    },
+
     async observedBalanceBefore(financialSpaceId: string, endExclusive: FinancialDate) {
       const { rows } = await db.query<{ amount_minor: string; observed_on: FinancialDate }>(
         `SELECT amount_minor, observed_on FROM balance_snapshot

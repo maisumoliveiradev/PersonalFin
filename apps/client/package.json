@@ -1,6 +1,6 @@
 {
   "name": "@personalfin/client",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@better-auth/expo": "1.7.5",

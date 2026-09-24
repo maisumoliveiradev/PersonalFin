@@ -1,0 +1,12 @@
+{
+  "name": "@personalfin/e2e",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "journeys": "node run.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.63.0"
+  }
+}

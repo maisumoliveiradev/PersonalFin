@@ -106,6 +106,9 @@ describe('monthly dashboard metrics (docs/product/METRICS.md)', () => {
         { categoryId: expect.any(String), name: 'Alimentação', amountMinor: 123_486 },
       ],
       observedBalance: { amountMinor: -15_075, observedOn: '2026-02-27' },
+      projection: expect.objectContaining({
+        base: { amountMinor: -15_075, observedOn: '2026-02-27' },
+      }),
     });
   });
 
@@ -127,6 +130,7 @@ describe('monthly dashboard metrics (docs/product/METRICS.md)', () => {
       forecastExpenses: 0,
       realizedExpensesByCategory: [],
       observedBalance: null,
+      projection: null,
     });
   });
 });
