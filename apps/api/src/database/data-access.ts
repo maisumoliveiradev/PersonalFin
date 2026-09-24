@@ -1,6 +1,8 @@
 import type { AuditRepository } from '../modules/audit/audit-repository.ts';
 import { createPostgresAuditRepository } from '../modules/audit/postgres-audit-repository.ts';
+import type { BalanceReminderRepository } from '../modules/balance/balance-reminder-repository.ts';
 import type { BalanceSnapshotRepository } from '../modules/balance/balance-snapshot-repository.ts';
+import { createPostgresBalanceReminderRepository } from '../modules/balance/postgres-balance-reminder-repository.ts';
 import { createPostgresBalanceSnapshotRepository } from '../modules/balance/postgres-balance-snapshot-repository.ts';
 import type { CategoryRepository } from '../modules/categories/category-repository.ts';
 import { createPostgresCategoryRepository } from '../modules/categories/postgres-category-repository.ts';
@@ -16,6 +18,7 @@ export interface Repositories {
   transactions: TransactionRepository;
   audit: AuditRepository;
   balanceSnapshots: BalanceSnapshotRepository;
+  balanceReminders: BalanceReminderRepository;
 }
 
 export interface DataAccess {
@@ -30,6 +33,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     transactions: createPostgresTransactionRepository(db),
     audit: createPostgresAuditRepository(db),
     balanceSnapshots: createPostgresBalanceSnapshotRepository(db),
+    balanceReminders: createPostgresBalanceReminderRepository(db),
   };
 }
 

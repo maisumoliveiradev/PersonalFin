@@ -450,6 +450,46 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/balance-reminder:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getBalanceReminder
+      summary: Return the user's balance reminder setting for the space
+      description: Returns the default (every 7 days) with isDefault true when never saved.
+      responses:
+        '200':
+          description: The effective setting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceReminder'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    put:
+      operationId: setBalanceReminder
+      summary: Save the user's balance reminder setting for the space
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BalanceReminderSetting'
+      responses:
+        '200':
+          description: The saved setting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceReminder'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     TransactionId:
@@ -982,6 +1022,45 @@ components:
             - $ref: '#/components/schemas/BalanceSnapshot'
             - type: 'null'
         hasMore:
+          type: boolean
+    BalanceReminderFrequency:
+      type: string
+      enum:
+        - app_start
+        - daily
+        - every_n_days
+        - never
+    BalanceReminderSetting:
+      type: object
+      additionalProperties: false
+      required:
+        - frequency
+        - intervalDays
+      properties:
+        frequency:
+          $ref: '#/components/schemas/BalanceReminderFrequency'
+        intervalDays:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+          maximum: 90
+          description: Required (1 to 90) for every_n_days; null otherwise.
+    BalanceReminder:
+      type: object
+      additionalProperties: false
+      required:
+        - frequency
+        - intervalDays
+        - isDefault
+      properties:
+        frequency:
+          $ref: '#/components/schemas/BalanceReminderFrequency'
+        intervalDays:
+          type:
+            - integer
+            - 'null'
+        isDefault:
           type: boolean
     ErrorResponse:
       type: object

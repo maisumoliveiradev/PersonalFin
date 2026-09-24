@@ -3,7 +3,7 @@
 ## Current Version
 
 `v0.1.0` released on 2026-09-24 (`main`, tag `v0.1.0`). `develop` is
-building v0.2.0: SDD-008 to SDD-013 implemented.
+building v0.2.0: SDD-008 to SDD-014 implemented.
 
 ## Implemented Product Capabilities
 
@@ -41,8 +41,11 @@ building v0.2.0: SDD-008 to SDD-013 implemented.
     restore are audited. There is no permanent deletion.
 -   **Balance snapshots (SDD-013):** each space shows its latest observed
     consolidated balance and date; users record new snapshots (zero or
-    negative allowed) and view the append-only history. There are no
-    reminders yet and no projection.
+    negative allowed) and view the append-only history. There is no
+    projection.
+-   **Balance reminder (SDD-014):** an in-app prompt on the space screen
+    when an update is due (DR-074), with per-user, per-space frequency.
+    There are no push or email notifications.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -70,7 +73,7 @@ building v0.2.0: SDD-008 to SDD-013 implemented.
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
     `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`, `audit_event`,
-    `balance_snapshot`.
+    `balance_snapshot`, `balance_reminder_setting`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -79,7 +82,7 @@ building v0.2.0: SDD-008 to SDD-013 implemented.
 
 ## Not Yet Present
 
--   Balance reminders and dashboard (remaining v0.2.0 SDDs).
+-   Dashboard (SDD-015).
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
 
@@ -94,4 +97,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.2.0/SDD-014-balance-update-prompt.md`.
+`docs/sdds/v0.2.0/SDD-015-current-month-dashboard.md`.

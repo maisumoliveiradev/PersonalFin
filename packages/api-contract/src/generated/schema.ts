@@ -210,6 +210,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/balance-reminder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Return the user's balance reminder setting for the space
+         * @description Returns the default (every 7 days) with isDefault true when never saved.
+         */
+        get: operations["getBalanceReminder"];
+        /** Save the user's balance reminder setting for the space */
+        put: operations["setBalanceReminder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -396,6 +419,18 @@ export interface components {
             items: components["schemas"]["BalanceSnapshot"][];
             current: components["schemas"]["BalanceSnapshot"] | null;
             hasMore: boolean;
+        };
+        /** @enum {string} */
+        BalanceReminderFrequency: "app_start" | "daily" | "every_n_days" | "never";
+        BalanceReminderSetting: {
+            frequency: components["schemas"]["BalanceReminderFrequency"];
+            /** @description Required (1 to 90) for every_n_days; null otherwise. */
+            intervalDays: number | null;
+        };
+        BalanceReminder: {
+            frequency: components["schemas"]["BalanceReminderFrequency"];
+            intervalDays: number | null;
+            isDefault: boolean;
         };
         ErrorResponse: {
             error: {
@@ -958,6 +993,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BalanceSnapshot"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getBalanceReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The effective setting. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceReminder"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    setBalanceReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BalanceReminderSetting"];
+            };
+        };
+        responses: {
+            /** @description The saved setting. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceReminder"];
                 };
             };
             400: components["responses"]["ValidationFailed"];
