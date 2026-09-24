@@ -2,8 +2,8 @@ import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createAuth, createSessionResolver } from '../../src/auth/better-auth.ts';
+import { createPostgresDataAccess } from '../../src/database/data-access.ts';
 import type { DatabasePool } from '../../src/database/pool.ts';
-import { createPostgresFinancialSpaceRepository } from '../../src/modules/financial-spaces/postgres-financial-space-repository.ts';
 import { buildServer } from '../../src/server.ts';
 import { createMigratedTestPool } from './database.ts';
 
@@ -32,7 +32,7 @@ beforeAll(async () => {
     corsOrigins: [ORIGIN],
     sessionResolver: createSessionResolver(auth),
     authHandler: auth.handler,
-    repositories: { financialSpaces: createPostgresFinancialSpaceRepository(pool) },
+    data: createPostgresDataAccess(pool),
   });
 });
 

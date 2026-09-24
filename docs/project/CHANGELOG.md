@@ -6,6 +6,17 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Initial Categories (SDD-004)
+
+-   Every new Financial Space receives the default pt-BR category
+    catalog exactly once, in the same transaction that creates the space
+    (`docs/product/DEFAULT-CATEGORY-CATALOG.md`).
+-   Categories have a kind (Expense or Income) and at most one level of
+    subcategories, enforced by the database. DR-072 was proposed.
+-   `GET /financial-spaces/{spaceId}/categories` returns the category
+    tree; the space screen shows it grouped by kind.
+-   Migration `0003_categories`.
+
 ### First Financial Space (SDD-003)
 
 -   Users create Financial Spaces (name only); the creator is the Owner

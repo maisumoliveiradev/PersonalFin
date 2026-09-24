@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto';
-
 import type {
   CreateFinancialSpaceRequest,
   FinancialSpaceList,
@@ -8,15 +6,16 @@ import type {
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
+import type { DataAccess } from '../../database/data-access.ts';
 import { requireAuthenticatedUser } from '../../http/authenticate.ts';
 import { parseInput } from '../../http/validation.ts';
+import { createFinancialSpace } from './create-financial-space.ts';
 import {
   FINANCIAL_SPACE_NAME_MAX_LENGTH,
   type FinancialSpace,
   normalizeFinancialSpaceName,
 } from './financial-space.ts';
 import { requireAccessibleSpace } from './financial-space-access.ts';
-import type { FinancialSpaceRepository } from './financial-space-repository.ts';
 
 const createFinancialSpaceSchema = z.strictObject({
   name: z
@@ -37,10 +36,9 @@ function toResponse(space: FinancialSpace): FinancialSpaceResponse {
   };
 }
 
-export function registerFinancialSpaceRoutes(
-  server: FastifyInstance,
-  repository: FinancialSpaceRepository,
-): void {
+export function registerFinancialSpaceRoutes(server: FastifyInstance, data: DataAccess): void {
+  const repository = data.repositories.financialSpaces;
+
   server.get('/financial-spaces', async (request): Promise<FinancialSpaceList> => {
     const user = requireAuthenticatedUser(request);
     const spaces = await repository.listAccessibleTo(user.id);
@@ -50,11 +48,7 @@ export function registerFinancialSpaceRoutes(
   server.post('/financial-spaces', async (request, reply): Promise<FinancialSpaceResponse> => {
     const user = requireAuthenticatedUser(request);
     const input = parseInput(createFinancialSpaceSchema, request.body);
-    const space = await repository.create({
-      id: randomUUID(),
-      name: input.name,
-      ownerUserId: user.id,
-    });
+    const space = await createFinancialSpace(data, { name: input.name, ownerUserId: user.id });
     reply.status(201);
     return toResponse(space);
   });

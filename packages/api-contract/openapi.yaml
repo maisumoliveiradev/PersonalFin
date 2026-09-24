@@ -85,6 +85,26 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/categories:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listCategories
+      summary: List the categories of an accessible Financial Space
+      description: >
+        Top-level categories ordered by position, each with its
+        subcategories. Every new space receives the default catalog once.
+      responses:
+        '200':
+          description: The category tree of the space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     SpaceId:
@@ -198,6 +218,54 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FinancialSpace'
+    CategoryKind:
+      type: string
+      description: Transaction type a category applies to.
+      enum:
+        - expense
+        - income
+    Subcategory:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    CategoryTreeItem:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - kind
+        - subcategories
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        kind:
+          $ref: '#/components/schemas/CategoryKind'
+        subcategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Subcategory'
+    CategoryList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryTreeItem'
     ErrorResponse:
       type: object
       additionalProperties: false

@@ -1,4 +1,4 @@
-import type { DatabasePool } from '../../database/pool.ts';
+import type { Queryable } from '../../database/pool.ts';
 import type { FinancialSpace, FinancialSpaceLifecycleState } from './financial-space.ts';
 import type { FinancialSpaceRepository } from './financial-space-repository.ts';
 
@@ -22,12 +22,10 @@ function toFinancialSpace(row: FinancialSpaceRow): FinancialSpace {
   };
 }
 
-export function createPostgresFinancialSpaceRepository(
-  pool: DatabasePool,
-): FinancialSpaceRepository {
+export function createPostgresFinancialSpaceRepository(db: Queryable): FinancialSpaceRepository {
   return {
     async create(space) {
-      const { rows } = await pool.query<FinancialSpaceRow>(
+      const { rows } = await db.query<FinancialSpaceRow>(
         `INSERT INTO financial_space (id, name, owner_user_id)
          VALUES ($1, $2, $3)
          RETURNING ${COLUMNS}`,
@@ -41,7 +39,7 @@ export function createPostgresFinancialSpaceRepository(
     },
 
     async listAccessibleTo(userId) {
-      const { rows } = await pool.query<FinancialSpaceRow>(
+      const { rows } = await db.query<FinancialSpaceRow>(
         `SELECT ${COLUMNS} FROM financial_space
          WHERE owner_user_id = $1
          ORDER BY created_at, id`,
@@ -51,7 +49,7 @@ export function createPostgresFinancialSpaceRepository(
     },
 
     async findAccessibleTo(userId, spaceId) {
-      const { rows } = await pool.query<FinancialSpaceRow>(
+      const { rows } = await db.query<FinancialSpaceRow>(
         `SELECT ${COLUMNS} FROM financial_space
          WHERE id = $1 AND owner_user_id = $2`,
         [spaceId, userId],

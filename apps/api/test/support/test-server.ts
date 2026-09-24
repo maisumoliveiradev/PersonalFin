@@ -1,6 +1,8 @@
 import type { AuthenticatedUser, SessionResolver } from '../../src/auth/authenticated-user.ts';
+import type { DataAccess } from '../../src/database/data-access.ts';
 import type { AuthHandler } from '../../src/routes/auth.ts';
-import { buildServer, type Repositories } from '../../src/server.ts';
+import { buildServer } from '../../src/server.ts';
+import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
 
 export const SESSION_COOKIE = 'personalfin.session_token';
@@ -28,14 +30,23 @@ export function createFakeSessionResolver(
 const unusedAuthHandler: AuthHandler = async () => new Response(null, { status: 404 });
 
 export function createInMemoryRepositories() {
-  return { financialSpaces: createInMemoryFinancialSpaceRepository() };
+  return {
+    financialSpaces: createInMemoryFinancialSpaceRepository(),
+    categories: createInMemoryCategoryRepository(),
+  };
+}
+
+export type InMemoryRepositories = ReturnType<typeof createInMemoryRepositories>;
+
+export function createInMemoryDataAccess(repositories: InMemoryRepositories): DataAccess {
+  return { repositories, transaction: (work) => work(repositories) };
 }
 
 export function buildTestServer(
   overrides: {
     sessions?: Record<string, AuthenticatedUser>;
     authHandler?: AuthHandler;
-    repositories?: Repositories;
+    repositories?: InMemoryRepositories;
   } = {},
 ) {
   return buildServer({
@@ -44,6 +55,6 @@ export function buildTestServer(
     corsOrigins: ['http://localhost:8081'],
     sessionResolver: createFakeSessionResolver(overrides.sessions ?? {}),
     authHandler: overrides.authHandler ?? unusedAuthHandler,
-    repositories: overrides.repositories ?? createInMemoryRepositories(),
+    data: createInMemoryDataAccess(overrides.repositories ?? createInMemoryRepositories()),
   });
 }

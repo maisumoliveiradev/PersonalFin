@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useFinancialSpace } from '../../../../api/financial-spaces';
+import { CategoryOverview } from '../../../../features/categories/CategoryOverview';
 import { messages } from '../../../../i18n/messages';
 import { BodyText } from '../../../../ui/BodyText';
 import { Button } from '../../../../ui/Button';
@@ -39,6 +40,7 @@ export default function FinancialSpaceHomeScreen() {
       <Title>{space.data.name}</Title>
       <BodyText muted>{messages.spaces.ownerRole}</BodyText>
       {backToSpaces}
+      <CategoryOverview spaceId={space.data.id} />
     </Screen>
   );
 }

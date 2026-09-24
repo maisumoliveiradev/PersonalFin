@@ -3,7 +3,8 @@
 ## Current Version
 
 Pre-release. SDD-001 (Project Foundation), SDD-002 (Base
-Authentication), and SDD-003 (First Financial Space) implemented;
+Authentication), SDD-003 (First Financial Space), and SDD-004 (Initial
+Categories) implemented;
 `v0.1.0` in progress.
 
 ## Implemented Product Capabilities
@@ -21,9 +22,14 @@ Authentication), and SDD-003 (First Financial Space) implemented;
     invitation. The selected space is carried in the URL
     (`/spaces/{spaceId}`), not persisted as a preference.
 
-No category or transaction functionality exists. Do not assume either
-until the corresponding SDD is implemented and this document is
-updated.
+-   **Categories (SDD-004):** each new space receives the default pt-BR
+    catalog once (`docs/product/DEFAULT-CATEGORY-CATALOG.md`). Categories
+    have a kind (Expense/Income) and optional subcategories (two levels
+    at most). They can be read (API and space screen) but not created,
+    renamed, archived, or deleted.
+
+No transaction functionality exists. Do not assume it until the
+corresponding SDD is implemented and this document is updated.
 
 ## Implemented Technical Foundation
 
@@ -39,7 +45,7 @@ updated.
         TypeScript types.
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
-    `session`, `account`, `verification`; `financial_space`.
+    `session`, `account`, `verification`; `financial_space`, `category`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -48,7 +54,7 @@ updated.
 
 ## Not Yet Present
 
--   Categories, transactions.
+-   Transactions; category management.
 -   Shared domain package.
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
@@ -68,4 +74,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.1.0/SDD-004-default-categories.md`.
+`docs/sdds/v0.1.0/SDD-005-manual-transaction.md`.

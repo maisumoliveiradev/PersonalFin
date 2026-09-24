@@ -3,9 +3,10 @@ import Fastify, { type FastifyInstance } from 'fastify';
 
 import type { SessionResolver } from './auth/authenticated-user.ts';
 import type { AppEnvironment, LogLevel } from './config.ts';
+import type { DataAccess } from './database/data-access.ts';
 import { createAuthenticationHook } from './http/authenticate.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
-import type { FinancialSpaceRepository } from './modules/financial-spaces/financial-space-repository.ts';
+import { registerCategoryRoutes } from './modules/categories/category-routes.ts';
 import { registerFinancialSpaceRoutes } from './modules/financial-spaces/financial-space-routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './routes/auth.ts';
 import { registerHealthRoute } from './routes/health.ts';
@@ -17,11 +18,7 @@ export interface ServerOptions {
   corsOrigins: string[];
   sessionResolver: SessionResolver;
   authHandler: AuthHandler;
-  repositories: Repositories;
-}
-
-export interface Repositories {
-  financialSpaces: FinancialSpaceRepository;
+  data: DataAccess;
 }
 
 const REDACTED_LOG_PATHS = ['req.headers.authorization', 'req.headers.cookie'];
@@ -54,7 +51,8 @@ export function buildServer(options: ServerOptions): FastifyInstance {
   server.register(async (authenticated) => {
     authenticated.addHook('preHandler', createAuthenticationHook(options.sessionResolver));
     registerMeRoute(authenticated);
-    registerFinancialSpaceRoutes(authenticated, options.repositories.financialSpaces);
+    registerFinancialSpaceRoutes(authenticated, options.data);
+    registerCategoryRoutes(authenticated, options.data);
   });
 
   return server;

@@ -8,3 +8,6 @@ export type ErrorResponse = components['schemas']['ErrorResponse'];
 export type CreateFinancialSpaceRequest = components['schemas']['CreateFinancialSpaceRequest'];
 export type FinancialSpace = components['schemas']['FinancialSpace'];
 export type FinancialSpaceList = components['schemas']['FinancialSpaceList'];
+export type CategoryKind = components['schemas']['CategoryKind'];
+export type CategoryTreeItem = components['schemas']['CategoryTreeItem'];
+export type CategoryList = components['schemas']['CategoryList'];

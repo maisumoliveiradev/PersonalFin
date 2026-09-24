@@ -37,7 +37,7 @@ Location: `apps/client/src/ui`.
     minimum height), `FormError` (alert role, polite live region),
     `LoadingScreen`, `BodyText` (regular and muted), `ListItem`
     (pressable row with title and subtitle, 56 px minimum height;
-    SDD-003).
+    SDD-003), `SectionTitle` (header role; SDD-004).
 
 ## Components
 

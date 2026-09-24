@@ -24,10 +24,12 @@ apps/
     src/ui/          Design System tokens and primitives
   api/             Node.js + Fastify application API
     src/auth/        Better Auth setup and session resolution
-    src/database/    Connection pool, migration runner, SQL migrations
+    src/database/    Connection pool, transactions (data-access.ts),
+                     migration runner, SQL migrations
     src/http/        Authentication hook, input validation, error contract
-    src/modules/     Domain modules (financial-spaces/): domain types,
-                     repository port, PostgreSQL adapter, routes
+    src/modules/     Domain modules (financial-spaces/, categories/):
+                     domain types, use cases, repository ports,
+                     PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)
 packages/
   api-contract/    OpenAPI contract (openapi.yaml) and generated types
@@ -140,6 +142,15 @@ Requirements:
 -   versioned schema migrations;
 -   soft-delete where domain rules require historical recovery;
 -   indexes based on measured query needs.
+
+### Data access pattern
+
+Routes and use cases receive a `DataAccess` object
+(`apps/api/src/database/data-access.ts`) exposing repository ports and
+`transaction(work)`. Work that must be atomic, such as creating a space
+together with its default categories, runs inside `transaction`, which
+gives it repositories bound to a single PostgreSQL transaction. Unit
+tests supply in-memory repositories through the same interface.
 
 ## Offline evolution
 

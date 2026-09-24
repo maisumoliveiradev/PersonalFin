@@ -30,6 +30,12 @@ export const messages = {
     greeting: (name: string) => `Olá, ${name}!`,
     loadError: 'Não foi possível carregar seus dados.',
   },
+  categories: {
+    title: 'Categorias',
+    expenseSection: 'Despesas',
+    incomeSection: 'Receitas',
+    loadError: 'Não foi possível carregar as categorias.',
+  },
   spaces: {
     listTitle: 'Seus espaços financeiros',
     firstSpaceTitle: 'Crie seu primeiro espaço financeiro',
