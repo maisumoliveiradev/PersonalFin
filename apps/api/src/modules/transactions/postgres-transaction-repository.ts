@@ -24,12 +24,14 @@ interface TransactionRow {
   subcategory_name: string | null;
   created_by_user_id: string;
   created_at: Date;
+  version: number;
 }
 
 const SELECT_WITH_CATEGORIES = `
   SELECT t.id, t.financial_space_id, t.type, t.status, t.description, t.amount_minor,
          t.currency, t.financial_date, t.category_id, c.name AS category_name,
-         t.subcategory_id, s.name AS subcategory_name, t.created_by_user_id, t.created_at
+         t.subcategory_id, s.name AS subcategory_name, t.created_by_user_id, t.created_at,
+         t.version
   FROM financial_transaction t
   JOIN category c ON c.id = t.category_id
   LEFT JOIN category s ON s.id = t.subcategory_id`;
@@ -59,10 +61,25 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
         : { id: row.subcategory_id, name: row.subcategory_name },
     createdByUserId: row.created_by_user_id,
     createdAt: row.created_at,
+    version: row.version,
   };
 }
 
 export function createPostgresTransactionRepository(db: Queryable): TransactionRepository {
+  async function findInSpace(
+    financialSpaceId: string,
+    transactionId: string,
+    options?: { lock: boolean },
+  ): Promise<FinancialTransaction | null> {
+    const lock = options?.lock === true ? 'FOR UPDATE OF t' : '';
+    const { rows } = await db.query<TransactionRow>(
+      `${SELECT_WITH_CATEGORIES} WHERE t.financial_space_id = $1 AND t.id = $2 ${lock}`,
+      [financialSpaceId, transactionId],
+    );
+    const [row] = rows;
+    return row === undefined ? null : toTransaction(row);
+  }
+
   return {
     async create(transaction) {
       await db.query(
@@ -93,6 +110,35 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
         throw new Error('Created transaction could not be read back');
       }
       return toTransaction(row);
+    },
+
+    findInSpace,
+
+    async update({ financialSpaceId, transactionId, expectedVersion, fields, updatedByUserId }) {
+      const result = await db.query(
+        `UPDATE financial_transaction SET
+           type = $4, status = $5, description = $6, amount_minor = $7, financial_date = $8,
+           category_id = $9, subcategory_id = $10, updated_by_user_id = $11,
+           version = version + 1, updated_at = now()
+         WHERE financial_space_id = $1 AND id = $2 AND version = $3`,
+        [
+          financialSpaceId,
+          transactionId,
+          expectedVersion,
+          fields.type,
+          fields.status,
+          fields.description,
+          String(fields.amountMinor),
+          fields.financialDate,
+          fields.categoryId,
+          fields.subcategoryId,
+          updatedByUserId,
+        ],
+      );
+      if (result.rowCount !== 1) {
+        return null;
+      }
+      return findInSpace(financialSpaceId, transactionId);
     },
 
     async listRecentForSpace(financialSpaceId, limit) {

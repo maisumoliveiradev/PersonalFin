@@ -159,16 +159,65 @@ paths:
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
         '422':
-          description: >
-            The category is not a top-level category of this space with the
-            same kind as the transaction type, or the subcategory does not
-            belong to it (code CATEGORY_NOT_AVAILABLE).
+          $ref: '#/components/responses/CategoryNotAvailable'
+  /financial-spaces/{spaceId}/transactions/{transactionId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/TransactionId'
+    get:
+      operationId: getTransaction
+      summary: Return one transaction of an accessible Financial Space
+      responses:
+        '200':
+          description: The transaction.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+    patch:
+      operationId: updateTransaction
+      summary: Edit a transaction (partial update with optimistic concurrency)
+      description: >
+        Only the fields present are changed. The final state must satisfy
+        the same rules as creation. Every effective change is recorded in
+        the audit log; a request that changes nothing is accepted without
+        a new version.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTransactionRequest'
+      responses:
+        '200':
+          description: The transaction after the edit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+        '422':
+          $ref: '#/components/responses/CategoryNotAvailable'
 components:
   parameters:
+    TransactionId:
+      name: transactionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     SpaceId:
       name: spaceId
       in: path
@@ -185,6 +234,29 @@ components:
         Session cookie issued by Better Auth. Native clients send the same
         cookie through the Cookie header.
   responses:
+    CategoryNotAvailable:
+      description: >
+        The category is not a top-level category of this space with the
+        same kind as the transaction type, or the subcategory does not
+        belong to it (code CATEGORY_NOT_AVAILABLE).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TransactionNotFound:
+      description: The transaction does not exist in this space (code TRANSACTION_NOT_FOUND).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    VersionConflict:
+      description: >
+        The record changed since the version sent by the client
+        (code VERSION_CONFLICT). Reload it and retry.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     ValidationFailed:
       description: The request is invalid (code VALIDATION_FAILED).
       content:
@@ -411,6 +483,7 @@ components:
         - category
         - subcategory
         - createdAt
+        - version
       properties:
         id:
           type: string
@@ -438,6 +511,40 @@ components:
         createdAt:
           type: string
           format: date-time
+        version:
+          type: integer
+          minimum: 1
+          description: Incremented on every effective edit; send it back when editing.
+    UpdateTransactionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+          description: The version the client edited.
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        description:
+          type: string
+          minLength: 1
+          maxLength: 140
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        financialDate:
+          $ref: '#/components/schemas/FinancialDate'
+        categoryId:
+          type: string
+          format: uuid
+        subcategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
     TransactionList:
       type: object
       additionalProperties: false

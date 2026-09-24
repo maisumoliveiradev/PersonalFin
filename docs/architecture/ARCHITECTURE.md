@@ -10,7 +10,8 @@ for Web/Android/iOS in a monorepo), ADR-0005 (API shell), ADR-0006
 (quality toolchain and local CI), ADR-0007 (authentication), ADR-0008
 (PostgreSQL and migrations), ADR-0009 (client application
 architecture), ADR-0010 (Financial Space access model), ADR-0011
-(money and financial date formats, shared domain package).
+(money and financial date formats, shared domain package), ADR-0012
+(audit log and optimistic concurrency).
 
 ## Repository structure
 
@@ -29,7 +30,7 @@ apps/
                      migration runner, SQL migrations
     src/http/        Authentication hook, input validation, error contract
     src/modules/     Domain modules (financial-spaces/, categories/,
-                     transactions/):
+                     transactions/, audit/):
                      domain types, use cases, repository ports,
                      PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)
@@ -163,6 +164,13 @@ exchanged as the integer `amountMinor`. Financial dates are PostgreSQL
 `date` values exchanged as `YYYY-MM-DD` strings; the database driver is
 configured never to convert them to JavaScript `Date`. Parsing and
 formatting live in `packages/domain` and are shared by API and client.
+
+### Audit and concurrency (ADR-0012)
+
+Mutations of financial records run in a transaction that locks the
+record, checks the client's `version`, applies the change, and appends
+an `audit_event` with actor and before/after values. `audit_event` is
+append-only at the database level.
 
 ## Offline evolution
 

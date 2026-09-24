@@ -2,9 +2,8 @@
 
 ## Current Version
 
-`v0.1.0`, released on 2026-09-24 (`main`, tag `v0.1.0`). SDD-001 to
-SDD-007 implemented and validated
-(`docs/sdds/v0.1.0/SDD-007-validation-report.md`).
+`v0.1.0` released on 2026-09-24 (`main`, tag `v0.1.0`). `develop` is
+building v0.2.0: SDD-008 implemented.
 
 ## Implemented Product Capabilities
 
@@ -30,8 +29,12 @@ SDD-007 implemented and validated
 -   **Transactions (SDD-005):** users register Expense or Income with
     description, amount (BRL), financial date, category matching the
     type, optional subcategory, and status (Paid/Received or Pending).
-    Transactions cannot be edited or deleted; there are no tags, notes,
-    attachments, recurrence, cards, or other currencies.
+    There are no tags, notes, attachments, recurrence, cards, or other
+    currencies.
+-   **Transaction edit (SDD-008):** every field can be edited from the
+    list; edits are audited (actor, instant, before/after) and protected
+    by optimistic concurrency (`version`, `409 VERSION_CONFLICT`). There
+    is no audit history screen and no deletion yet.
 -   **Transaction list (SDD-006):** the space screen lists the space's
     most recent transactions (up to 100; API limit up to 200 with
     `hasMore`), newest financial date first, with type, description,
@@ -54,7 +57,7 @@ SDD-007 implemented and validated
         transaction rules (ADR-0011).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
-    `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`.
+    `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`, `audit_event`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -63,8 +66,8 @@ SDD-007 implemented and validated
 
 ## Not Yet Present
 
--   Transaction edit and deletion; category management; filters and
-    pagination.
+-   Transaction deletion; category management; filters and pagination;
+    balance; dashboard (v0.2.0 SDDs).
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
 
@@ -79,4 +82,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Write and execute the v0.2.0 SDDs (`docs/sdds/v0.2.0/`).
+`docs/sdds/v0.2.0/SDD-009-transaction-soft-delete.md`.

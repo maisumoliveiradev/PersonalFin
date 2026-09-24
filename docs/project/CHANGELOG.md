@@ -6,7 +6,18 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
-Nothing yet.
+### Transaction Edit (SDD-008)
+
+-   Transactions can be edited (all fields) from the list; the form is
+    shared with creation.
+-   Every effective edit is recorded in the append-only audit log with
+    actor and before/after values (ADR-0012).
+-   Optimistic concurrency: edits based on an outdated version are
+    rejected with `409 VERSION_CONFLICT` instead of overwriting.
+-   `GET` and `PATCH /financial-spaces/{spaceId}/transactions/{transactionId}`;
+    transactions now expose `version`.
+-   Fixed: option groups and buttons now expose their selected, disabled,
+    and busy states to Web screen readers.
 
 ## \[0.1.0\] --- 2026-09-24
 

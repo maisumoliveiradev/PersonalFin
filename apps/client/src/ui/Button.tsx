@@ -25,9 +25,10 @@ export function Button({
   const contentColor = isPrimary ? palette.onPrimary : palette.primary;
   return (
     <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: isInactive, busy: loading }}
+      role="button"
+      aria-label={label}
+      aria-disabled={isInactive}
+      aria-busy={loading}
       disabled={isInactive}
       onPress={onPress}
       style={({ pressed }) => [

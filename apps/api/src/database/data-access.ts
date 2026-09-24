@@ -1,3 +1,5 @@
+import type { AuditRepository } from '../modules/audit/audit-repository.ts';
+import { createPostgresAuditRepository } from '../modules/audit/postgres-audit-repository.ts';
 import type { CategoryRepository } from '../modules/categories/category-repository.ts';
 import { createPostgresCategoryRepository } from '../modules/categories/postgres-category-repository.ts';
 import type { FinancialSpaceRepository } from '../modules/financial-spaces/financial-space-repository.ts';
@@ -10,6 +12,7 @@ export interface Repositories {
   financialSpaces: FinancialSpaceRepository;
   categories: CategoryRepository;
   transactions: TransactionRepository;
+  audit: AuditRepository;
 }
 
 export interface DataAccess {
@@ -22,6 +25,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     financialSpaces: createPostgresFinancialSpaceRepository(db),
     categories: createPostgresCategoryRepository(db),
     transactions: createPostgresTransactionRepository(db),
+    audit: createPostgresAuditRepository(db),
   };
 }
 

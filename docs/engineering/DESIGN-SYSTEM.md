@@ -42,6 +42,11 @@ Location: `apps/client/src/ui`.
     and `StatusMessage` (success alert with `success` color token;
     SDD-005).
 
+Accessibility props: use the cross-platform `role` and `aria-*` props
+(`aria-label`, `aria-checked`, `aria-disabled`, `aria-busy`). React
+Native Web 0.21 ignores `accessibilityState`, so selected/disabled
+states would not reach Web screen readers (found in SDD-008).
+
 ## Components
 
 Create components only when justified by current product usage. Prefer

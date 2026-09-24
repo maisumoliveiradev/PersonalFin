@@ -15,6 +15,13 @@ export function createInMemoryTransactionRepository(
     return { id: category.id, name: category.name };
   }
 
+  function find(financialSpaceId: string, transactionId: string) {
+    return transactions.find(
+      (transaction) =>
+        transaction.financialSpaceId === financialSpaceId && transaction.id === transactionId,
+    );
+  }
+
   return {
     transactions,
     async create(transaction) {
@@ -24,6 +31,7 @@ export function createInMemoryTransactionRepository(
         category: reference(categoryId),
         subcategory: subcategoryId === null ? null : reference(subcategoryId),
         createdAt: new Date(Date.UTC(2026, 0, 1, 12, 0, transactions.length)),
+        version: 1,
       };
       transactions.push(created);
       return created;
@@ -37,6 +45,22 @@ export function createInMemoryTransactionRepository(
             right.createdAt.getTime() - left.createdAt.getTime(),
         )
         .slice(0, limit);
+    },
+    async findInSpace(financialSpaceId, transactionId) {
+      return find(financialSpaceId, transactionId) ?? null;
+    },
+    async update({ financialSpaceId, transactionId, expectedVersion, fields }) {
+      const current = find(financialSpaceId, transactionId);
+      if (current === undefined || current.version !== expectedVersion) {
+        return null;
+      }
+      const { categoryId, subcategoryId, ...rest } = fields;
+      Object.assign(current, rest, {
+        category: reference(categoryId),
+        subcategory: subcategoryId === null ? null : reference(subcategoryId),
+        version: current.version + 1,
+      });
+      return current;
     },
   };
 }
