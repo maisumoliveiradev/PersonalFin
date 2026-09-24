@@ -6,6 +6,17 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Independent Occurrences and Series Changes (SDD-019)
+
+-   Editing an occurrence offers "Apenas este" or "Este e os próximos";
+    the latter updates description, amount, and category of the series
+    and of later pending occurrences not edited individually (DR-076).
+-   "Encerrar" on the Recorrências screen ends a series on a date and
+    moves later pending occurrences to the trash.
+-   `PATCH .../recurrences/{id}` and `POST .../recurrences/{id}/end`;
+    transactions expose `occurrenceDate`; migration
+    `0012_occurrence_independence`.
+
 ### Recurring Income and Expenses (SDD-018)
 
 -   "Repetir" in the new-transaction form creates a monthly, weekly, or

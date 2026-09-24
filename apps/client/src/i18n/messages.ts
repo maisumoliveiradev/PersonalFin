@@ -246,10 +246,26 @@ export const messages = {
     until: (date: string) => `até ${date}`,
     noEnd: 'sem data de término',
     tag: 'Recorrente',
+    scopeLabel: 'Aplicar alterações a',
+    onlyThis: 'Apenas este',
+    thisAndFollowing: 'Este e os próximos',
+    followingHint:
+      'Altera a descrição, o valor e a categoria deste e dos próximos lançamentos pendentes que não foram editados individualmente.',
+    endAction: 'Encerrar',
+    lastDayLabel: 'Último dia da recorrência',
+    confirmEndAction: 'Confirmar encerramento',
+    keepAction: 'Não encerrar',
+    ended: (count: number) =>
+      count === 1
+        ? 'Recorrência encerrada. 1 lançamento previsto foi para a Lixeira.'
+        : `Recorrência encerrada. ${count} lançamentos previstos foram para a Lixeira.`,
     errors: {
       endDateInvalid: 'Data de término inválida. Use DD/MM/AAAA.',
       endBeforeStart:
         'A data de término deve ser igual ou posterior à data do primeiro lançamento.',
+      followingOnlyDefaults:
+        'Para mudar data, tipo ou situação, use "Apenas este". "Este e os próximos" altera descrição, valor e categoria.',
+      endFailed: 'Não foi possível encerrar. Atualize a tela e tente novamente.',
     },
   },
   spaces: {

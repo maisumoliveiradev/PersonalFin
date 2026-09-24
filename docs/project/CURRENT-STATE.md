@@ -4,7 +4,7 @@
 
 `v0.2.0`, released on 2026-09-24 (`main`, tag `v0.2.0`). SDD-001 to
 SDD-016 implemented and validated. `develop` is building v0.3.0:
-SDD-017 and SDD-018 implemented.
+SDD-017 to SDD-019 implemented.
 
 ## Implemented Product Capabilities
 
@@ -55,7 +55,10 @@ SDD-017 and SDD-018 implemented.
 -   **Recurrences (SDD-018):** monthly, weekly, or yearly series with
     optional end date and non-business-day rule; occurrences are Pending
     transactions created 12 months ahead and extended when browsing
-    (ADR-0014). Series cannot yet be edited or ended (SDD-019).
+    (ADR-0014). Occurrences are independent; "Este e os próximos" and
+    "Encerrar" change the series without rewriting paid or individually
+    edited occurrences (DR-076). Frequency and start date cannot be
+    changed.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -107,6 +110,6 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.3.0/SDD-019-occurrence-independence.md`. Domain decisions
+`docs/sdds/v0.3.0/SDD-020-future-commitments.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, DR-072 to DR-075).
+`docs/sdds/v0.3.0/README.md`, DR-072 to DR-076).
