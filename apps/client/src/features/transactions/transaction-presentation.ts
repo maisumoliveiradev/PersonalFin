@@ -38,3 +38,19 @@ export function transactionCategoryLabel(transaction: Transaction): string {
 export function transactionDateLabel(transaction: Transaction): string {
   return formatDisplayDate(transaction.financialDate, 'pt-BR');
 }
+
+export function statusToggle(transaction: Transaction): {
+  nextStatus: Transaction['status'];
+  label: string;
+} {
+  if (transaction.status === 'paid') {
+    return { nextStatus: 'pending', label: messages.transactions.markPending };
+  }
+  return {
+    nextStatus: 'paid',
+    label:
+      transaction.type === 'expense'
+        ? messages.transactions.markPaid
+        : messages.transactions.markReceived,
+  };
+}

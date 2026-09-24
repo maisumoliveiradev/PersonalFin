@@ -1,4 +1,8 @@
-import type { CreateTransactionRequest, UpdateTransactionRequest } from '@personalfin/api-contract';
+import type {
+  CreateTransactionRequest,
+  TransactionStatus,
+  UpdateTransactionRequest,
+} from '@personalfin/api-contract';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient, expectData } from './api-client';
@@ -104,6 +108,26 @@ export function useCreateTransaction(spaceId: string) {
         }),
       ),
     onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+    },
+  });
+}
+
+export function useChangeTransactionStatus(spaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      transactionId: string;
+      version: number;
+      status: TransactionStatus;
+    }) =>
+      expectData(
+        await apiClient.PATCH('/financial-spaces/{spaceId}/transactions/{transactionId}', {
+          params: { path: { spaceId, transactionId: input.transactionId } },
+          body: { version: input.version, status: input.status },
+        }),
+      ),
+    onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
     },
   });
