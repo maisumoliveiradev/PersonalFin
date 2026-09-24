@@ -6,6 +6,25 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+Nothing yet.
+
+## \[0.1.0\] --- Release candidate
+
+Validated on 2026-09-24 (SDD-007,
+`docs/sdds/v0.1.0/SDD-007-validation-report.md`). The release date is
+set when the candidate is merged to `main`.
+
+First usable vertical slice: authenticate, create a Financial Space,
+receive default categories, register income and expenses, and list
+them on Web (and Android/iOS from the same codebase).
+
+### Release validation (SDD-007)
+
+-   Validation report recorded; no new functionality.
+-   Development `TRUSTED_ORIGINS` example now includes `exp://` so Expo Go
+    can authenticate.
+-   Workspace and app versions set to 0.1.0.
+
 ### Transaction List (SDD-006)
 
 -   The space screen lists its transactions (newest financial date
@@ -91,6 +110,3 @@ The project follows incremental semantic-style product versions.
 -   Established agent operating rules and specialist skills.
 -   Prepared v0.1.0 SDD sequence.
 
-## \[0.1.0\]
-
-Not released.
