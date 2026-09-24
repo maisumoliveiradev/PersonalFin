@@ -30,4 +30,27 @@ export const messages = {
     greeting: (name: string) => `Olá, ${name}!`,
     loadError: 'Não foi possível carregar seus dados.',
   },
+  spaces: {
+    listTitle: 'Seus espaços financeiros',
+    firstSpaceTitle: 'Crie seu primeiro espaço financeiro',
+    firstSpaceDescription:
+      'Um espaço organiza um contexto financeiro independente, como suas finanças pessoais, da casa ou da empresa.',
+    newSpaceTitle: 'Novo espaço financeiro',
+    newSpaceAction: 'Novo espaço',
+    nameLabel: 'Nome do espaço',
+    nameHint: 'Por exemplo: Pessoal, Casa ou Empresa.',
+    defaultName: 'Pessoal',
+    createAction: 'Criar espaço',
+    cancelAction: 'Cancelar',
+    openSpaceHint: 'Abre este espaço financeiro',
+    ownerRole: 'Proprietário',
+    backToSpaces: 'Trocar de espaço',
+    loadError: 'Não foi possível carregar os espaços.',
+    notFound: 'Espaço não encontrado ou sem acesso.',
+    errors: {
+      nameRequired: 'Informe um nome para o espaço.',
+      nameTooLong: 'Use no máximo 80 caracteres.',
+      unexpected: 'Não foi possível criar o espaço. Tente novamente.',
+    },
+  },
 } as const;

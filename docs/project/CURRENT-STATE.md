@@ -2,8 +2,9 @@
 
 ## Current Version
 
-Pre-release. SDD-001 (Project Foundation) and SDD-002 (Base
-Authentication) implemented; `v0.1.0` in progress.
+Pre-release. SDD-001 (Project Foundation), SDD-002 (Base
+Authentication), and SDD-003 (First Financial Space) implemented;
+`v0.1.0` in progress.
 
 ## Implemented Product Capabilities
 
@@ -13,9 +14,16 @@ Authentication) implemented; `v0.1.0` in progress.
     verification, password recovery, social login, MFA, or device/session
     management.
 
-No Financial Space, category, or transaction functionality exists. Do
-not assume any of them until the corresponding SDD is implemented and
-this document is updated.
+-   **Financial Spaces (SDD-003):** an authenticated user creates spaces
+    by name, becomes their single Owner, and lists, selects, and enters
+    them. Only the Owner can access a space (ADR-0010). Spaces are always
+    Active; there is no rename, archive, deletion, sharing, or
+    invitation. The selected space is carried in the URL
+    (`/spaces/{spaceId}`), not persisted as a preference.
+
+No category or transaction functionality exists. Do not assume either
+until the corresponding SDD is implemented and this document is
+updated.
 
 ## Implemented Technical Foundation
 
@@ -31,7 +39,7 @@ this document is updated.
         TypeScript types.
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
-    `session`, `account`, `verification`.
+    `session`, `account`, `verification`; `financial_space`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -40,7 +48,7 @@ this document is updated.
 
 ## Not Yet Present
 
--   Financial Spaces, categories, transactions.
+-   Categories, transactions.
 -   Shared domain package.
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
@@ -60,4 +68,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.1.0/SDD-003-financial-space.md`.
+`docs/sdds/v0.1.0/SDD-004-default-categories.md`.

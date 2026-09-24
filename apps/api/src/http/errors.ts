@@ -11,6 +11,34 @@ export function errorBody(code: string, message: string): ErrorBody {
   return { error: { code, message } };
 }
 
+export class AppError extends Error {
+  override name = 'AppError';
+  readonly statusCode: number;
+  readonly code: string;
+
+  constructor(statusCode: number, code: string, message: string) {
+    super(message);
+    this.statusCode = statusCode;
+    this.code = code;
+  }
+}
+
+export class ValidationError extends AppError {
+  override name = 'ValidationError';
+
+  constructor(message: string) {
+    super(400, 'VALIDATION_FAILED', message);
+  }
+}
+
+export class NotFoundError extends AppError {
+  override name = 'NotFoundError';
+
+  constructor(code: string, message: string) {
+    super(404, code, message);
+  }
+}
+
 const CLIENT_ERROR_CODES: Record<number, string> = {
   400: 'BAD_REQUEST',
   404: 'NOT_FOUND',
@@ -19,7 +47,14 @@ const CLIENT_ERROR_CODES: Record<number, string> = {
   415: 'UNSUPPORTED_MEDIA_TYPE',
 };
 
-export function handleError(error: FastifyError, request: FastifyRequest, reply: FastifyReply) {
+export function handleError(
+  error: FastifyError | AppError,
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  if (error instanceof AppError) {
+    return reply.status(error.statusCode).send(errorBody(error.code, error.message));
+  }
   const statusCode = error.statusCode ?? 500;
   if (statusCode < 500) {
     return reply

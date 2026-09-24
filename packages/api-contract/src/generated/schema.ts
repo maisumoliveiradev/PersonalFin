@@ -38,6 +38,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the Financial Spaces the user can access */
+        get: operations["listFinancialSpaces"];
+        put?: never;
+        /** Create a Financial Space owned by the user */
+        post: operations["createFinancialSpace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Return one accessible Financial Space */
+        get: operations["getFinancialSpace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -53,6 +90,27 @@ export interface components {
             email: string;
             name: string;
         };
+        CreateFinancialSpaceRequest: {
+            /** @description Trimmed, internal whitespace collapsed; 1 to 80 characters. */
+            name: string;
+        };
+        FinancialSpace: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            lifecycleState: "active";
+            /**
+             * @description The requesting user's role in the space.
+             * @enum {string}
+             */
+            role: "owner";
+            /** Format: date-time */
+            createdAt: string;
+        };
+        FinancialSpaceList: {
+            items: components["schemas"]["FinancialSpace"][];
+        };
         ErrorResponse: {
             error: {
                 /** @description Stable machine-readable error code. */
@@ -63,6 +121,24 @@ export interface components {
         };
     };
     responses: {
+        /** @description The request is invalid (code VALIDATION_FAILED). */
+        ValidationFailed: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description The Financial Space does not exist or is not accessible to the user (code FINANCIAL_SPACE_NOT_FOUND). Both cases return 404 so that inaccessible spaces are not revealed. */
+        FinancialSpaceNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description No valid session was provided. */
         Unauthenticated: {
             headers: {
@@ -73,7 +149,9 @@ export interface components {
             };
         };
     };
-    parameters: never;
+    parameters: {
+        SpaceId: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -119,6 +197,77 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+        };
+    };
+    listFinancialSpaces: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accessible Financial Spaces, oldest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancialSpaceList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+        };
+    };
+    createFinancialSpace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFinancialSpaceRequest"];
+            };
+        };
+        responses: {
+            /** @description The created Financial Space. The creator is its Owner. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancialSpace"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+        };
+    };
+    getFinancialSpace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The Financial Space. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancialSpace"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
 }

@@ -9,7 +9,7 @@ Accepted platform and tooling decisions: ADR-0001 (single Expo client
 for Web/Android/iOS in a monorepo), ADR-0005 (API shell), ADR-0006
 (quality toolchain and local CI), ADR-0007 (authentication), ADR-0008
 (PostgreSQL and migrations), ADR-0009 (client application
-architecture).
+architecture), ADR-0010 (Financial Space access model).
 
 ## Repository structure
 
@@ -19,13 +19,16 @@ apps/
     src/app/         Expo Router routes (screens)
     src/api/         Typed API client and TanStack Query hooks
     src/auth/        Better Auth client (Web and native variants)
+    src/features/    Feature components shared by several screens
     src/i18n/        UI text catalog
     src/ui/          Design System tokens and primitives
   api/             Node.js + Fastify application API
     src/auth/        Better Auth setup and session resolution
     src/database/    Connection pool, migration runner, SQL migrations
-    src/http/        Authentication hook and error contract
-    src/routes/      HTTP routes
+    src/http/        Authentication hook, input validation, error contract
+    src/modules/     Domain modules (financial-spaces/): domain types,
+                     repository port, PostgreSQL adapter, routes
+    src/routes/      Cross-cutting HTTP routes (health, auth, me)
 packages/
   api-contract/    OpenAPI contract (openapi.yaml) and generated types
 compose.yaml       Local PostgreSQL (development and test databases)
@@ -159,6 +162,14 @@ scope that resolves the session server-side and rejects missing or
 invalid sessions with `401 UNAUTHENTICATED`. Web clients use an
 `HttpOnly` session cookie; native clients keep the same cookie in
 secure storage.
+
+## Financial Space access (ADR-0010)
+
+Every Financial Space has exactly one Owner (`owner_user_id`). In v0.1
+only the Owner can access a space. Space-scoped endpoints resolve the
+space through `requireAccessibleSpace`, which returns
+`404 FINANCIAL_SPACE_NOT_FOUND` for missing and inaccessible spaces
+alike.
 
 ## Security boundaries
 

@@ -29,3 +29,16 @@ export class ApiRequestError extends Error {
     this.code = code;
   }
 }
+
+interface ApiResult<Data> {
+  data?: Data;
+  error?: { error?: { code?: string } };
+  response: Response;
+}
+
+export function expectData<Data>(result: ApiResult<Data>): Data {
+  if (result.data === undefined) {
+    throw new ApiRequestError(result.response.status, result.error?.error?.code ?? 'UNKNOWN');
+  }
+  return result.data;
+}

@@ -35,7 +35,65 @@ paths:
                 $ref: '#/components/schemas/CurrentUser'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+  /financial-spaces:
+    get:
+      operationId: listFinancialSpaces
+      summary: List the Financial Spaces the user can access
+      responses:
+        '200':
+          description: Accessible Financial Spaces, oldest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialSpaceList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      operationId: createFinancialSpace
+      summary: Create a Financial Space owned by the user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFinancialSpaceRequest'
+      responses:
+        '201':
+          description: The created Financial Space. The creator is its Owner.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialSpace'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /financial-spaces/{spaceId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getFinancialSpace
+      summary: Return one accessible Financial Space
+      responses:
+        '200':
+          description: The Financial Space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinancialSpace'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
+  parameters:
+    SpaceId:
+      name: spaceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
   securitySchemes:
     sessionCookie:
       type: apiKey
@@ -45,6 +103,21 @@ components:
         Session cookie issued by Better Auth. Native clients send the same
         cookie through the Cookie header.
   responses:
+    ValidationFailed:
+      description: The request is invalid (code VALIDATION_FAILED).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    FinancialSpaceNotFound:
+      description: >
+        The Financial Space does not exist or is not accessible to the user
+        (code FINANCIAL_SPACE_NOT_FOUND). Both cases return 404 so that
+        inaccessible spaces are not revealed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     Unauthenticated:
       description: No valid session was provided.
       content:
@@ -77,6 +150,54 @@ components:
           format: email
         name:
           type: string
+    CreateFinancialSpaceRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Trimmed, internal whitespace collapsed; 1 to 80 characters.
+          minLength: 1
+          maxLength: 80
+    FinancialSpace:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - lifecycleState
+        - role
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        lifecycleState:
+          type: string
+          enum:
+            - active
+        role:
+          type: string
+          description: The requesting user's role in the space.
+          enum:
+            - owner
+        createdAt:
+          type: string
+          format: date-time
+    FinancialSpaceList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FinancialSpace'
     ErrorResponse:
       type: object
       additionalProperties: false

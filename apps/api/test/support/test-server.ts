@@ -1,6 +1,7 @@
 import type { AuthenticatedUser, SessionResolver } from '../../src/auth/authenticated-user.ts';
 import type { AuthHandler } from '../../src/routes/auth.ts';
-import { buildServer } from '../../src/server.ts';
+import { buildServer, type Repositories } from '../../src/server.ts';
+import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
 
 export const SESSION_COOKIE = 'personalfin.session_token';
 
@@ -26,8 +27,16 @@ export function createFakeSessionResolver(
 
 const unusedAuthHandler: AuthHandler = async () => new Response(null, { status: 404 });
 
+export function createInMemoryRepositories() {
+  return { financialSpaces: createInMemoryFinancialSpaceRepository() };
+}
+
 export function buildTestServer(
-  overrides: { sessions?: Record<string, AuthenticatedUser>; authHandler?: AuthHandler } = {},
+  overrides: {
+    sessions?: Record<string, AuthenticatedUser>;
+    authHandler?: AuthHandler;
+    repositories?: Repositories;
+  } = {},
 ) {
   return buildServer({
     appEnv: 'development',
@@ -35,5 +44,6 @@ export function buildTestServer(
     corsOrigins: ['http://localhost:8081'],
     sessionResolver: createFakeSessionResolver(overrides.sessions ?? {}),
     authHandler: overrides.authHandler ?? unusedAuthHandler,
+    repositories: overrides.repositories ?? createInMemoryRepositories(),
   });
 }

@@ -6,6 +6,18 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### First Financial Space (SDD-003)
+
+-   Users create Financial Spaces (name only); the creator is the Owner
+    and the space starts Active.
+-   New users are guided to create their first space (name suggested as
+    "Pessoal"); users list, select, and enter their spaces.
+-   `GET /financial-spaces`, `POST /financial-spaces`, and
+    `GET /financial-spaces/{spaceId}`; inaccessible spaces return `404`.
+-   Migration `0002_financial_spaces`.
+-   Request validation with zod and `400 VALIDATION_FAILED` errors.
+-   ADR-0010 (Financial Space ownership and access model).
+
 ### Base Authentication (SDD-002)
 
 -   Email/password sign-up, sign-in, sign-out, and session restoration

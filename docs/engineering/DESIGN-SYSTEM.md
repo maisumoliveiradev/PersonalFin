@@ -35,7 +35,9 @@ Location: `apps/client/src/ui`.
     (visible label, accessibility label and hint, 48 px minimum height),
     `Button` (`primary` and `link` variants, busy/disabled states, 48 px
     minimum height), `FormError` (alert role, polite live region),
-    `LoadingScreen`.
+    `LoadingScreen`, `BodyText` (regular and muted), `ListItem`
+    (pressable row with title and subtitle, 56 px minimum height;
+    SDD-003).
 
 ## Components
 
