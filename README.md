@@ -48,6 +48,7 @@ use your computer's LAN address (and set `HOST=0.0.0.0` in the API).
 ``` sh
 npm run validate          # lint, typecheck, contract check, unit tests
 npm run test:integration  # API tests against the PostgreSQL test database
+npm run test:e2e          # browser journeys (needs Chrome, API, and Web running)
 ```
 
 `validate` runs automatically before every `git push`. Run
