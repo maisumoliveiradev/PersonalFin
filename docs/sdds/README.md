@@ -26,3 +26,7 @@ SDDs are bounded implementation specifications.
 7.  `SDD-007-release-validation.md`
 
 Do not execute later SDDs before dependencies are satisfied.
+
+## v0.2.0 sequence
+
+See `v0.2.0/README.md` (SDD-008 to SDD-016).
