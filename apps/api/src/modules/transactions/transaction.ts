@@ -1,6 +1,7 @@
 import type {
   CurrencyCode,
   FinancialDate,
+  Month,
   TransactionStatus,
   TransactionType,
 } from '@personalfin/domain';
@@ -8,6 +9,13 @@ import type {
 export interface CategoryReference {
   id: string;
   name: string;
+}
+
+export interface CardPurchaseReference {
+  cardId: string;
+  cardName: string;
+  invoiceId: string;
+  invoiceMonth: Month;
 }
 
 export interface FinancialTransaction {
@@ -28,6 +36,7 @@ export interface FinancialTransaction {
   recurrenceSeriesId: string | null;
   occurrenceDate: FinancialDate | null;
   individuallyModified: boolean;
+  cardPurchase: CardPurchaseReference | null;
 }
 
 export interface NewFinancialTransaction {
@@ -42,6 +51,7 @@ export interface NewFinancialTransaction {
   categoryId: string;
   subcategoryId: string | null;
   createdByUserId: string;
+  cardInvoiceId?: string | null;
 }
 
 export interface TransactionFields {
@@ -52,6 +62,7 @@ export interface TransactionFields {
   financialDate: FinancialDate;
   categoryId: string;
   subcategoryId: string | null;
+  cardInvoiceId: string | null;
 }
 
 export function transactionFields(transaction: FinancialTransaction): TransactionFields {
@@ -63,5 +74,6 @@ export function transactionFields(transaction: FinancialTransaction): Transactio
     financialDate: transaction.financialDate,
     categoryId: transaction.category.id,
     subcategoryId: transaction.subcategory?.id ?? null,
+    cardInvoiceId: transaction.cardPurchase?.invoiceId ?? null,
   };
 }

@@ -1,5 +1,10 @@
 import type { Transaction } from '@personalfin/api-contract';
-import { formatDisplayDate, formatMoney, isSupportedCurrency } from '@personalfin/domain';
+import {
+  formatDisplayDate,
+  formatMoney,
+  formatMonthLabel,
+  isSupportedCurrency,
+} from '@personalfin/domain';
 
 import { messages } from '../../i18n/messages';
 
@@ -10,6 +15,12 @@ export function transactionTypeLabel(transaction: Transaction): string {
 }
 
 export function transactionStatusLabel(transaction: Transaction): string {
+  if (transaction.cardPurchase !== null) {
+    return messages.cards.invoiceTag(
+      transaction.cardPurchase.cardName,
+      formatMonthLabel(transaction.cardPurchase.invoiceMonth, 'pt-BR'),
+    );
+  }
   if (transaction.status === 'pending') {
     return messages.transactions.pending;
   }

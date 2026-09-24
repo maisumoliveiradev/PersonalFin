@@ -1,6 +1,12 @@
+import type { Month } from '@personalfin/domain';
+
 import type { DataAccess } from '../../database/data-access.ts';
 import { AppError, NotFoundError } from '../../http/errors.ts';
 import { diffFields } from '../audit/audit-event.ts';
+import {
+  InvalidCardPurchaseError,
+  resolvePurchaseInvoice,
+} from '../cards/card-invoice-management.ts';
 import { assertCategorySelection } from './category-selection.ts';
 import {
   type FinancialTransaction,
@@ -13,7 +19,8 @@ export interface UpdateTransactionInput {
   transactionId: string;
   actorUserId: string;
   expectedVersion: number;
-  changes: Partial<TransactionFields>;
+  changes: Partial<Omit<TransactionFields, 'cardInvoiceId'>>;
+  invoiceMonth?: Month;
 }
 
 export class TransactionNotFoundError extends NotFoundError {
@@ -42,7 +49,8 @@ export async function updateTransaction(
   data: DataAccess,
   input: UpdateTransactionInput,
 ): Promise<FinancialTransaction> {
-  return data.transaction(async ({ transactions, categories, audit }) => {
+  return data.transaction(async (repositories) => {
+    const { transactions, categories, audit } = repositories;
     const current = await transactions.findInSpace(input.financialSpaceId, input.transactionId, {
       lock: true,
     });
@@ -58,6 +66,33 @@ export async function updateTransaction(
 
     const before = transactionFields(current);
     const after: TransactionFields = { ...before, ...input.changes };
+    if (current.cardPurchase === null) {
+      if (input.invoiceMonth !== undefined) {
+        throw new InvalidCardPurchaseError('Only card purchases have an invoice');
+      }
+    } else {
+      if (after.type !== 'expense' || after.status !== 'pending') {
+        throw new InvalidCardPurchaseError(
+          'Card purchases are expenses whose status follows the invoice',
+        );
+      }
+      if (input.invoiceMonth !== undefined) {
+        const card = await repositories.cards.findInSpace(
+          input.financialSpaceId,
+          current.cardPurchase.cardId,
+        );
+        if (card === null) {
+          throw new InvalidCardPurchaseError('The card of this purchase no longer exists');
+        }
+        const invoice = await resolvePurchaseInvoice(
+          repositories,
+          card,
+          after.financialDate,
+          input.invoiceMonth,
+        );
+        after.cardInvoiceId = invoice.id;
+      }
+    }
     const changes = diffFields({ ...before }, { ...after });
     if (Object.keys(changes).length === 0) {
       return current;

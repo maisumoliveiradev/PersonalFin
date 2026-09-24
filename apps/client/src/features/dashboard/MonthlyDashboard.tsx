@@ -151,6 +151,10 @@ export function MonthlyDashboard({ spaceId, month }: MonthlyDashboardProps) {
             )}
           />
           <MetricRow
+            label={messages.dashboard.projectionInvoices}
+            value={money(data, -data.projection.openInvoices)}
+          />
+          <MetricRow
             label={messages.dashboard.projectedBalance}
             value={money(data, data.projection.amountMinor)}
             color={data.projection.amountMinor < 0 ? palette.danger : palette.primary}

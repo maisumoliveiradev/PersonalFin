@@ -1,5 +1,6 @@
 import type {
   CreateCardRequest,
+  InvoiceDatesRequest,
   RecordCardLimitRequest,
   UpdateCardRequest,
 } from '@personalfin/api-contract';
@@ -67,5 +68,37 @@ export function useRecordCardLimit(spaceId: string, cardId: string) {
         }),
       ),
     onSettled: invalidate,
+  });
+}
+
+export const invoiceKeys = {
+  month: (spaceId: string, cardId: string, month: string) =>
+    ['financial-spaces', spaceId, 'transactions', 'card-invoices', cardId, month] as const,
+};
+
+export function useCardInvoice(spaceId: string, cardId: string, month: string) {
+  return useQuery({
+    queryKey: invoiceKeys.month(spaceId, cardId, month),
+    queryFn: async () =>
+      expectData(
+        await apiClient.GET('/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}', {
+          params: { path: { spaceId, cardId, month } },
+        }),
+      ),
+  });
+}
+
+export function useSetInvoiceDates(spaceId: string, cardId: string, month: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: InvoiceDatesRequest) =>
+      expectData(
+        await apiClient.PUT('/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/dates', {
+          params: { path: { spaceId, cardId, month } },
+          body: input,
+        }),
+      ),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ['financial-spaces', spaceId, 'transactions'] }),
   });
 }

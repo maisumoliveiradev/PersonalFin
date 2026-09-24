@@ -5,16 +5,21 @@ import type { FinancialTransaction } from '../../src/modules/transactions/transa
 export function createInMemoryDashboardRepository(
   transactions: () => readonly FinancialTransaction[],
   snapshots: () => readonly BalanceSnapshot[],
+  invoiceDueDate: (invoiceId: string) => string = () => '9999-12-31',
 ): DashboardRepository {
   function inRange(
     transaction: FinancialTransaction,
     range: { financialSpaceId: string; start: string; endExclusive: string },
   ) {
+    const metricDate =
+      transaction.cardPurchase === null
+        ? transaction.financialDate
+        : `${transaction.cardPurchase.invoiceMonth}-01`;
     return (
       transaction.financialSpaceId === range.financialSpaceId &&
       transaction.deletedAt === null &&
-      transaction.financialDate >= range.start &&
-      transaction.financialDate < range.endExclusive
+      metricDate >= range.start &&
+      metricDate < range.endExclusive
     );
   }
   const sum = (items: readonly FinancialTransaction[]) =>
@@ -50,11 +55,27 @@ export function createInMemoryDashboardRepository(
           right.amountMinor - left.amountMinor || left.name.localeCompare(right.name),
       );
     },
+    async pendingTotals(range) {
+      const items = transactions().filter(
+        (item) =>
+          item.financialSpaceId === range.financialSpaceId &&
+          item.deletedAt === null &&
+          item.status === 'pending' &&
+          item.cardPurchase === null &&
+          item.financialDate >= range.start &&
+          item.financialDate < range.endExclusive,
+      );
+      return {
+        income: sum(items.filter((item) => item.type === 'income')),
+        expenses: sum(items.filter((item) => item.type === 'expense')),
+      };
+    },
     async projectionComponents(financialSpaceId, observedOn, endExclusive) {
       const active = transactions().filter(
         (item) =>
           item.financialSpaceId === financialSpaceId &&
           item.deletedAt === null &&
+          item.cardPurchase === null &&
           item.financialDate < endExclusive,
       );
       const flow = (items: readonly FinancialTransaction[]) => ({
@@ -65,6 +86,15 @@ export function createInMemoryDashboardRepository(
         afterObservation: flow(active.filter((item) => item.financialDate > observedOn)),
         pendingUpToObservation: flow(
           active.filter((item) => item.financialDate <= observedOn && item.status === 'pending'),
+        ),
+        openInvoices: sum(
+          transactions().filter(
+            (item) =>
+              item.financialSpaceId === financialSpaceId &&
+              item.deletedAt === null &&
+              item.cardPurchase !== null &&
+              invoiceDueDate(item.cardPurchase.invoiceId) < endExclusive,
+          ),
         ),
       };
     },

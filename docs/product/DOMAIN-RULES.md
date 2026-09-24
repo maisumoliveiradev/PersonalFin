@@ -184,6 +184,20 @@ with effective dates: the limit on a date is the latest value effective
 on or before it (ties: latest recorded). Card names are unique per space,
 ignoring case. Cards are archived rather than deleted.
 
+**DR-079** *(SDD-024; decided under delegation.)* An invoice is
+identified by its card and reference month, the month of its due date.
+By default it closes on the card's closing day of the month before when
+the due day is on or before the closing day, otherwise of the reference
+month; it is due on the card's due day of the reference month moved to
+the next business day. A purchase belongs by default to the earliest
+invoice whose closing date is after the purchase date (a purchase on
+the closing date goes to the next invoice); the user may choose an
+invoice from the month before to two months after the purchase. The
+assignment is stored, so later date overrides never move purchases.
+Invoices are created when first needed with the card's days at that
+time. Card purchases are Expense transactions without a status of their
+own; commitments and the cash projection use their invoices instead.
+
 **DR-040** Interest/fees may be represented as separate expenses rather
 than inferred automatically.
 
