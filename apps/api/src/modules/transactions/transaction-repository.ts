@@ -1,8 +1,31 @@
+import type { FinancialDate, TransactionStatus, TransactionType } from '@personalfin/domain';
+
 import type {
   FinancialTransaction,
   NewFinancialTransaction,
   TransactionFields,
 } from './transaction.ts';
+
+export interface TransactionListQuery {
+  financialSpaceId: string;
+  state: 'active' | 'deleted';
+  limit: number;
+  cursor: string | null;
+  range?: { start: FinancialDate; endExclusive: FinancialDate };
+  type?: TransactionType;
+  status?: TransactionStatus;
+  categoryId?: string;
+  text?: string;
+}
+
+export interface TransactionPage {
+  items: FinancialTransaction[];
+  nextCursor: string | null;
+}
+
+export class InvalidCursorError extends Error {
+  override name = 'InvalidCursorError';
+}
 
 export interface TransactionDeletionChange {
   financialSpaceId: string;
@@ -22,7 +45,7 @@ export interface TransactionUpdate {
 
 export interface TransactionRepository {
   create(transaction: NewFinancialTransaction): Promise<FinancialTransaction>;
-  listRecentForSpace(financialSpaceId: string, limit: number): Promise<FinancialTransaction[]>;
+  list(query: TransactionListQuery): Promise<TransactionPage>;
   findInSpace(
     financialSpaceId: string,
     transactionId: string,
@@ -30,5 +53,4 @@ export interface TransactionRepository {
   ): Promise<FinancialTransaction | null>;
   update(update: TransactionUpdate): Promise<FinancialTransaction | null>;
   setDeleted(change: TransactionDeletionChange): Promise<FinancialTransaction | null>;
-  listDeletedForSpace(financialSpaceId: string, limit: number): Promise<FinancialTransaction[]>;
 }

@@ -348,8 +348,10 @@ export interface components {
         };
         TransactionList: {
             items: components["schemas"]["Transaction"][];
-            /** @description True when older transactions exist beyond the limit. */
+            /** @description True when more transactions match beyond this page. */
             hasMore: boolean;
+            /** @description Pass as cursor to fetch the next page; null on the last page. */
+            nextCursor: string | null;
         };
         ErrorResponse: {
             error: {
@@ -683,6 +685,16 @@ export interface operations {
                 limit?: number;
                 /** @description active (default) lists non-deleted transactions by financial date; deleted lists the trash, most recently deleted first. */
                 state?: "active" | "deleted";
+                /** @description Calendar month of the financial date (YYYY-MM). */
+                month?: string;
+                type?: components["schemas"]["TransactionType"];
+                status?: components["schemas"]["TransactionStatus"];
+                /** @description Matches the category or the subcategory. */
+                categoryId?: string;
+                /** @description Case- and accent-insensitive search in the description. */
+                q?: string;
+                /** @description Opaque cursor from a previous page's nextCursor. */
+                cursor?: string;
             };
             header?: never;
             path: {

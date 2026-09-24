@@ -3,7 +3,7 @@
 ## Current Version
 
 `v0.1.0` released on 2026-09-24 (`main`, tag `v0.1.0`). `develop` is
-building v0.2.0: SDD-008 to SDD-011 implemented.
+building v0.2.0: SDD-008 to SDD-012 implemented.
 
 ## Implemented Product Capabilities
 
@@ -41,11 +41,13 @@ building v0.2.0: SDD-008 to SDD-011 implemented.
     restore are audited. There is no permanent deletion.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
--   **Transaction list (SDD-006):** the space screen lists the space's
-    most recent transactions (up to 100; API limit up to 200 with
-    `hasMore`), newest financial date first, with type, description,
-    amount, date, category, and status. There is no search, filter,
-    pagination beyond the limit, or dashboard.
+-   **Transaction list (SDD-006, SDD-012):** the space screen lists
+    transactions of one month at a time (current month by default,
+    navigable, kept in the URL), newest financial date first, with type,
+    description, amount, date, category, and status. Optional filters:
+    type, status, category, and accent-insensitive text search; results
+    are paged by cursor ("Carregar mais"). There is no cross-space search
+    or saved filters.
 
 ## Implemented Technical Foundation
 
@@ -72,8 +74,8 @@ building v0.2.0: SDD-008 to SDD-011 implemented.
 
 ## Not Yet Present
 
--   Filters and pagination;
-    balance; dashboard (v0.2.0 SDDs).
+-   Balance snapshots, balance reminders, and dashboard (remaining
+    v0.2.0 SDDs).
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
 
@@ -88,4 +90,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.2.0/SDD-012-transaction-filters.md`.
+`docs/sdds/v0.2.0/SDD-013-balance-snapshots.md`.

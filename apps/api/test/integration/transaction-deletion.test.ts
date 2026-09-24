@@ -25,6 +25,10 @@ afterAll(async () => {
   await pool.end();
 });
 
+function listFor(financialSpaceId: string, state: 'active' | 'deleted') {
+  return data.repositories.transactions.list({ financialSpaceId, state, limit: 10, cursor: null });
+}
+
 async function setUp() {
   const userId = await insertUser(pool, `${randomUUID()}@example.com`);
   const space = await createFinancialSpace(data, { name: 'Pessoal', ownerUserId: userId });
@@ -57,8 +61,8 @@ describe('transaction soft delete persistence', () => {
       [transaction.id],
     );
     expect(rows[0]).toEqual({ deleted_by_user_id: userId, amount_minor: '4321' });
-    expect(await data.repositories.transactions.listRecentForSpace(spaceId, 10)).toEqual([]);
-    expect(await data.repositories.transactions.listDeletedForSpace(spaceId, 10)).toHaveLength(1);
+    expect((await listFor(spaceId, 'active')).items).toEqual([]);
+    expect((await listFor(spaceId, 'deleted')).items).toHaveLength(1);
 
     const restored = await restoreTransaction(data, { ...input, expectedVersion: 2 });
 

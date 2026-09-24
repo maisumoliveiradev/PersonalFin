@@ -3,7 +3,9 @@ import type {
   TransactionStatus,
   UpdateTransactionRequest,
 } from '@personalfin/api-contract';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import type { TransactionFilters } from '../features/transactions/transaction-filters';
 
 import { apiClient, expectData } from './api-client';
 
@@ -85,15 +87,26 @@ export function useUpdateTransaction(spaceId: string, transactionId: string) {
   });
 }
 
-export function useTransactions(spaceId: string) {
-  return useQuery({
-    queryKey: transactionKeys.forSpace(spaceId),
-    queryFn: async () =>
+const PAGE_SIZE = 50;
+
+export function useTransactions(spaceId: string, filters: TransactionFilters) {
+  return useInfiniteQuery({
+    queryKey: [...transactionKeys.forSpace(spaceId), 'list', filters] as const,
+    initialPageParam: null as string | null,
+    queryFn: async ({ pageParam }) =>
       expectData(
         await apiClient.GET('/financial-spaces/{spaceId}/transactions', {
-          params: { path: { spaceId } },
+          params: {
+            path: { spaceId },
+            query: {
+              ...filters,
+              limit: PAGE_SIZE,
+              ...(pageParam === null ? {} : { cursor: pageParam }),
+            },
+          },
         }),
       ),
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 }
 
