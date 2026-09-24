@@ -33,7 +33,7 @@ Location: `apps/client/src/ui`.
     safe-area handling.
 -   **Components:** `Screen`, `Title` (header role), `TextField`
     (visible label, accessibility label and hint, 48 px minimum height),
-    `Button` (`primary` and `link` variants, busy/disabled states, 48 px
+    `Button` (`primary`, `danger` (SDD-009), and `link` variants, busy/disabled states, 48 px
     minimum height), `FormError` (alert role, polite live region),
     `LoadingScreen`, `BodyText` (regular and muted), `ListItem`
     (pressable row with title and subtitle, 56 px minimum height;

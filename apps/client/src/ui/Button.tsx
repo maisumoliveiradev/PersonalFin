@@ -2,10 +2,11 @@ import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
 import { fontSize, radius, spacing, usePalette } from './theme';
 
-type ButtonVariant = 'primary' | 'link';
+type ButtonVariant = 'primary' | 'danger' | 'link';
 
 interface ButtonProps {
   label: string;
+  accessibilityLabel?: string;
   onPress: () => void;
   variant?: ButtonVariant;
   loading?: boolean;
@@ -14,33 +15,35 @@ interface ButtonProps {
 
 export function Button({
   label,
+  accessibilityLabel,
   onPress,
   variant = 'primary',
   loading = false,
   disabled = false,
 }: ButtonProps) {
   const palette = usePalette();
-  const isPrimary = variant === 'primary';
+  const isFilled = variant !== 'link';
   const isInactive = disabled || loading;
-  const contentColor = isPrimary ? palette.onPrimary : palette.primary;
+  const fillColor = variant === 'danger' ? palette.danger : palette.primary;
+  const contentColor = isFilled ? palette.onPrimary : palette.primary;
   return (
     <Pressable
       role="button"
-      aria-label={label}
+      aria-label={accessibilityLabel ?? label}
       aria-disabled={isInactive}
       aria-busy={loading}
       disabled={isInactive}
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        isPrimary && { backgroundColor: palette.primary },
+        isFilled && { backgroundColor: fillColor },
         (pressed || isInactive) && styles.dimmed,
       ]}
     >
       {loading ? (
         <ActivityIndicator color={contentColor} />
       ) : (
-        <Text style={[styles.label, { color: contentColor }, !isPrimary && styles.linkLabel]}>
+        <Text style={[styles.label, { color: contentColor }, !isFilled && styles.linkLabel]}>
           {label}
         </Text>
       )}

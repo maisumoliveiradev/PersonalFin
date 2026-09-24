@@ -3,7 +3,7 @@
 ## Current Version
 
 `v0.1.0` released on 2026-09-24 (`main`, tag `v0.1.0`). `develop` is
-building v0.2.0: SDD-008 implemented.
+building v0.2.0: SDD-008 and SDD-009 implemented.
 
 ## Implemented Product Capabilities
 
@@ -34,7 +34,10 @@ building v0.2.0: SDD-008 implemented.
 -   **Transaction edit (SDD-008):** every field can be edited from the
     list; edits are audited (actor, instant, before/after) and protected
     by optimistic concurrency (`version`, `409 VERSION_CONFLICT`). There
-    is no audit history screen and no deletion yet.
+    is no audit history screen.
+-   **Soft delete (SDD-009):** transactions can be deleted (with
+    confirmation) and restored from the space's Lixeira; deletion and
+    restore are audited. There is no permanent deletion.
 -   **Transaction list (SDD-006):** the space screen lists the space's
     most recent transactions (up to 100; API limit up to 200 with
     `hasMore`), newest financial date first, with type, description,
@@ -66,7 +69,7 @@ building v0.2.0: SDD-008 implemented.
 
 ## Not Yet Present
 
--   Transaction deletion; category management; filters and pagination;
+-   Category management; filters and pagination;
     balance; dashboard (v0.2.0 SDDs).
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
@@ -82,4 +85,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.2.0/SDD-009-transaction-soft-delete.md`.
+`docs/sdds/v0.2.0/SDD-010-transaction-status.md`.

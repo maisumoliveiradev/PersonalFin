@@ -24,6 +24,7 @@ export interface FinancialTransaction {
   createdByUserId: string;
   createdAt: Date;
   version: number;
+  deletedAt: Date | null;
 }
 
 export interface NewFinancialTransaction {

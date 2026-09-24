@@ -123,6 +123,18 @@ paths:
             minimum: 1
             maximum: 200
             default: 100
+        - name: state
+          in: query
+          required: false
+          description: >
+            active (default) lists non-deleted transactions by financial date;
+            deleted lists the trash, most recently deleted first.
+          schema:
+            type: string
+            enum:
+              - active
+              - deleted
+            default: active
       responses:
         '200':
           description: The most recent transactions of the space.
@@ -206,9 +218,62 @@ paths:
         '404':
           $ref: '#/components/responses/TransactionNotFound'
         '409':
-          $ref: '#/components/responses/VersionConflict'
+          $ref: '#/components/responses/StateConflict'
         '422':
           $ref: '#/components/responses/CategoryNotAvailable'
+    delete:
+      operationId: deleteTransaction
+      summary: Soft delete a transaction (restorable, audited)
+      parameters:
+        - name: version
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: The deleted transaction (deletedAt set).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+  /financial-spaces/{spaceId}/transactions/{transactionId}/restore:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/TransactionId'
+    post:
+      operationId: restoreTransaction
+      summary: Restore a soft-deleted transaction (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+      responses:
+        '200':
+          description: The restored transaction.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
 components:
   parameters:
     TransactionId:
@@ -249,10 +314,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
-    VersionConflict:
+    StateConflict:
       description: >
-        The record changed since the version sent by the client
-        (code VERSION_CONFLICT). Reload it and retry.
+        The request conflicts with the record's current state: the version
+        is outdated (VERSION_CONFLICT), the transaction is deleted and cannot
+        be edited (TRANSACTION_DELETED), or it is already deleted / not
+        deleted (TRANSACTION_ALREADY_DELETED, TRANSACTION_NOT_DELETED).
       content:
         application/json:
           schema:
@@ -484,6 +551,7 @@ components:
         - subcategory
         - createdAt
         - version
+        - deletedAt
       properties:
         id:
           type: string
@@ -515,6 +583,21 @@ components:
           type: integer
           minimum: 1
           description: Incremented on every effective edit; send it back when editing.
+        deletedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: When the transaction was soft-deleted; null when active.
+    VersionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
     UpdateTransactionRequest:
       type: object
       additionalProperties: false

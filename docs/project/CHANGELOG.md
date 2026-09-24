@@ -6,6 +6,17 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Transaction Soft Delete and Restore (SDD-009)
+
+-   Transactions can be deleted from the edit screen after confirmation;
+    they move to the space's Lixeira (trash) and can be restored with
+    identical values.
+-   Deleted transactions are excluded from the list and cannot be edited
+    (`409 TRANSACTION_DELETED`); delete and restore are audited and
+    version-checked.
+-   `DELETE .../transactions/{id}?version=`, `POST .../restore`, and
+    `GET .../transactions?state=deleted`.
+
 ### Transaction Edit (SDD-008)
 
 -   Transactions can be edited (all fields) from the list; the form is

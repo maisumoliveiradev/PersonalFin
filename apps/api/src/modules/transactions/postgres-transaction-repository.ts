@@ -25,13 +25,14 @@ interface TransactionRow {
   created_by_user_id: string;
   created_at: Date;
   version: number;
+  deleted_at: Date | null;
 }
 
 const SELECT_WITH_CATEGORIES = `
   SELECT t.id, t.financial_space_id, t.type, t.status, t.description, t.amount_minor,
          t.currency, t.financial_date, t.category_id, c.name AS category_name,
          t.subcategory_id, s.name AS subcategory_name, t.created_by_user_id, t.created_at,
-         t.version
+         t.version, t.deleted_at
   FROM financial_transaction t
   JOIN category c ON c.id = t.category_id
   LEFT JOIN category s ON s.id = t.subcategory_id`;
@@ -62,6 +63,7 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
     createdByUserId: row.created_by_user_id,
     createdAt: row.created_at,
     version: row.version,
+    deletedAt: row.deleted_at,
   };
 }
 
@@ -120,7 +122,7 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
            type = $4, status = $5, description = $6, amount_minor = $7, financial_date = $8,
            category_id = $9, subcategory_id = $10, updated_by_user_id = $11,
            version = version + 1, updated_at = now()
-         WHERE financial_space_id = $1 AND id = $2 AND version = $3`,
+         WHERE financial_space_id = $1 AND id = $2 AND version = $3 AND deleted_at IS NULL`,
         [
           financialSpaceId,
           transactionId,
@@ -141,10 +143,38 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
       return findInSpace(financialSpaceId, transactionId);
     },
 
+    async setDeleted({ financialSpaceId, transactionId, expectedVersion, deleted, actorUserId }) {
+      const result = await db.query(
+        deleted
+          ? `UPDATE financial_transaction SET deleted_at = now(), deleted_by_user_id = $4,
+               version = version + 1, updated_at = now()
+             WHERE financial_space_id = $1 AND id = $2 AND version = $3 AND deleted_at IS NULL`
+          : `UPDATE financial_transaction SET deleted_at = NULL, deleted_by_user_id = NULL,
+               updated_by_user_id = $4, version = version + 1, updated_at = now()
+             WHERE financial_space_id = $1 AND id = $2 AND version = $3 AND deleted_at IS NOT NULL`,
+        [financialSpaceId, transactionId, expectedVersion, actorUserId],
+      );
+      if (result.rowCount !== 1) {
+        return null;
+      }
+      return findInSpace(financialSpaceId, transactionId);
+    },
+
+    async listDeletedForSpace(financialSpaceId, limit) {
+      const { rows } = await db.query<TransactionRow>(
+        `${SELECT_WITH_CATEGORIES}
+         WHERE t.financial_space_id = $1 AND t.deleted_at IS NOT NULL
+         ORDER BY t.deleted_at DESC, t.id DESC
+         LIMIT $2`,
+        [financialSpaceId, limit],
+      );
+      return rows.map(toTransaction);
+    },
+
     async listRecentForSpace(financialSpaceId, limit) {
       const { rows } = await db.query<TransactionRow>(
         `${SELECT_WITH_CATEGORIES}
-         WHERE t.financial_space_id = $1
+         WHERE t.financial_space_id = $1 AND t.deleted_at IS NULL
          ORDER BY t.financial_date DESC, t.created_at DESC, t.id DESC
          LIMIT $2`,
         [financialSpaceId, limit],

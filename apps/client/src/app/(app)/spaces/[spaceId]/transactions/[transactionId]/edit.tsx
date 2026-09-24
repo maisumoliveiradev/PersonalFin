@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useCategories } from '../../../../../../api/categories';
 import { useTransaction, useUpdateTransaction } from '../../../../../../api/transactions';
+import { DeleteTransactionSection } from '../../../../../../features/transactions/DeleteTransactionSection';
 import { TransactionForm } from '../../../../../../features/transactions/TransactionForm';
 import { transactionToFormValues } from '../../../../../../features/transactions/transaction-form';
 import { messages } from '../../../../../../i18n/messages';
@@ -21,10 +22,10 @@ export default function EditTransactionScreen() {
   const transaction = useTransaction(spaceId, transactionId);
   const updateTransaction = useUpdateTransaction(spaceId, transactionId);
 
-  function backToSpace(saved: boolean): void {
+  function backToSpace(saved?: 'updated' | 'deleted'): void {
     router.dismissTo({
       pathname: '/spaces/[spaceId]',
-      params: saved ? { spaceId, saved: 'updated' } : { spaceId },
+      params: saved === undefined ? { spaceId } : { spaceId, saved },
     });
   }
 
@@ -36,11 +37,7 @@ export default function EditTransactionScreen() {
     return (
       <Screen>
         <FormError message={messages.transactions.errors.notFound} />
-        <Button
-          label={messages.spaces.backToSpaces}
-          variant="link"
-          onPress={() => backToSpace(false)}
-        />
+        <Button label={messages.spaces.backToSpaces} variant="link" onPress={() => backToSpace()} />
       </Screen>
     );
   }
@@ -59,10 +56,16 @@ export default function EditTransactionScreen() {
         onSubmit={(request) =>
           updateTransaction.mutate(
             { ...request, version: current.version },
-            { onSuccess: () => backToSpace(true) },
+            { onSuccess: () => backToSpace('updated') },
           )
         }
-        onCancel={() => backToSpace(false)}
+        onCancel={() => backToSpace()}
+      />
+      <DeleteTransactionSection
+        spaceId={spaceId}
+        transactionId={transactionId}
+        version={current.version}
+        onDeleted={() => backToSpace('deleted')}
       />
     </Screen>
   );

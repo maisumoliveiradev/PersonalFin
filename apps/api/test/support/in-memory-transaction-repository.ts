@@ -32,13 +32,17 @@ export function createInMemoryTransactionRepository(
         subcategory: subcategoryId === null ? null : reference(subcategoryId),
         createdAt: new Date(Date.UTC(2026, 0, 1, 12, 0, transactions.length)),
         version: 1,
+        deletedAt: null,
       };
       transactions.push(created);
       return created;
     },
     async listRecentForSpace(financialSpaceId, limit) {
       return transactions
-        .filter((transaction) => transaction.financialSpaceId === financialSpaceId)
+        .filter(
+          (transaction) =>
+            transaction.financialSpaceId === financialSpaceId && transaction.deletedAt === null,
+        )
         .sort(
           (left, right) =>
             right.financialDate.localeCompare(left.financialDate) ||
@@ -51,7 +55,11 @@ export function createInMemoryTransactionRepository(
     },
     async update({ financialSpaceId, transactionId, expectedVersion, fields }) {
       const current = find(financialSpaceId, transactionId);
-      if (current === undefined || current.version !== expectedVersion) {
+      if (
+        current === undefined ||
+        current.version !== expectedVersion ||
+        current.deletedAt !== null
+      ) {
         return null;
       }
       const { categoryId, subcategoryId, ...rest } = fields;
@@ -61,6 +69,27 @@ export function createInMemoryTransactionRepository(
         version: current.version + 1,
       });
       return current;
+    },
+    async setDeleted({ financialSpaceId, transactionId, expectedVersion, deleted }) {
+      const current = find(financialSpaceId, transactionId);
+      if (
+        current === undefined ||
+        current.version !== expectedVersion ||
+        (current.deletedAt !== null) === deleted
+      ) {
+        return null;
+      }
+      current.deletedAt = deleted ? new Date() : null;
+      current.version += 1;
+      return current;
+    },
+    async listDeletedForSpace(financialSpaceId, limit) {
+      return transactions
+        .filter(
+          (transaction) =>
+            transaction.financialSpaceId === financialSpaceId && transaction.deletedAt !== null,
+        )
+        .slice(0, limit);
     },
   };
 }
