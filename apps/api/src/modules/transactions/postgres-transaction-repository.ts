@@ -30,6 +30,7 @@ interface TransactionRow {
   created_at: Date;
   version: number;
   deleted_at: Date | null;
+  recurrence_series_id: string | null;
 }
 
 interface CursorKeys {
@@ -42,7 +43,7 @@ type ListState = TransactionListQuery['state'];
 const COLUMNS = `t.id, t.financial_space_id, t.type, t.status, t.description, t.amount_minor,
          t.currency, t.financial_date, t.category_id, c.name AS category_name,
          t.subcategory_id, s.name AS subcategory_name, t.created_by_user_id, t.created_at,
-         t.version, t.deleted_at`;
+         t.version, t.deleted_at, t.recurrence_series_id`;
 
 const CURSOR_KEY_COLUMNS = `to_char(t.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at_key,
          to_char(t.deleted_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS deleted_at_key`;
@@ -83,6 +84,7 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
     createdAt: row.created_at,
     version: row.version,
     deletedAt: row.deleted_at,
+    recurrenceSeriesId: row.recurrence_series_id,
   };
 }
 

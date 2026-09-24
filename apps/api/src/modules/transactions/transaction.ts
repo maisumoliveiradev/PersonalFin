@@ -25,6 +25,7 @@ export interface FinancialTransaction {
   createdAt: Date;
   version: number;
   deletedAt: Date | null;
+  recurrenceSeriesId: string | null;
 }
 
 export interface NewFinancialTransaction {
