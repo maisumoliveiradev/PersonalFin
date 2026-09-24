@@ -61,7 +61,8 @@ configuration, isolated from the day-to-day development instance:
 ## Open items (not blocking)
 
 -   **DR-072** (category kind must match transaction type) was proposed
-    by the agent and is enforced; it awaits project-owner confirmation.
+    by the agent and accepted on 2026-09-24 under the project owner's
+    delegation.
 -   **Android startup was not verified** (see Results). iOS was verified
     for startup only. The full user journey was automated only on the
     Web (TD-008 tracks the missing client test runner).
@@ -76,3 +77,11 @@ configuration, isolated from the day-to-day development instance:
     `docs/engineering/TECHNICAL-DEBT.md`.
 -   Production/staging hosting is not defined yet; v0.1.0 is validated in
     the development environment only.
+
+## Release
+
+Released to `main` on 2026-09-24 and tagged `v0.1.0`. The stacked PRs
+#2 to #7 had been merged into their base branches; PR #8 integrated them
+into `develop` with a tree identical to the validated candidate.
+Android was later confirmed to load the app in Expo Go (bundle loaded
+on the `Phone` emulator); the full journey remains Web-only.
