@@ -71,3 +71,53 @@ implemented yet.
 -   **Resolution:** Resolved by an Expo release that updates the
     dependency; re-check `npm audit` on each Expo upgrade.
 -   **Target version:** Next Expo SDK upgrade.
+
+### TD-004 --- UI text is pt-BR only
+
+-   **Status:** Open
+-   **Priority:** Medium
+-   **Origin:** SDD-002
+-   **Reason:** FR-107 requires pt-BR and English, but no SDD has
+    delivered localization yet. Strings are centralized in
+    `apps/client/src/i18n/messages.ts` to keep the migration mechanical.
+-   **Impact:** English-speaking users see Portuguese text.
+-   **Resolution:** Introduce locale detection/selection and an English
+    catalog in a localization SDD.
+-   **Target version:** Before public release.
+
+### TD-005 --- Theme follows the operating system only
+
+-   **Status:** Open
+-   **Priority:** Low
+-   **Origin:** SDD-002
+-   **Reason:** FR-106 requires Light, Dark, and System options stored in
+    the user profile. The client implements only the System behavior.
+-   **Impact:** Users cannot override the OS theme.
+-   **Resolution:** Add a theme preference to the profile and a selector.
+-   **Target version:** With profile settings.
+
+### TD-006 --- Integration tests are not part of the pre-push hook
+
+-   **Status:** Accepted
+-   **Priority:** Medium
+-   **Origin:** SDD-002
+-   **Reason:** They need a running PostgreSQL (Docker); requiring it on
+    every push would block pushes whenever Docker is stopped.
+-   **Impact:** A persistence or auth regression can be pushed if
+    `npm run test:integration` is skipped.
+-   **Resolution:** Run it before merging changes to persistence or
+    authentication; reconsider making it part of `validate`.
+-   **Target version:** None.
+
+### TD-007 --- Sign-up reveals whether an email is registered
+
+-   **Status:** Open
+-   **Priority:** Low
+-   **Origin:** SDD-002
+-   **Reason:** Better Auth answers `USER_ALREADY_EXISTS` on duplicate
+    sign-up; hiding it properly requires email verification, which is
+    outside SDD-002.
+-   **Impact:** Allows account enumeration (mitigated by production rate
+    limiting).
+-   **Resolution:** Revisit when email verification is introduced.
+-   **Target version:** Email verification SDD.

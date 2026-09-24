@@ -18,6 +18,25 @@ The foundation should define:
 -   motion principles;
 -   Light/Dark/System theme mapping.
 
+## Implemented foundation (SDD-002)
+
+Location: `apps/client/src/ui`.
+
+-   **Color tokens** (`theme.ts`): `background`, `surface`, `text`,
+    `textMuted`, `border`, `primary`, `onPrimary`, `danger`, each with
+    Light and Dark values. `usePalette()` follows the operating-system
+    theme (user-selected theme is not implemented yet; TD-005).
+-   **Spacing:** `xs 4`, `sm 8`, `md 16`, `lg 24`, `xl 32`.
+-   **Radius:** `md 8`. **Font sizes:** `caption 14`, `body 16`,
+    `title 24`.
+-   **Layout:** content width capped at 420 px for forms, centered, with
+    safe-area handling.
+-   **Components:** `Screen`, `Title` (header role), `TextField`
+    (visible label, accessibility label and hint, 48 px minimum height),
+    `Button` (`primary` and `link` variants, busy/disabled states, 48 px
+    minimum height), `FormError` (alert role, polite live region),
+    `LoadingScreen`.
+
 ## Components
 
 Create components only when justified by current product usage. Prefer

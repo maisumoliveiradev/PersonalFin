@@ -16,6 +16,14 @@ platform before the product needs it.
     when the first UI test is justified (ADR-0006).
 -   `npm run test` runs every workspace's tests; `npm run validate`
     includes them.
+-   **Integration tests** (`apps/api/test/integration`) run against the
+    real PostgreSQL test database: migrations, Better Auth flows, and,
+    from SDD-003 on, persistence adapters and isolation rules. Run
+    `npm run db:up` and then `npm run test:integration`. The suite drops
+    and recreates the `public` schema of `TEST_DATABASE_URL`, and refuses
+    to run unless the database name ends in `_test`. It is not part of
+    `validate` (TD-006) and must be run before merging changes that touch
+    persistence or authentication.
 
 ## v0.1.x
 

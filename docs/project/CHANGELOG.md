@@ -6,6 +6,22 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Base Authentication (SDD-002)
+
+-   Email/password sign-up, sign-in, sign-out, and session restoration
+    on Web, Android, and iOS (Better Auth, ADR-0007).
+-   Protected area in the client; signed-out users only reach sign-in and
+    sign-up.
+-   `GET /me` protected endpoint; all protected API routes reject
+    missing or invalid sessions with `401 UNAUTHENTICATED`.
+-   PostgreSQL persistence with versioned SQL migrations (ADR-0008) and
+    local Docker Compose database.
+-   Client architecture: Expo Router, TanStack Query, typed
+    `openapi-fetch` client, pt-BR text catalog, and first Design System
+    tokens/components (ADR-0009).
+-   Standard API error body (`{ error: { code, message } }`).
+-   Recorded TD-004 to TD-007.
+
 ### Foundation (SDD-001)
 
 -   npm workspaces monorepo with `apps/client` (Expo universal app shell

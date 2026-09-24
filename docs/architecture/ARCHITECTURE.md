@@ -7,16 +7,28 @@ not yet accepted must be finalized through ADRs before implementation.
 
 Accepted platform and tooling decisions: ADR-0001 (single Expo client
 for Web/Android/iOS in a monorepo), ADR-0005 (API shell), ADR-0006
-(quality toolchain and local CI).
+(quality toolchain and local CI), ADR-0007 (authentication), ADR-0008
+(PostgreSQL and migrations), ADR-0009 (client application
+architecture).
 
 ## Repository structure
 
 ``` text
 apps/
   client/          Expo universal app: Web (React Native Web), Android, iOS
+    src/app/         Expo Router routes (screens)
+    src/api/         Typed API client and TanStack Query hooks
+    src/auth/        Better Auth client (Web and native variants)
+    src/i18n/        UI text catalog
+    src/ui/          Design System tokens and primitives
   api/             Node.js + Fastify application API
+    src/auth/        Better Auth setup and session resolution
+    src/database/    Connection pool, migration runner, SQL migrations
+    src/http/        Authentication hook and error contract
+    src/routes/      HTTP routes
 packages/
   api-contract/    OpenAPI contract (openapi.yaml) and generated types
+compose.yaml       Local PostgreSQL (development and test databases)
 .githooks/         Versioned git hooks (pre-push runs npm run validate)
 ```
 
@@ -139,6 +151,15 @@ impossible. When offline is introduced:
 -   conflict-aware synchronization;
 -   no silent destructive resolution.
 
+## Authentication (ADR-0007)
+
+Better Auth runs inside the API and stores users and sessions in
+PostgreSQL. Protected routes are registered in an authenticated Fastify
+scope that resolves the session server-side and rejects missing or
+invalid sessions with `401 UNAUTHENTICATED`. Web clients use an
+`HttpOnly` session cookie; native clients keep the same cookie in
+secure storage.
+
 ## Security boundaries
 
 -   authentication proves identity;
@@ -155,7 +176,9 @@ backend infrastructure exists. Expand later to metrics/tracing/admin
 views.
 
 Implemented: the API writes structured JSON logs (pino via Fastify)
-with request IDs and redacts `authorization` and `cookie` headers.
+with request IDs, logs only method and path (no query strings), and
+redacts `authorization` and `cookie` headers. Unhandled errors return a
+generic `500 INTERNAL_ERROR` body and are logged server-side.
 `GET /health` reports liveness.
 
 ## Deployment environments
@@ -184,9 +207,23 @@ Configuration, credentials, and data must be isolated.
     repository.
 -   Client (Expo) variables must use the `EXPO_PUBLIC_` prefix and are
     embedded in the client bundle, so they must never contain secrets.
-    The client reads no environment variables yet.
+    The client reads `EXPO_PUBLIC_API_URL`, validated at startup
+    (`apps/client/src/config.ts`, `apps/client/.env.example`).
 -   Each environment uses its own credentials and data stores; none are
     shared between environments.
+
+API variables (`apps/api/.env.example`):
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `APP_ENV` | yes | `development`, `staging`, or `production` |
+| `HOST`, `PORT` | no | Listen address (default `localhost:3333`) |
+| `LOG_LEVEL` | no | pino log level (default `info`) |
+| `DATABASE_URL` | yes | PostgreSQL connection string |
+| `TEST_DATABASE_URL` | tests only | Database for integration tests; name must end in `_test` |
+| `BETTER_AUTH_SECRET` | yes | At least 32 characters; unique per environment |
+| `BETTER_AUTH_URL` | yes | Public base URL of the API |
+| `TRUSTED_ORIGINS` | no | Comma-separated Web origins and app schemes allowed to authenticate |
 
 ## Architecture evolution
 

@@ -9,6 +9,14 @@ export interface ApiConfig {
   host: string;
   port: number;
   logLevel: LogLevel;
+  databaseUrl: string;
+  auth: AuthConfig;
+}
+
+export interface AuthConfig {
+  secret: string;
+  baseUrl: string;
+  trustedOrigins: string[];
 }
 
 export class ConfigError extends Error {
@@ -17,13 +25,22 @@ export class ConfigError extends Error {
 
 type Environment = Readonly<Record<string, string | undefined>>;
 
-const DEFAULT_HOST = '127.0.0.1';
+const DEFAULT_HOST = 'localhost';
 const DEFAULT_PORT = 3333;
 const DEFAULT_LOG_LEVEL: LogLevel = 'info';
 const MAX_PORT = 65_535;
+const MIN_AUTH_SECRET_LENGTH = 32;
 
 function isOneOf<T extends string>(values: readonly T[], value: string): value is T {
   return values.some((candidate) => candidate === value);
+}
+
+function readRequired(env: Environment, name: string): string {
+  const value = env[name];
+  if (value === undefined || value === '') {
+    throw new ConfigError(`${name} is required`);
+  }
+  return value;
 }
 
 function readAppEnvironment(env: Environment): AppEnvironment {
@@ -57,11 +74,48 @@ function readLogLevel(env: Environment): LogLevel {
   return value;
 }
 
+function readUrl(env: Environment, name: string, protocols: readonly string[]): string {
+  const value = readRequired(env, name);
+  if (!URL.canParse(value) || !protocols.includes(new URL(value).protocol)) {
+    throw new ConfigError(`${name} must be a URL using ${protocols.join(' or ')}`);
+  }
+  return value;
+}
+
+function readAuthSecret(env: Environment): string {
+  const secret = readRequired(env, 'BETTER_AUTH_SECRET');
+  if (secret.length < MIN_AUTH_SECRET_LENGTH) {
+    throw new ConfigError(
+      `BETTER_AUTH_SECRET must have at least ${MIN_AUTH_SECRET_LENGTH} characters`,
+    );
+  }
+  return secret;
+}
+
+function readTrustedOrigins(env: Environment): string[] {
+  const value = env.TRUSTED_ORIGINS;
+  if (value === undefined || value.trim() === '') {
+    return [];
+  }
+  const origins = value.split(',').map((origin) => origin.trim());
+  const invalid = origins.filter((origin) => !URL.canParse(origin));
+  if (invalid.length > 0) {
+    throw new ConfigError(`TRUSTED_ORIGINS contains invalid entries: ${invalid.join(', ')}`);
+  }
+  return origins;
+}
+
 export function loadConfig(env: Environment): ApiConfig {
   return {
     appEnv: readAppEnvironment(env),
     host: env.HOST || DEFAULT_HOST,
     port: readPort(env),
     logLevel: readLogLevel(env),
+    databaseUrl: readUrl(env, 'DATABASE_URL', ['postgres:', 'postgresql:']),
+    auth: {
+      secret: readAuthSecret(env),
+      baseUrl: readUrl(env, 'BETTER_AUTH_URL', ['http:', 'https:']),
+      trustedOrigins: readTrustedOrigins(env),
+    },
   };
 }
