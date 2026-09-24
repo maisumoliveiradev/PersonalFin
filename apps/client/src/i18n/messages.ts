@@ -39,6 +39,9 @@ export const messages = {
   transactions: {
     newAction: 'Novo lançamento',
     newTitle: 'Novo lançamento',
+    editTitle: 'Editar lançamento',
+    editHint: 'Abre o lançamento para edição',
+    updated: 'Lançamento atualizado.',
     typeLabel: 'Tipo',
     expense: 'Despesa',
     income: 'Receita',
@@ -81,6 +84,9 @@ export const messages = {
       dateInvalid: 'Data inválida. Use DD/MM/AAAA.',
       categoryRequired: 'Escolha uma categoria.',
       categoryNotAvailable: 'A categoria escolhida não está disponível. Escolha outra.',
+      versionConflict:
+        'Este lançamento foi alterado em outro lugar. Volte e abra novamente para ver a versão atual.',
+      notFound: 'Lançamento não encontrado.',
       unexpected: 'Não foi possível salvar. Tente novamente.',
     },
   },

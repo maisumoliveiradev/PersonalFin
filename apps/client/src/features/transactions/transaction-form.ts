@@ -1,6 +1,8 @@
-import type { CreateTransactionRequest } from '@personalfin/api-contract';
+import type { CreateTransactionRequest, Transaction } from '@personalfin/api-contract';
 import {
   type AmountParseError,
+  formatDisplayDate,
+  formatMoney,
   normalizeTransactionDescription,
   parseAmountInput,
   parseDisplayDate,
@@ -63,5 +65,21 @@ export function toCreateTransactionRequest(values: TransactionFormValues): Trans
       categoryId: values.categoryId,
       subcategoryId: values.subcategoryId,
     },
+  };
+}
+
+export function transactionToFormValues(transaction: Transaction): TransactionFormValues {
+  const amount = formatMoney(
+    { amountMinor: transaction.amountMinor, currency: 'BRL' },
+    'pt-BR',
+  ).replace(/^R\$\u00a0/, '');
+  return {
+    type: transaction.type,
+    description: transaction.description,
+    amount,
+    date: formatDisplayDate(transaction.financialDate, 'pt-BR'),
+    categoryId: transaction.category.id,
+    subcategoryId: transaction.subcategory?.id ?? null,
+    status: transaction.status,
   };
 }

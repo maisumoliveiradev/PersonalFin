@@ -41,7 +41,8 @@ export default function FinancialSpaceHomeScreen() {
     <Screen>
       <Title>{space.data.name}</Title>
       <BodyText muted>{messages.spaces.ownerRole}</BodyText>
-      {saved === '1' && <StatusMessage>{messages.transactions.saved}</StatusMessage>}
+      {saved === 'created' && <StatusMessage>{messages.transactions.saved}</StatusMessage>}
+      {saved === 'updated' && <StatusMessage>{messages.transactions.updated}</StatusMessage>}
       <Button
         label={messages.transactions.newAction}
         onPress={() =>

@@ -9,7 +9,7 @@ import {
 } from '@personalfin/domain';
 
 import type { DataAccess } from '../../database/data-access.ts';
-import { AppError } from '../../http/errors.ts';
+import { assertCategorySelection } from './category-selection.ts';
 import type { FinancialTransaction } from './transaction.ts';
 
 export interface CreateTransactionInput {
@@ -24,36 +24,14 @@ export interface CreateTransactionInput {
   subcategoryId: string | null;
 }
 
-export class CategoryNotAvailableError extends AppError {
-  override name = 'CategoryNotAvailableError';
-
-  constructor() {
-    super(
-      422,
-      'CATEGORY_NOT_AVAILABLE',
-      'The category or subcategory is not available for this transaction type in this space',
-    );
-  }
-}
-
 const SPACE_CURRENCY: CurrencyCode = DEFAULT_CURRENCY;
 
 export async function createTransaction(
   data: DataAccess,
   input: CreateTransactionInput,
 ): Promise<FinancialTransaction> {
-  const { categories, transactions } = data.repositories;
-  const category = await categories.findInSpace(input.financialSpaceId, input.categoryId);
-  if (category === null || category.parentCategoryId !== null || category.kind !== input.type) {
-    throw new CategoryNotAvailableError();
-  }
-  if (input.subcategoryId !== null) {
-    const subcategory = await categories.findInSpace(input.financialSpaceId, input.subcategoryId);
-    if (subcategory === null || subcategory.parentCategoryId !== category.id) {
-      throw new CategoryNotAvailableError();
-    }
-  }
-  return transactions.create({
+  await assertCategorySelection(data.repositories.categories, input);
+  return data.repositories.transactions.create({
     id: randomUUID(),
     currency: SPACE_CURRENCY,
     ...input,

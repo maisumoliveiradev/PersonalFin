@@ -120,6 +120,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/transactions/{transactionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        /** Return one transaction of an accessible Financial Space */
+        get: operations["getTransaction"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Edit a transaction (partial update with optimistic concurrency)
+         * @description Only the fields present are changed. The final state must satisfy the same rules as creation. Every effective change is recorded in the audit log; a request that changes nothing is accepted without a new version.
+         */
+        patch: operations["updateTransaction"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -228,6 +252,21 @@ export interface components {
             subcategory: components["schemas"]["CategoryReference"] | null;
             /** Format: date-time */
             createdAt: string;
+            /** @description Incremented on every effective edit; send it back when editing. */
+            version: number;
+        };
+        UpdateTransactionRequest: {
+            /** @description The version the client edited. */
+            version: number;
+            type?: components["schemas"]["TransactionType"];
+            status?: components["schemas"]["TransactionStatus"];
+            description?: string;
+            amountMinor?: components["schemas"]["AmountMinor"];
+            financialDate?: components["schemas"]["FinancialDate"];
+            /** Format: uuid */
+            categoryId?: string;
+            /** Format: uuid */
+            subcategoryId?: string | null;
         };
         TransactionList: {
             items: components["schemas"]["Transaction"][];
@@ -244,6 +283,33 @@ export interface components {
         };
     };
     responses: {
+        /** @description The category is not a top-level category of this space with the same kind as the transaction type, or the subcategory does not belong to it (code CATEGORY_NOT_AVAILABLE). */
+        CategoryNotAvailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description The transaction does not exist in this space (code TRANSACTION_NOT_FOUND). */
+        TransactionNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description The record changed since the version sent by the client (code VERSION_CONFLICT). Reload it and retry. */
+        VersionConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description The request is invalid (code VALIDATION_FAILED). */
         ValidationFailed: {
             headers: {
@@ -273,6 +339,7 @@ export interface components {
         };
     };
     parameters: {
+        TransactionId: string;
         SpaceId: string;
     };
     requestBodies: never;
@@ -471,15 +538,64 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["FinancialSpaceNotFound"];
-            /** @description The category is not a top-level category of this space with the same kind as the transaction type, or the subcategory does not belong to it (code CATEGORY_NOT_AVAILABLE). */
-            422: {
+            422: components["responses"]["CategoryNotAvailable"];
+        };
+    };
+    getTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The transaction. */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["Transaction"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TransactionNotFound"];
+        };
+    };
+    updateTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                transactionId: components["parameters"]["TransactionId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTransactionRequest"];
+            };
+        };
+        responses: {
+            /** @description The transaction after the edit. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TransactionNotFound"];
+            409: components["responses"]["VersionConflict"];
+            422: components["responses"]["CategoryNotAvailable"];
         };
     };
 }

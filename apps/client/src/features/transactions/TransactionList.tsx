@@ -1,5 +1,6 @@
 import type { Transaction } from '@personalfin/api-contract';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTransactions } from '../../api/transactions';
 import { messages } from '../../i18n/messages';
@@ -16,16 +17,24 @@ import {
   transactionTypeLabel,
 } from './transaction-presentation';
 
-function TransactionRow({ transaction }: { transaction: Transaction }) {
+function TransactionRow({ spaceId, transaction }: { spaceId: string; transaction: Transaction }) {
   const palette = usePalette();
+  const router = useRouter();
   const amount = transactionAmountLabel(transaction);
   const category = transactionCategoryLabel(transaction);
   const date = transactionDateLabel(transaction);
   const status = transactionStatusLabel(transaction);
   const isPending = transaction.status === 'pending';
   return (
-    <View
-      accessible
+    <Pressable
+      accessibilityRole="button"
+      accessibilityHint={messages.transactions.editHint}
+      onPress={() =>
+        router.push({
+          pathname: '/spaces/[spaceId]/transactions/[transactionId]/edit',
+          params: { spaceId, transactionId: transaction.id },
+        })
+      }
       accessibilityLabel={messages.transactions.rowAccessibilityLabel({
         type: transactionTypeLabel(transaction),
         description: transaction.description,
@@ -34,7 +43,11 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
         category,
         status,
       })}
-      style={[styles.row, { borderColor: palette.border }]}
+      style={({ pressed }) => [
+        styles.row,
+        { borderColor: palette.border },
+        pressed && styles.pressed,
+      ]}
     >
       <View style={styles.main}>
         <Text style={[styles.description, { color: palette.text }]}>{transaction.description}</Text>
@@ -53,7 +66,7 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
           {status}
         </Text>
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -82,7 +95,7 @@ export function TransactionList({ spaceId }: TransactionListProps) {
       )}
       {transactions.isSuccess &&
         transactions.data.items.map((transaction) => (
-          <TransactionRow key={transaction.id} transaction={transaction} />
+          <TransactionRow key={transaction.id} spaceId={spaceId} transaction={transaction} />
         ))}
       {transactions.isSuccess && transactions.data.hasMore && (
         <BodyText muted>
@@ -102,6 +115,7 @@ const styles = StyleSheet.create({
     padding: spacing.sm + 4,
     gap: spacing.sm,
   },
+  pressed: { opacity: 0.7 },
   main: { flex: 1, gap: 2 },
   description: { fontSize: fontSize.body, fontWeight: '600' },
   meta: { fontSize: fontSize.caption },
