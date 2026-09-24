@@ -3,7 +3,8 @@
 ## Current Version
 
 `v0.2.0`, released on 2026-09-24 (`main`, tag `v0.2.0`). SDD-001 to
-SDD-016 implemented and validated.
+SDD-016 implemented and validated. `develop` is building v0.3.0:
+SDD-017 implemented.
 
 ## Implemented Product Capabilities
 
@@ -73,8 +74,9 @@ SDD-016 implemented and validated.
         error body, validated configuration, structured logs.
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
-    -   `packages/domain` --- shared money, financial date, and
-        transaction rules (ADR-0011).
+    -   `packages/domain` --- shared money, financial date, transaction,
+        month, balance-reminder, and business-day rules (ADR-0011;
+        national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
     `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`, `audit_event`,
