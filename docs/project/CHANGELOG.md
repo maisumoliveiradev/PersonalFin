@@ -6,6 +6,16 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Current-Month Dashboard (SDD-015)
+
+-   "Resumo do mês" card on the space screen, following the selected
+    month: realized income, expenses, and net; forecast (pending) income
+    and expenses; realized expenses by category; and, for past months,
+    the balance observed up to the end of the month.
+-   Metric catalog `docs/product/METRICS.md` (M-001 to M-007); values are
+    computed only by `GET /financial-spaces/{spaceId}/dashboard?month=`.
+-   Fixed: recording a balance now refreshes the dashboard.
+
 ### Balance Update Prompt (SDD-014)
 
 -   The space screen asks "Qual é o seu saldo hoje?" when the balance

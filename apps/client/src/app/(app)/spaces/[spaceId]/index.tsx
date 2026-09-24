@@ -5,6 +5,7 @@ import { useCategories } from '../../../../api/categories';
 import { useFinancialSpace } from '../../../../api/financial-spaces';
 import { BalanceSummary } from '../../../../features/balance/BalanceSummary';
 import { BalanceUpdatePrompt } from '../../../../features/balance/BalanceUpdatePrompt';
+import { MonthlyDashboard } from '../../../../features/dashboard/MonthlyDashboard';
 import { MonthNavigator } from '../../../../features/transactions/MonthNavigator';
 import { TransactionFiltersPanel } from '../../../../features/transactions/TransactionFiltersPanel';
 import { TransactionList } from '../../../../features/transactions/TransactionList';
@@ -79,11 +80,12 @@ export default function FinancialSpaceHomeScreen() {
           router.push({ pathname: '/spaces/[spaceId]/transactions/new', params: { spaceId } })
         }
       />
-      <SectionTitle>{messages.transactions.listTitle}</SectionTitle>
       <MonthNavigator
         month={month}
         onChange={(nextMonth) => changeFilters({ ...filters, month: nextMonth })}
       />
+      <MonthlyDashboard spaceId={space.data.id} month={month} />
+      <SectionTitle>{messages.transactions.listTitle}</SectionTitle>
       <Button
         label={
           showFilters

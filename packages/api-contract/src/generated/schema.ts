@@ -233,6 +233,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Built-in metrics of one month (see docs/product/METRICS.md) */
+        get: operations["getMonthlyDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -431,6 +450,32 @@ export interface components {
             frequency: components["schemas"]["BalanceReminderFrequency"];
             intervalDays: number | null;
             isDefault: boolean;
+        };
+        MonthlyDashboard: {
+            month: string;
+            currency: string;
+            /** @description M-001, minor units. */
+            realizedIncome: number;
+            /** @description M-002, minor units. */
+            realizedExpenses: number;
+            /** @description M-003 = M-001 - M-002; may be negative. */
+            realizedNet: number;
+            /** @description M-004, minor units. */
+            forecastIncome: number;
+            /** @description M-005, minor units. */
+            forecastExpenses: number;
+            /** @description M-006, sorted by amount (desc), then name. */
+            realizedExpensesByCategory: {
+                /** Format: uuid */
+                categoryId: string;
+                name: string;
+                amountMinor: number;
+            }[];
+            /** @description M-007, the latest observed balance dated within or before the month. */
+            observedBalance: {
+                amountMinor: number;
+                observedOn: components["schemas"]["FinancialDate"];
+            } | null;
         };
         ErrorResponse: {
             error: {
@@ -1046,6 +1091,33 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BalanceReminder"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getMonthlyDashboard: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metric values M-001 to M-007 for the month. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthlyDashboard"];
                 };
             };
             400: components["responses"]["ValidationFailed"];

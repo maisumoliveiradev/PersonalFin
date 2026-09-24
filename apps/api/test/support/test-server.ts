@@ -6,6 +6,7 @@ import { createInMemoryAuditRepository } from './in-memory-audit-repository.ts';
 import { createInMemoryBalanceReminderRepository } from './in-memory-balance-reminder-repository.ts';
 import { createInMemoryBalanceSnapshotRepository } from './in-memory-balance-snapshot-repository.ts';
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
+import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
 import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
 
@@ -36,12 +37,17 @@ const unusedAuthHandler: AuthHandler = async () => new Response(null, { status: 
 export function createInMemoryRepositories() {
   const categories = createInMemoryCategoryRepository(() => transactions.transactions);
   const transactions = createInMemoryTransactionRepository(categories.categories);
+  const balanceSnapshots = createInMemoryBalanceSnapshotRepository();
   return {
     financialSpaces: createInMemoryFinancialSpaceRepository(),
     categories,
     transactions,
     audit: createInMemoryAuditRepository(),
-    balanceSnapshots: createInMemoryBalanceSnapshotRepository(),
+    balanceSnapshots,
+    dashboard: createInMemoryDashboardRepository(
+      () => transactions.transactions,
+      () => balanceSnapshots.snapshots,
+    ),
     balanceReminders: createInMemoryBalanceReminderRepository(),
   };
 }
