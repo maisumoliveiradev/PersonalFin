@@ -16,6 +16,8 @@ export interface TransactionListQuery {
   status?: TransactionStatus;
   categoryId?: string;
   text?: string;
+  cardInvoiceId?: string;
+  excludeCardPurchases?: boolean;
 }
 
 export interface TransactionPage {

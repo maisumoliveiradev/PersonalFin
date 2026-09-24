@@ -41,3 +41,7 @@ export type CardList = components['schemas']['CardList'];
 export type CreateCardRequest = components['schemas']['CreateCardRequest'];
 export type UpdateCardRequest = components['schemas']['UpdateCardRequest'];
 export type RecordCardLimitRequest = components['schemas']['RecordCardLimitRequest'];
+export type CardPurchase = components['schemas']['CardPurchase'];
+export type CardInvoice = components['schemas']['CardInvoice'];
+export type InvoiceDatesRequest = components['schemas']['InvoiceDatesRequest'];
+export type CommitmentInvoice = components['schemas']['CommitmentInvoice'];

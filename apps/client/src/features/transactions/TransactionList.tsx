@@ -87,16 +87,18 @@ export function TransactionRow({
           </Text>
         </View>
       </Pressable>
-      <Button
-        label={toggle.label}
-        accessibilityLabel={messages.transactions.statusActionLabel(
-          toggle.label,
-          transaction.description,
-        )}
-        variant="link"
-        loading={changingStatus}
-        onPress={onToggleStatus}
-      />
+      {transaction.cardPurchase === null && (
+        <Button
+          label={toggle.label}
+          accessibilityLabel={messages.transactions.statusActionLabel(
+            toggle.label,
+            transaction.description,
+          )}
+          variant="link"
+          loading={changingStatus}
+          onPress={onToggleStatus}
+        />
+      )}
     </View>
   );
 }

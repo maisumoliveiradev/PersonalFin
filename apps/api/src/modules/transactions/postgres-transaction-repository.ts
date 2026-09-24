@@ -33,6 +33,10 @@ interface TransactionRow {
   recurrence_series_id: string | null;
   occurrence_date: FinancialDate | null;
   individually_modified: boolean;
+  card_invoice_id: string | null;
+  card_id: string | null;
+  card_name: string | null;
+  invoice_month: FinancialDate | null;
 }
 
 interface CursorKeys {
@@ -46,14 +50,17 @@ const COLUMNS = `t.id, t.financial_space_id, t.type, t.status, t.description, t.
          t.currency, t.financial_date, t.category_id, c.name AS category_name,
          t.subcategory_id, s.name AS subcategory_name, t.created_by_user_id, t.created_at,
          t.version, t.deleted_at, t.recurrence_series_id, t.occurrence_date,
-         t.individually_modified`;
+         t.individually_modified, t.card_invoice_id, ci.card_id, cd.name AS card_name,
+         ci.reference_month AS invoice_month`;
 
 const CURSOR_KEY_COLUMNS = `to_char(t.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at_key,
          to_char(t.deleted_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS deleted_at_key`;
 
 const FROM_WITH_CATEGORIES = `FROM financial_transaction t
   JOIN category c ON c.id = t.category_id
-  LEFT JOIN category s ON s.id = t.subcategory_id`;
+  LEFT JOIN category s ON s.id = t.subcategory_id
+  LEFT JOIN card_invoice ci ON ci.id = t.card_invoice_id
+  LEFT JOIN card cd ON cd.id = ci.card_id`;
 
 const SELECT_WITH_CATEGORIES = `SELECT ${COLUMNS} ${FROM_WITH_CATEGORIES}`;
 
@@ -90,6 +97,18 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
     recurrenceSeriesId: row.recurrence_series_id,
     occurrenceDate: row.occurrence_date,
     individuallyModified: row.individually_modified,
+    cardPurchase:
+      row.card_invoice_id === null ||
+      row.card_id === null ||
+      row.card_name === null ||
+      row.invoice_month === null
+        ? null
+        : {
+            cardId: row.card_id,
+            cardName: row.card_name,
+            invoiceId: row.card_invoice_id,
+            invoiceMonth: row.invoice_month.slice(0, 7),
+          },
   };
 }
 
@@ -139,8 +158,8 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
       await db.query(
         `INSERT INTO financial_transaction (
            id, financial_space_id, type, status, description, amount_minor, currency,
-           financial_date, category_id, subcategory_id, created_by_user_id
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+           financial_date, category_id, subcategory_id, created_by_user_id, card_invoice_id
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
         [
           transaction.id,
           transaction.financialSpaceId,
@@ -153,6 +172,7 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
           transaction.categoryId,
           transaction.subcategoryId,
           transaction.createdByUserId,
+          transaction.cardInvoiceId ?? null,
         ],
       );
       const created = await findInSpace(transaction.financialSpaceId, transaction.id);
@@ -169,6 +189,7 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
         `UPDATE financial_transaction SET
            type = $4, status = $5, description = $6, amount_minor = $7, financial_date = $8,
            category_id = $9, subcategory_id = $10, updated_by_user_id = $11,
+           card_invoice_id = $12,
            individually_modified = individually_modified OR recurrence_series_id IS NOT NULL,
            version = version + 1, updated_at = now()
          WHERE financial_space_id = $1 AND id = $2 AND version = $3 AND deleted_at IS NULL`,
@@ -184,6 +205,7 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
           fields.categoryId,
           fields.subcategoryId,
           updatedByUserId,
+          fields.cardInvoiceId,
         ],
       );
       if (result.rowCount !== 1) {
@@ -233,6 +255,12 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
       if (query.categoryId !== undefined) {
         const category = param(query.categoryId);
         conditions.push(`(t.category_id = ${category} OR t.subcategory_id = ${category})`);
+      }
+      if (query.cardInvoiceId !== undefined) {
+        conditions.push(`t.card_invoice_id = ${param(query.cardInvoiceId)}`);
+      }
+      if (query.excludeCardPurchases === true) {
+        conditions.push('t.card_invoice_id IS NULL');
       }
       if (query.text !== undefined) {
         const pattern = `%${query.text.replace(LIKE_SPECIAL_CHARACTERS, (character) => `\\${character}`)}%`;

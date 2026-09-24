@@ -121,6 +121,16 @@ function CardEditor({ spaceId, card }: { spaceId: string; card: Card }) {
         variant="link"
         onPress={() => updateCard.mutate({ version: card.version, archived: !card.archived })}
       />
+      <Button
+        label={messages.cards.invoicesAction}
+        variant="link"
+        onPress={() =>
+          router.push({
+            pathname: '/spaces/[spaceId]/cards/invoice',
+            params: { spaceId, cardId: card.id },
+          })
+        }
+      />
       <SectionTitle>{messages.cards.limitTitle}</SectionTitle>
       {recordLimit.isSuccess && <StatusMessage>{messages.cards.limitSaved}</StatusMessage>}
       <TextField

@@ -5,6 +5,7 @@ import { buildServer } from '../../src/server.ts';
 import { createInMemoryAuditRepository } from './in-memory-audit-repository.ts';
 import { createInMemoryBalanceReminderRepository } from './in-memory-balance-reminder-repository.ts';
 import { createInMemoryBalanceSnapshotRepository } from './in-memory-balance-snapshot-repository.ts';
+import { createInMemoryCardInvoiceRepository } from './in-memory-card-invoice-repository.ts';
 import { createInMemoryCardRepository } from './in-memory-card-repository.ts';
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
@@ -38,7 +39,14 @@ const unusedAuthHandler: AuthHandler = async () => new Response(null, { status: 
 
 export function createInMemoryRepositories() {
   const categories = createInMemoryCategoryRepository(() => transactions.transactions);
-  const transactions = createInMemoryTransactionRepository(categories.categories);
+  const cards = createInMemoryCardRepository();
+  const cardInvoices = createInMemoryCardInvoiceRepository(
+    cards.cards,
+    () => transactions.transactions,
+  );
+  const transactions = createInMemoryTransactionRepository(categories.categories, (invoiceId) =>
+    cardInvoices.cardPurchase(invoiceId),
+  );
   const balanceSnapshots = createInMemoryBalanceSnapshotRepository();
   return {
     financialSpaces: createInMemoryFinancialSpaceRepository(),
@@ -50,9 +58,12 @@ export function createInMemoryRepositories() {
     dashboard: createInMemoryDashboardRepository(
       () => transactions.transactions,
       () => balanceSnapshots.snapshots,
+      (invoiceId) =>
+        cardInvoices.invoices.find((invoice) => invoice.id === invoiceId)?.dueDate ?? '9999-12-31',
     ),
     balanceReminders: createInMemoryBalanceReminderRepository(),
-    cards: createInMemoryCardRepository(),
+    cards,
+    cardInvoices,
   };
 }
 

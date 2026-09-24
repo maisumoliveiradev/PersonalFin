@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { cardDayInMonth, currentCardLimit, isValidCardDay } from '../src/card.ts';
+import {
+  cardDayInMonth,
+  currentCardLimit,
+  defaultInvoiceDates,
+  defaultInvoiceMonth,
+  isValidCardDay,
+} from '../src/card.ts';
 
 describe('card days', () => {
   it.each([1, 15, 31])('accepts %i', (day) => {
@@ -38,5 +44,55 @@ describe('current card limit', () => {
 
   it('has no limit before the first effective date', () => {
     expect(currentCardLimit(limits, '2025-12-31')).toBeNull();
+  });
+});
+
+describe('default invoice dates', () => {
+  it('closes in the same month when the due day comes after the closing day', () => {
+    expect(defaultInvoiceDates('2026-10', { closingDay: 3, dueDay: 10 })).toEqual({
+      closingDate: '2026-10-03',
+      dueDate: '2026-10-13',
+    });
+  });
+
+  it('closes in the previous month when the due day is on or before the closing day', () => {
+    expect(defaultInvoiceDates('2026-03', { closingDay: 28, dueDay: 5 })).toEqual({
+      closingDate: '2026-02-28',
+      dueDate: '2026-03-05',
+    });
+    expect(defaultInvoiceDates('2026-01', { closingDay: 10, dueDay: 10 })).toEqual({
+      closingDate: '2025-12-10',
+      dueDate: '2026-01-12',
+    });
+  });
+
+  it('clamps short months and moves the due date past holidays', () => {
+    expect(defaultInvoiceDates('2026-03', { closingDay: 31, dueDay: 7 })).toEqual({
+      closingDate: '2026-02-28',
+      dueDate: '2026-03-09',
+    });
+    expect(defaultInvoiceDates('2026-04', { closingDay: 25, dueDay: 3 }).dueDate).toBe(
+      '2026-04-06',
+    );
+  });
+});
+
+describe('default invoice month', () => {
+  const schedule = { closingDay: 3, dueDay: 10 };
+
+  it.each([
+    ['2026-10-02', '2026-10'],
+    ['2026-10-03', '2026-11'],
+    ['2026-10-04', '2026-11'],
+    ['2026-12-31', '2027-01'],
+  ])('puts a purchase on %s in the %s invoice', (purchaseDate, month) => {
+    expect(defaultInvoiceMonth(purchaseDate, schedule)).toBe(month);
+  });
+
+  it('uses the next month invoice when the card closes in the previous month', () => {
+    const lateClosing = { closingDay: 28, dueDay: 5 };
+    expect(defaultInvoiceMonth('2026-02-27', lateClosing)).toBe('2026-03');
+    expect(defaultInvoiceMonth('2026-02-28', lateClosing)).toBe('2026-04');
+    expect(defaultInvoiceMonth('2026-03-01', lateClosing)).toBe('2026-04');
   });
 });

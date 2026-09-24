@@ -187,6 +187,16 @@ database level. The current balance is the most recent snapshot by
 observed date, then recording instant. Snapshots are never transactions
 and never enter transaction totals.
 
+### Cards and invoices (DR-078, DR-079)
+
+Cards keep an append-only limit history (`card_limit_change`). Invoices
+(`card_invoice`) are created on demand, one per card and reference
+month, with stored closing and due dates. A card purchase is a
+`financial_transaction` linked to an invoice (`card_invoice_id`); the
+database enforces that it is a Pending expense and not a recurrence
+occurrence. Metrics group card purchases by the invoice's reference
+month.
+
 ### Metrics (DR-066, DR-067)
 
 Built-in metrics are defined once in `docs/product/METRICS.md` and

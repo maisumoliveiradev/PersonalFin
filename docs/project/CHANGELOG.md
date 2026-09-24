@@ -6,6 +6,21 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Card Purchases and Invoices (SDD-024)
+
+-   Expenses can be paid with a card ("Pagamento"): the invoice is
+    suggested from the card's closing day and can be changed; card
+    purchases show their card and invoice instead of a status.
+-   Invoice screen per card and month with closing and due dates, total,
+    and purchases; each invoice can have its own dates (DR-038, DR-079).
+-   Card purchases count in the metrics of their invoice month (DR-035);
+    the projection and "Próximos compromissos" use open invoices at
+    their due date instead of individual purchases.
+-   `cardId`/`invoiceMonth` on transactions, `cardPurchase` in responses,
+    `GET .../cards/{cardId}/invoices/{month}`, `PUT .../dates`,
+    `openInvoices` in the projection, and `invoices` in commitments;
+    migration `0014_card_invoices`. Recorded TD-010.
+
 ### Cards and Limits (SDD-023)
 
 -   "Cartões" screen per space: register cards with name, closing day,
