@@ -16,7 +16,7 @@ export default async function balanceJourney({ browser, step }) {
   await field(page, 'Data do saldo').fill('01/02/2026');
   await page.getByRole('button', { name: 'Salvar saldo' }).click();
   await step('recorded balance becomes the observed balance', async () => {
-    await page.getByText('R$ 2.500,00', { exact: true }).waitFor();
+    await page.getByText('R$ 2.500,00', { exact: true }).first().waitFor();
     await page.getByText('Informado para 01/02/2026').waitFor();
   });
   await page.getByRole('button', { name: 'Atualizar saldo' }).click();
@@ -25,7 +25,7 @@ export default async function balanceJourney({ browser, step }) {
   await field(page, 'Observação (opcional)').fill('Cheque especial');
   await page.getByRole('button', { name: 'Salvar saldo' }).click();
   await step('negative balance is accepted as current', () =>
-    page.getByText('-R$ 150,75', { exact: true }).waitFor(),
+    page.getByText('-R$ 150,75', { exact: true }).first().waitFor(),
   );
   await step('a balance is not a transaction', async () => {
     if (await page.getByRole('button', { name: /^(Despesa|Receita): / }).count()) {

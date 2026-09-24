@@ -14,7 +14,7 @@ export default async function reminderJourney({ browser, step }) {
   await field(page, 'Data do saldo').fill(localDate(-20));
   await page.getByRole('button', { name: 'Salvar saldo' }).click();
   await step('an old balance keeps the default 7-day reminder due', async () => {
-    await page.getByText('R$ 1.000,00', { exact: true }).waitFor();
+    await page.getByText('R$ 1.000,00', { exact: true }).first().waitFor();
     await prompt().waitFor();
   });
   await page.getByRole('button', { name: 'Histórico de saldos' }).click();
@@ -29,7 +29,7 @@ export default async function reminderJourney({ browser, step }) {
   await step('reminder is saved', () => page.getByText('Lembrete salvo.').waitFor());
   await page.goto(spaceUrl, { waitUntil: 'networkidle' });
   await step('a 20-day-old balance is not due with 30 days', async () => {
-    await page.getByText('R$ 1.000,00', { exact: true }).waitFor();
+    await page.getByText('R$ 1.000,00', { exact: true }).first().waitFor();
     if (await prompt().count()) {
       throw new Error('prompt shown');
     }

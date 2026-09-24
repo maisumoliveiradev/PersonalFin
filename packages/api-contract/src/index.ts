@@ -33,3 +33,5 @@ export type CreateRecurrenceRequest = components['schemas']['CreateRecurrenceReq
 export type UpdateRecurrenceRequest = components['schemas']['UpdateRecurrenceRequest'];
 export type RecurrenceSeriesChanged = components['schemas']['RecurrenceSeriesChanged'];
 export type Commitments = components['schemas']['Commitments'];
+export type Projection = components['schemas']['Projection'];
+export type ProjectionSeries = components['schemas']['ProjectionSeries'];

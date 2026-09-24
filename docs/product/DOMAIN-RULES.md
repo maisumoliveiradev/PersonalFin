@@ -120,6 +120,16 @@ observed balance plus expected financial movements.
 **DR-029** UI and reports must visually/semantically distinguish these
 concepts.
 
+**DR-077** *(SDD-021; decided under delegation.)* The projected balance
+at the end of a month starts from the latest observed balance dated up to
+that month's end, adds every non-deleted transaction dated after the
+observation date up to the month's end (income adds, expense subtracts,
+any status), and adds Pending transactions dated on or before the
+observation date (still expected). Paid transactions dated on or before
+the observation date are assumed to be already reflected in it. Without
+an observed balance there is no projection (M-008 in
+`docs/product/METRICS.md`).
+
 ## Recurrence
 
 **DR-030** A recurrence defines a series; occurrences remain

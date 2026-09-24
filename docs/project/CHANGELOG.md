@@ -6,6 +6,16 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Monthly Projection (SDD-021)
+
+-   The "Resumo do mês" card has a "Projeção" group with the projected
+    month-end balance (M-008) and its base and components, separate from
+    realized and forecast values (DR-077).
+-   "Projeção dos próximos meses" lists M-008 for six months from the
+    selected month.
+-   The dashboard response includes `projection`; new
+    `GET /financial-spaces/{spaceId}/projection?fromMonth=&months=`.
+
 ### Future Commitments (SDD-020)
 
 -   "Próximos compromissos" screen: overdue pending items and pending

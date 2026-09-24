@@ -122,6 +122,41 @@ export function MonthlyDashboard({ spaceId, month }: MonthlyDashboardProps) {
           )}
         </>
       )}
+      <Text style={[styles.subheading, { color: palette.text }]}>
+        {messages.dashboard.projectionTitle}
+      </Text>
+      {data.projection === null ? (
+        <BodyText muted>{messages.dashboard.noProjection}</BodyText>
+      ) : (
+        <>
+          <MetricRow
+            label={messages.dashboard.projectionBase(
+              formatDisplayDate(data.projection.base.observedOn, 'pt-BR'),
+            )}
+            value={money(data, data.projection.base.amountMinor)}
+          />
+          <MetricRow
+            label={messages.dashboard.projectionAfter}
+            value={money(
+              data,
+              data.projection.afterObservation.income - data.projection.afterObservation.expenses,
+            )}
+          />
+          <MetricRow
+            label={messages.dashboard.projectionPending}
+            value={money(
+              data,
+              data.projection.pendingUpToObservation.income -
+                data.projection.pendingUpToObservation.expenses,
+            )}
+          />
+          <MetricRow
+            label={messages.dashboard.projectedBalance}
+            value={money(data, data.projection.amountMinor)}
+            color={data.projection.amountMinor < 0 ? palette.danger : palette.primary}
+          />
+        </>
+      )}
       <BodyText muted>{messages.dashboard.definitionsHint}</BodyText>
     </View>
   );
