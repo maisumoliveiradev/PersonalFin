@@ -343,6 +343,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/commitments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Pending income and expenses that are overdue or coming up
+         * @description overdue = Pending, non-deleted transactions dated before from; upcoming = those dated from `from` through from + days - 1. Items are ordered by financial date; each section returns at most 200 items plus exact totals.
+         */
+        get: operations["getCommitments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -639,6 +661,20 @@ export interface components {
         };
         RecurrenceSeriesList: {
             items: components["schemas"]["RecurrenceSeries"][];
+        };
+        CommitmentSection: {
+            items: components["schemas"]["Transaction"][];
+            hasMore: boolean;
+            /** @description Sum of pending income in the section, minor units. */
+            income: number;
+            /** @description Sum of pending expenses in the section, minor units. */
+            expenses: number;
+        };
+        Commitments: {
+            from: components["schemas"]["FinancialDate"];
+            through: components["schemas"]["FinancialDate"];
+            overdue: components["schemas"]["CommitmentSection"];
+            upcoming: components["schemas"]["CommitmentSection"];
         };
         ErrorResponse: {
             error: {
@@ -1444,6 +1480,35 @@ export interface operations {
                     "application/json": {
                         occurrencesCreated: number;
                     };
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getCommitments: {
+        parameters: {
+            query: {
+                /** @description The user's current calendar date. */
+                from: string;
+                days?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Overdue and upcoming commitments. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Commitments"];
                 };
             };
             400: components["responses"]["ValidationFailed"];

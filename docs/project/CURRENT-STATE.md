@@ -4,7 +4,7 @@
 
 `v0.2.0`, released on 2026-09-24 (`main`, tag `v0.2.0`). SDD-001 to
 SDD-016 implemented and validated. `develop` is building v0.3.0:
-SDD-017 to SDD-019 implemented.
+SDD-017 to SDD-020 implemented.
 
 ## Implemented Product Capabilities
 
@@ -59,6 +59,9 @@ SDD-017 to SDD-019 implemented.
     "Encerrar" change the series without rewriting paid or individually
     edited occurrences (DR-076). Frequency and start date cannot be
     changed.
+-   **Future commitments (SDD-020):** overdue and upcoming pending
+    income/expenses (7, 30, or 90 days) with exact totals. There are no
+    notifications.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -110,6 +113,6 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.3.0/SDD-020-future-commitments.md`. Domain decisions
+`docs/sdds/v0.3.0/SDD-021-monthly-projection.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, DR-072 to DR-076).
