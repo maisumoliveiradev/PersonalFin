@@ -1,0 +1,16 @@
+{
+  "name": "@personalfin/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/main.ts",
+    "start": "node src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@personalfin/api-contract": "*",
+    "fastify": "5.12.5"
+  }
+}
