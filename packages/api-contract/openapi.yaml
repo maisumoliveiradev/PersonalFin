@@ -750,8 +750,130 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/cards:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listCards
+      summary: List the credit cards of the space
+      responses:
+        '200':
+          description: Active cards first, then archived, by name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createCard
+      summary: Register a credit card with its initial limit
+      description: Creates the card and the first entry of its limit history. Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCardRequest'
+      responses:
+        '201':
+          description: The created card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '409':
+          $ref: '#/components/responses/CardConflict'
+  /financial-spaces/{spaceId}/cards/{cardId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+    get:
+      operationId: getCard
+      summary: Get a card with its limit history
+      responses:
+        '200':
+          description: The card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
+    patch:
+      operationId: updateCard
+      summary: Rename, change closing/due days, or archive a card
+      description: Version-checked and audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCardRequest'
+      responses:
+        '200':
+          description: The card after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
+        '409':
+          $ref: '#/components/responses/CardConflict'
+  /financial-spaces/{spaceId}/cards/{cardId}/limit-changes:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+    post:
+      operationId: recordCardLimit
+      summary: Record a new card limit from an effective date
+      description: >
+        Appends to the limit history; earlier values are never changed
+        (FR-051). The current limit on a date is the latest value effective
+        on or before it (ties: latest recorded).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordCardLimitRequest'
+      responses:
+        '201':
+          description: The card with its updated limit history.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
 components:
   parameters:
+    CardId:
+      name: cardId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     SeriesId:
       name: seriesId
       in: path
@@ -782,6 +904,18 @@ components:
         Session cookie issued by Better Auth. Native clients send the same
         cookie through the Cookie header.
   responses:
+    CardNotFound:
+      description: The card does not exist in this space (code CARD_NOT_FOUND).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    CardConflict:
+      description: VERSION_CONFLICT or CARD_NAME_TAKEN (another card of the space has the name).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     RecurrenceNotFound:
       description: The series does not exist in this space (code RECURRENCE_NOT_FOUND).
       content:
@@ -850,6 +984,127 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    CardDay:
+      type: integer
+      minimum: 1
+      maximum: 31
+      description: Day of the month; months without it use their last day.
+    CardName:
+      type: string
+      minLength: 1
+      maxLength: 60
+    CardLimitChange:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - amountMinor
+        - currency
+        - effectiveFrom
+        - recordedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        effectiveFrom:
+          $ref: '#/components/schemas/FinancialDate'
+        recordedAt:
+          type: string
+          format: date-time
+    Card:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - closingDay
+        - dueDay
+        - archived
+        - version
+        - limits
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        closingDay:
+          $ref: '#/components/schemas/CardDay'
+        dueDay:
+          $ref: '#/components/schemas/CardDay'
+        archived:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
+        limits:
+          type: array
+          description: Limit history, latest effective date first (ties, latest recorded first).
+          items:
+            $ref: '#/components/schemas/CardLimitChange'
+    CardList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+    CreateCardRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - closingDay
+        - dueDay
+        - limitMinor
+        - limitEffectiveFrom
+      properties:
+        name:
+          $ref: '#/components/schemas/CardName'
+        closingDay:
+          $ref: '#/components/schemas/CardDay'
+        dueDay:
+          $ref: '#/components/schemas/CardDay'
+        limitMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        limitEffectiveFrom:
+          $ref: '#/components/schemas/FinancialDate'
+    UpdateCardRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        name:
+          $ref: '#/components/schemas/CardName'
+        closingDay:
+          $ref: '#/components/schemas/CardDay'
+        dueDay:
+          $ref: '#/components/schemas/CardDay'
+        archived:
+          type: boolean
+    RecordCardLimitRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - amountMinor
+        - effectiveFrom
+      properties:
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        effectiveFrom:
+          $ref: '#/components/schemas/FinancialDate'
     HealthStatus:
       type: object
       additionalProperties: false

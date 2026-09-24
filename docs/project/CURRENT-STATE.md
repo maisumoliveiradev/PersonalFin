@@ -4,7 +4,8 @@
 
 `v0.3.0`, released on 2026-09-24 (`main`, tag `v0.3.0`). SDD-001 to
 SDD-022 implemented and validated
-(`docs/sdds/v0.3.0/SDD-022-validation-report.md`).
+(`docs/sdds/v0.3.0/SDD-022-validation-report.md`). `develop` is building
+v0.4.0: SDD-023 implemented.
 
 ## Implemented Product Capabilities
 
@@ -62,6 +63,10 @@ SDD-022 implemented and validated
 -   **Future commitments (SDD-020):** overdue and upcoming pending
     income/expenses (7, 30, or 90 days) with exact totals. There are no
     notifications.
+-   **Cards (SDD-023):** cards with name, closing and due days, and an
+    append-only limit history with effective dates (DR-078); archive and
+    reactivate. There are no purchases, invoices, or used/available limit
+    yet.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -85,7 +90,7 @@ SDD-022 implemented and validated
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
     -   `packages/domain` --- shared money, financial date, transaction,
-        month, balance-reminder, and business-day rules (ADR-0011;
+        month, balance-reminder, business-day, and card rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
@@ -113,7 +118,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.4.0/SDD-023-cards-and-limits.md`. Domain decisions
+`docs/sdds/v0.4.0/SDD-024-card-purchases-and-invoices.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, DR-072 to
-DR-077).
+DR-078).

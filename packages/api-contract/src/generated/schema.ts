@@ -384,10 +384,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the credit cards of the space */
+        get: operations["listCards"];
+        put?: never;
+        /**
+         * Register a credit card with its initial limit
+         * @description Creates the card and the first entry of its limit history. Audited.
+         */
+        post: operations["createCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        /** Get a card with its limit history */
+        get: operations["getCard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Rename, change closing/due days, or archive a card
+         * @description Version-checked and audited.
+         */
+        patch: operations["updateCard"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}/limit-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record a new card limit from an effective date
+         * @description Appends to the limit history; earlier values are never changed (FR-051). The current limit on a date is the latest value effective on or before it (ties: latest recorded).
+         */
+        post: operations["recordCardLimit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Day of the month; months without it use their last day. */
+        CardDay: number;
+        CardName: string;
+        CardLimitChange: {
+            /** Format: uuid */
+            id: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            currency: string;
+            effectiveFrom: components["schemas"]["FinancialDate"];
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        Card: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            closingDay: components["schemas"]["CardDay"];
+            dueDay: components["schemas"]["CardDay"];
+            archived: boolean;
+            version: number;
+            /** @description Limit history, latest effective date first (ties, latest recorded first). */
+            limits: components["schemas"]["CardLimitChange"][];
+        };
+        CardList: {
+            items: components["schemas"]["Card"][];
+        };
+        CreateCardRequest: {
+            name: components["schemas"]["CardName"];
+            closingDay: components["schemas"]["CardDay"];
+            dueDay: components["schemas"]["CardDay"];
+            limitMinor: components["schemas"]["AmountMinor"];
+            limitEffectiveFrom: components["schemas"]["FinancialDate"];
+        };
+        UpdateCardRequest: {
+            version: number;
+            name?: components["schemas"]["CardName"];
+            closingDay?: components["schemas"]["CardDay"];
+            dueDay?: components["schemas"]["CardDay"];
+            archived?: boolean;
+        };
+        RecordCardLimitRequest: {
+            amountMinor: components["schemas"]["AmountMinor"];
+            effectiveFrom: components["schemas"]["FinancialDate"];
+        };
         HealthStatus: {
             /** @constant */
             status: "ok";
@@ -727,6 +841,24 @@ export interface components {
         };
     };
     responses: {
+        /** @description The card does not exist in this space (code CARD_NOT_FOUND). */
+        CardNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description VERSION_CONFLICT or CARD_NAME_TAKEN (another card of the space has the name). */
+        CardConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description The series does not exist in this space (code RECURRENCE_NOT_FOUND). */
         RecurrenceNotFound: {
             headers: {
@@ -810,6 +942,7 @@ export interface components {
         };
     };
     parameters: {
+        CardId: string;
         SeriesId: string;
         TransactionId: string;
         SpaceId: string;
@@ -1583,6 +1716,146 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    listCards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active cards first, then archived, by name. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    createCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCardRequest"];
+            };
+        };
+        responses: {
+            /** @description The created card. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Card"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            409: components["responses"]["CardConflict"];
+        };
+    };
+    getCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Card"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
+        };
+    };
+    updateCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCardRequest"];
+            };
+        };
+        responses: {
+            /** @description The card after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Card"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
+            409: components["responses"]["CardConflict"];
+        };
+    };
+    recordCardLimit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordCardLimitRequest"];
+            };
+        };
+        responses: {
+            /** @description The card with its updated limit history. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Card"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
         };
     };
 }

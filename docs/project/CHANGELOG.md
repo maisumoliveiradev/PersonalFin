@@ -6,6 +6,16 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Cards and Limits (SDD-023)
+
+-   "Cartões" screen per space: register cards with name, closing day,
+    due day, and initial limit; edit days and name; archive/reactivate
+    (audited, version-checked).
+-   The card limit keeps its history: new limits are recorded with an
+    effective date and never overwrite earlier values (DR-078).
+-   `GET`/`POST .../cards`, `GET`/`PATCH .../cards/{cardId}`, and
+    `POST .../cards/{cardId}/limit-changes`; migration `0013_cards`.
+
 ## \[0.3.0\] --- 2026-09-24
 
 Planning and Recurrence. Released to `main` and tagged `v0.3.0`;

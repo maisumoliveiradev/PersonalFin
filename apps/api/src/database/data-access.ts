@@ -4,6 +4,8 @@ import type { BalanceReminderRepository } from '../modules/balance/balance-remin
 import type { BalanceSnapshotRepository } from '../modules/balance/balance-snapshot-repository.ts';
 import { createPostgresBalanceReminderRepository } from '../modules/balance/postgres-balance-reminder-repository.ts';
 import { createPostgresBalanceSnapshotRepository } from '../modules/balance/postgres-balance-snapshot-repository.ts';
+import type { CardRepository } from '../modules/cards/card-repository.ts';
+import { createPostgresCardRepository } from '../modules/cards/postgres-card-repository.ts';
 import type { CategoryRepository } from '../modules/categories/category-repository.ts';
 import { createPostgresCategoryRepository } from '../modules/categories/postgres-category-repository.ts';
 import type { DashboardRepository } from '../modules/dashboard/dashboard-repository.ts';
@@ -25,6 +27,7 @@ export interface Repositories {
   balanceReminders: BalanceReminderRepository;
   dashboard: DashboardRepository;
   recurrences: RecurrenceRepository;
+  cards: CardRepository;
 }
 
 export interface DataAccess {
@@ -42,6 +45,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     balanceReminders: createPostgresBalanceReminderRepository(db),
     dashboard: createPostgresDashboardRepository(db),
     recurrences: createPostgresRecurrenceRepository(db),
+    cards: createPostgresCardRepository(db),
   };
 }
 
