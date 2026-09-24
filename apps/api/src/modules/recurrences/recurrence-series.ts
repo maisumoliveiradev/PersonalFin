@@ -26,6 +26,18 @@ export interface RecurrenceSeries {
 
 export type NewRecurrenceSeries = Omit<RecurrenceSeries, 'materializedThrough' | 'version'>;
 
+export interface SeriesDefaults {
+  description: string;
+  amountMinor: number;
+  categoryId: string;
+  subcategoryId: string | null;
+}
+
+export interface OccurrenceSnapshot extends SeriesDefaults {
+  id: string;
+  occurrenceDate: FinancialDate;
+}
+
 export interface NewOccurrence {
   id: string;
   seriesId: string;

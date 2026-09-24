@@ -104,6 +104,7 @@ export function toTransactionResponse(transaction: FinancialTransaction): Transa
     version: transaction.version,
     deletedAt: transaction.deletedAt?.toISOString() ?? null,
     recurrenceSeriesId: transaction.recurrenceSeriesId,
+    occurrenceDate: transaction.occurrenceDate,
   };
 }
 

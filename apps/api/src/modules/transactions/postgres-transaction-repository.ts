@@ -31,6 +31,8 @@ interface TransactionRow {
   version: number;
   deleted_at: Date | null;
   recurrence_series_id: string | null;
+  occurrence_date: FinancialDate | null;
+  individually_modified: boolean;
 }
 
 interface CursorKeys {
@@ -43,7 +45,8 @@ type ListState = TransactionListQuery['state'];
 const COLUMNS = `t.id, t.financial_space_id, t.type, t.status, t.description, t.amount_minor,
          t.currency, t.financial_date, t.category_id, c.name AS category_name,
          t.subcategory_id, s.name AS subcategory_name, t.created_by_user_id, t.created_at,
-         t.version, t.deleted_at, t.recurrence_series_id`;
+         t.version, t.deleted_at, t.recurrence_series_id, t.occurrence_date,
+         t.individually_modified`;
 
 const CURSOR_KEY_COLUMNS = `to_char(t.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at_key,
          to_char(t.deleted_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS deleted_at_key`;
@@ -85,6 +88,8 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
     version: row.version,
     deletedAt: row.deleted_at,
     recurrenceSeriesId: row.recurrence_series_id,
+    occurrenceDate: row.occurrence_date,
+    individuallyModified: row.individually_modified,
   };
 }
 
@@ -164,6 +169,7 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
         `UPDATE financial_transaction SET
            type = $4, status = $5, description = $6, amount_minor = $7, financial_date = $8,
            category_id = $9, subcategory_id = $10, updated_by_user_id = $11,
+           individually_modified = individually_modified OR recurrence_series_id IS NOT NULL,
            version = version + 1, updated_at = now()
          WHERE financial_space_id = $1 AND id = $2 AND version = $3 AND deleted_at IS NULL`,
         [
@@ -190,6 +196,7 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
       const result = await db.query(
         deleted
           ? `UPDATE financial_transaction SET deleted_at = now(), deleted_by_user_id = $4,
+               individually_modified = individually_modified OR recurrence_series_id IS NOT NULL,
                version = version + 1, updated_at = now()
              WHERE financial_space_id = $1 AND id = $2 AND version = $3 AND deleted_at IS NULL`
           : `UPDATE financial_transaction SET deleted_at = NULL, deleted_by_user_id = NULL,

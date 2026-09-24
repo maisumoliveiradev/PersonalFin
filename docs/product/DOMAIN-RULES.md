@@ -142,6 +142,15 @@ non-leap years. Each occurrence keeps its scheduled date and receives a
 financial date adjusted by the series' non-business-day rule
 (`docs/product/BUSINESS-DAYS.md`). Occurrences are created Pending.
 
+**DR-076** *(SDD-019; decided under delegation.)* Editing or deleting one
+occurrence marks it as individually modified; later series changes never
+touch it. "This and following" changes the series description, amount,
+and category and applies them to Pending, non-deleted, unmodified
+occurrences scheduled on or after the chosen occurrence; date, type, and
+status changes are always per occurrence. Ending a series on a date
+moves its Pending, unmodified occurrences scheduled after that date to
+the trash; paid, edited, and earlier occurrences are kept.
+
 ## Cards and invoices
 
 **DR-035** A card purchase counts as expense in the month of the invoice

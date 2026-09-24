@@ -275,6 +275,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/recurrences/{seriesId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                seriesId: components["parameters"]["SeriesId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Change the series defaults for this and following occurrences
+         * @description Updates the series and every Pending, non-deleted occurrence on or after fromOccurrenceDate that was not individually modified. Paid, past-edited, and deleted occurrences are never rewritten. Audited.
+         */
+        patch: operations["updateRecurrenceFrom"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/recurrences/{seriesId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                seriesId: components["parameters"]["SeriesId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End a series on a date
+         * @description Sets the end date and moves to the trash every Pending, unmodified occurrence scheduled after it. Everything else is kept. Audited.
+         */
+        post: operations["endRecurrence"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/financial-spaces/{spaceId}/recurrences/materialize": {
         parameters: {
             query?: never;
@@ -444,6 +490,11 @@ export interface components {
              * @description The series this transaction is an occurrence of; null for one-off entries.
              */
             recurrenceSeriesId: string | null;
+            /**
+             * Format: date
+             * @description Scheduled (unadjusted) date of the occurrence; null for one-off entries.
+             */
+            occurrenceDate: string | null;
         };
         VersionRequest: {
             version: number;
@@ -572,6 +623,20 @@ export interface components {
             series: components["schemas"]["RecurrenceSeries"];
             occurrencesCreated: number;
         };
+        UpdateRecurrenceRequest: {
+            version: number;
+            fromOccurrenceDate: components["schemas"]["FinancialDate"];
+            description?: string;
+            amountMinor?: components["schemas"]["AmountMinor"];
+            /** Format: uuid */
+            categoryId?: string;
+            /** Format: uuid */
+            subcategoryId?: string | null;
+        };
+        RecurrenceSeriesChanged: {
+            series: components["schemas"]["RecurrenceSeries"];
+            occurrencesAffected: number;
+        };
         RecurrenceSeriesList: {
             items: components["schemas"]["RecurrenceSeries"][];
         };
@@ -585,6 +650,15 @@ export interface components {
         };
     };
     responses: {
+        /** @description The series does not exist in this space (code RECURRENCE_NOT_FOUND). */
+        RecurrenceNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description The category does not exist in this space (code CATEGORY_NOT_FOUND). */
         CategoryNotFound: {
             headers: {
@@ -659,6 +733,7 @@ export interface components {
         };
     };
     parameters: {
+        SeriesId: string;
         TransactionId: string;
         SpaceId: string;
     };
@@ -1275,6 +1350,72 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["FinancialSpaceNotFound"];
             422: components["responses"]["CategoryNotAvailable"];
+        };
+    };
+    updateRecurrenceFrom: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                seriesId: components["parameters"]["SeriesId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRecurrenceRequest"];
+            };
+        };
+        responses: {
+            /** @description The series after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurrenceSeriesChanged"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["RecurrenceNotFound"];
+            409: components["responses"]["StateConflict"];
+            422: components["responses"]["CategoryNotAvailable"];
+        };
+    };
+    endRecurrence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                seriesId: components["parameters"]["SeriesId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    version: number;
+                    endDate: components["schemas"]["FinancialDate"];
+                };
+            };
+        };
+        responses: {
+            /** @description The ended series. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurrenceSeriesChanged"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["RecurrenceNotFound"];
+            409: components["responses"]["StateConflict"];
         };
     };
     materializeRecurrences: {
