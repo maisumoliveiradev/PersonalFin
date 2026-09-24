@@ -2,9 +2,8 @@
 
 ## Current Version
 
-`v0.1.0` released on 2026-09-24 (`main`, tag `v0.1.0`). `develop` is
-building v0.2.0: SDD-008 to SDD-015 implemented; SDD-016 (release
-validation) pending.
+`v0.2.0`, released on 2026-09-24 (`main`, tag `v0.2.0`). SDD-001 to
+SDD-016 implemented and validated.
 
 ## Implemented Product Capabilities
 
@@ -93,7 +92,8 @@ validation) pending.
 
 ## Active Target
 
-`v0.2.0` --- Core Financial Control (`docs/product/ROADMAP.md`).
+`v0.3.0` --- Planning and Recurrence (`docs/product/ROADMAP.md`); no SDDs
+yet.
 
 ## Important Constraint
 
@@ -102,4 +102,6 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.2.0/SDD-016-release-validation.md`.
+Project owner: review the domain decisions taken under delegation
+(`docs/sdds/v0.2.0/README.md`, DR-072 to DR-074). Then write the v0.3.0
+SDDs.
