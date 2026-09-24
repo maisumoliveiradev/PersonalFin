@@ -1,8 +1,12 @@
 import type { CategoryTreeItem, CreateTransactionRequest } from '@personalfin/api-contract';
 import {
   DEFAULT_TRANSACTION_STATUS,
+  type FinancialDate,
   financialDateFromLocalClock,
   formatDisplayDate,
+  type NonBusinessDayRule,
+  parseDisplayDate,
+  type RecurrenceFrequency,
   type TransactionStatus,
   type TransactionType,
 } from '@personalfin/domain';
@@ -54,12 +58,34 @@ export function emptyTransactionFormValues(): TransactionFormValues {
   };
 }
 
+export interface RecurrenceChoice {
+  frequency: RecurrenceFrequency;
+  nonBusinessDayRule: NonBusinessDayRule;
+  endDate: FinancialDate | null;
+}
+
+const NO_REPEAT = 'none';
+
+const REPEAT_OPTIONS: readonly Option<RecurrenceFrequency | typeof NO_REPEAT>[] = [
+  { value: NO_REPEAT, label: messages.recurrences.none },
+  { value: 'monthly', label: messages.recurrences.monthly },
+  { value: 'weekly', label: messages.recurrences.weekly },
+  { value: 'yearly', label: messages.recurrences.yearly },
+];
+
+const RULE_OPTIONS: readonly Option<NonBusinessDayRule>[] = [
+  { value: 'keep', label: messages.recurrences.keep },
+  { value: 'previous', label: messages.recurrences.previous },
+  { value: 'next', label: messages.recurrences.next },
+];
+
 interface TransactionFormProps {
   categories: readonly CategoryTreeItem[];
   initialValues: TransactionFormValues;
   submitting: boolean;
   submitError: Error | null;
-  onSubmit: (request: CreateTransactionRequest) => void;
+  allowRecurrence?: boolean;
+  onSubmit: (request: CreateTransactionRequest, recurrence: RecurrenceChoice | null) => void;
   onCancel: () => void;
 }
 
@@ -68,6 +94,7 @@ export function TransactionForm({
   initialValues,
   submitting,
   submitError: submitFailure,
+  allowRecurrence = false,
   onSubmit,
   onCancel,
 }: TransactionFormProps) {
@@ -79,6 +106,9 @@ export function TransactionForm({
   const [subcategoryId, setSubcategoryId] = useState<string | null>(initialValues.subcategoryId);
   const [status, setStatus] = useState<TransactionStatus>(initialValues.status);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState<RecurrenceFrequency | typeof NO_REPEAT>(NO_REPEAT);
+  const [endDate, setEndDate] = useState('');
+  const [rule, setRule] = useState<NonBusinessDayRule>('keep');
 
   const categoriesForType = categories.filter(
     (category) =>
@@ -122,8 +152,25 @@ export function TransactionForm({
       setValidationError(result.error);
       return;
     }
+    if (repeat === NO_REPEAT) {
+      setValidationError(null);
+      onSubmit(result.request, null);
+      return;
+    }
+    let parsedEnd: FinancialDate | null = null;
+    if (endDate.trim() !== '') {
+      parsedEnd = parseDisplayDate(endDate, 'pt-BR');
+      if (parsedEnd === null) {
+        setValidationError(messages.recurrences.errors.endDateInvalid);
+        return;
+      }
+      if (parsedEnd < result.request.financialDate) {
+        setValidationError(messages.recurrences.errors.endBeforeStart);
+        return;
+      }
+    }
     setValidationError(null);
-    onSubmit(result.request);
+    onSubmit(result.request, { frequency: repeat, nonBusinessDayRule: rule, endDate: parsedEnd });
   }
 
   const submitError = submitFailure === null ? null : describeSubmitError(submitFailure);
@@ -175,12 +222,40 @@ export function TransactionForm({
           onSelect={(value) => setSubcategoryId(value === NO_SUBCATEGORY ? null : value)}
         />
       )}
-      <OptionGroup
-        label={messages.transactions.statusLabel}
-        options={statusOptions(type)}
-        selected={status}
-        onSelect={setStatus}
-      />
+      {allowRecurrence && (
+        <OptionGroup
+          label={messages.recurrences.repeatLabel}
+          options={REPEAT_OPTIONS}
+          selected={repeat}
+          onSelect={setRepeat}
+        />
+      )}
+      {repeat !== NO_REPEAT && (
+        <>
+          <TextField
+            label={messages.recurrences.endDateLabel}
+            hint={messages.recurrences.endDateHint}
+            value={endDate}
+            onChangeText={setEndDate}
+            inputMode="numeric"
+            maxLength={10}
+          />
+          <OptionGroup
+            label={messages.recurrences.ruleLabel}
+            options={RULE_OPTIONS}
+            selected={rule}
+            onSelect={setRule}
+          />
+        </>
+      )}
+      {repeat === NO_REPEAT && (
+        <OptionGroup
+          label={messages.transactions.statusLabel}
+          options={statusOptions(type)}
+          selected={status}
+          onSelect={setStatus}
+        />
+      )}
       <FormError message={validationError ?? submitError} />
       <Button
         label={messages.transactions.saveAction}

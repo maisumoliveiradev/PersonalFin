@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { useCategories } from '../../../../api/categories';
 import { useFinancialSpace } from '../../../../api/financial-spaces';
+import { useMaterializeRecurrences } from '../../../../api/recurrences';
 import { BalanceSummary } from '../../../../features/balance/BalanceSummary';
 import { BalanceUpdatePrompt } from '../../../../features/balance/BalanceUpdatePrompt';
 import { MonthlyDashboard } from '../../../../features/dashboard/MonthlyDashboard';
@@ -28,11 +29,17 @@ type OptionalFilters = Omit<TransactionFilters, 'month'>;
 
 export default function FinancialSpaceHomeScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ spaceId: string; saved?: string; month?: string }>();
+  const params = useLocalSearchParams<{
+    spaceId: string;
+    saved?: string;
+    month?: string;
+    count?: string;
+  }>();
   const { spaceId, saved } = params;
   const month = monthFromParam(params.month);
   const space = useFinancialSpace(spaceId);
   const categories = useCategories(spaceId);
+  const materializeRecurrences = useMaterializeRecurrences(spaceId);
   const [optionalFilters, setOptionalFilters] = useState<OptionalFilters>({});
   const [showFilters, setShowFilters] = useState(false);
   const filters: TransactionFilters = { ...optionalFilters, month };
@@ -41,6 +48,9 @@ export default function FinancialSpaceHomeScreen() {
     setOptionalFilters(rest);
     if (nextMonth !== month) {
       router.setParams({ month: nextMonth });
+      if (nextMonth > month) {
+        materializeRecurrences.mutate(nextMonth);
+      }
     }
   }
 
@@ -72,6 +82,9 @@ export default function FinancialSpaceHomeScreen() {
       {saved === 'created' && <StatusMessage>{messages.transactions.saved}</StatusMessage>}
       {saved === 'updated' && <StatusMessage>{messages.transactions.updated}</StatusMessage>}
       {saved === 'deleted' && <StatusMessage>{messages.transactions.deleted}</StatusMessage>}
+      {saved === 'recurrence' && (
+        <StatusMessage>{messages.recurrences.created(Number(params.count ?? 0))}</StatusMessage>
+      )}
       <BalanceUpdatePrompt spaceId={space.data.id} />
       <BalanceSummary spaceId={space.data.id} />
       <Button
@@ -115,6 +128,13 @@ export default function FinancialSpaceHomeScreen() {
         variant="link"
         onPress={() =>
           router.push({ pathname: '/spaces/[spaceId]/trash', params: { spaceId, month } })
+        }
+      />
+      <Button
+        label={messages.recurrences.listAction}
+        variant="link"
+        onPress={() =>
+          router.push({ pathname: '/spaces/[spaceId]/recurrences', params: { spaceId } })
         }
       />
       <Button
