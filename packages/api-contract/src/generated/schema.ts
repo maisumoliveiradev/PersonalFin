@@ -86,15 +86,37 @@ export interface paths {
         };
         /**
          * List the categories of an accessible Financial Space
-         * @description Top-level categories ordered by position, each with its subcategories. Every new space receives the default catalog once.
+         * @description Top-level categories ordered by position, each with its subcategories, including archived ones (flagged). Every new space receives the default catalog once.
          */
         get: operations["listCategories"];
         put?: never;
-        post?: never;
+        /** Create a category, or a subcategory when parentCategoryId is set */
+        post: operations["createCategory"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/categories/{categoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Permanently delete a never-used category without subcategories */
+        delete: operations["deleteCategory"];
+        options?: never;
+        head?: never;
+        /** Rename, archive, or unarchive a category (audited) */
+        patch: operations["updateCategory"];
         trace?: never;
     };
     "/financial-spaces/{spaceId}/transactions": {
@@ -210,13 +232,40 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+            archived: boolean;
+            version: number;
         };
         CategoryTreeItem: {
             /** Format: uuid */
             id: string;
             name: string;
             kind: components["schemas"]["CategoryKind"];
+            /** @description Archived categories are kept on existing transactions but not offered for new ones. */
+            archived: boolean;
+            version: number;
             subcategories: components["schemas"]["Subcategory"][];
+        };
+        Category: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["CategoryKind"];
+            /** Format: uuid */
+            parentCategoryId: string | null;
+            archived: boolean;
+            version: number;
+        };
+        CreateCategoryRequest: {
+            name: string;
+            /** @description Required for top-level categories; subcategories inherit the parent kind. */
+            kind?: components["schemas"]["CategoryKind"];
+            /** Format: uuid */
+            parentCategoryId?: string | null;
+        };
+        UpdateCategoryRequest: {
+            version: number;
+            name?: string;
+            archived?: boolean;
         };
         CategoryList: {
             items: components["schemas"]["CategoryTreeItem"][];
@@ -312,6 +361,24 @@ export interface components {
         };
     };
     responses: {
+        /** @description The category does not exist in this space (code CATEGORY_NOT_FOUND). */
+        CategoryNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description VERSION_CONFLICT, CATEGORY_NAME_TAKEN (sibling with the same name), CATEGORY_IN_USE (used by transactions, including deleted ones; archive instead), or CATEGORY_HAS_SUBCATEGORIES. */
+        CategoryConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description The category is not a top-level category of this space with the same kind as the transaction type, or the subcategory does not belong to it (code CATEGORY_NOT_AVAILABLE). */
         CategoryNotAvailable: {
             headers: {
@@ -511,6 +578,103 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    createCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCategoryRequest"];
+            };
+        };
+        responses: {
+            /** @description The created category. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            409: components["responses"]["CategoryConflict"];
+            /** @description The parent is not an active top-level category of the same kind (code PARENT_CATEGORY_NOT_AVAILABLE). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deleteCategory: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CategoryNotFound"];
+            409: components["responses"]["CategoryConflict"];
+        };
+    };
+    updateCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCategoryRequest"];
+            };
+        };
+        responses: {
+            /** @description The category after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CategoryNotFound"];
+            409: components["responses"]["CategoryConflict"];
         };
     };
     listTransactions: {

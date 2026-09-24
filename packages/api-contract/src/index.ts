@@ -17,3 +17,6 @@ export type CreateTransactionRequest = components['schemas']['CreateTransactionR
 export type Transaction = components['schemas']['Transaction'];
 export type TransactionList = components['schemas']['TransactionList'];
 export type UpdateTransactionRequest = components['schemas']['UpdateTransactionRequest'];
+export type Category = components['schemas']['Category'];
+export type CreateCategoryRequest = components['schemas']['CreateCategoryRequest'];
+export type UpdateCategoryRequest = components['schemas']['UpdateCategoryRequest'];

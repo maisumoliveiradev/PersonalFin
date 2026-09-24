@@ -1,5 +1,5 @@
-export type AuditEntityType = 'financial_transaction';
-export type AuditAction = 'update' | 'delete' | 'restore';
+export type AuditEntityType = 'financial_transaction' | 'category';
+export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
 
 export type AuditValue = string | number | boolean | null;
 
