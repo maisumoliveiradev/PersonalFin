@@ -5,6 +5,26 @@
 Initial target architecture. Concrete framework/library choices that are
 not yet accepted must be finalized through ADRs before implementation.
 
+Accepted platform and tooling decisions: ADR-0001 (single Expo client
+for Web/Android/iOS in a monorepo), ADR-0005 (API shell), ADR-0006
+(quality toolchain and local CI).
+
+## Repository structure
+
+``` text
+apps/
+  client/          Expo universal app: Web (React Native Web), Android, iOS
+  api/             Node.js + Fastify application API
+packages/
+  api-contract/    OpenAPI contract (openapi.yaml) and generated types
+.githooks/         Versioned git hooks (pre-push runs npm run validate)
+```
+
+Dependency direction between workspaces:
+
+`apps/client → packages/*` and `apps/api → packages/*`.
+Applications never import from each other.
+
 ## Architectural goals
 
 -   Web, Android, and iOS.
@@ -134,6 +154,10 @@ Start with structured logs, health checks, and error capture when
 backend infrastructure exists. Expand later to metrics/tracing/admin
 views.
 
+Implemented: the API writes structured JSON logs (pino via Fastify)
+with request IDs and redacts `authorization` and `cookie` headers.
+`GET /health` reports liveness.
+
 ## Deployment environments
 
 -   Development
@@ -141,6 +165,28 @@ views.
 -   Production
 
 Configuration, credentials, and data must be isolated.
+
+### Environment configuration strategy
+
+-   The environment is always explicit. The API requires
+    `APP_ENV` (`development`, `staging`, or `production`) and refuses to
+    start without a valid value. It never falls back to a default
+    environment.
+-   Configuration comes from environment variables, validated once at
+    startup (`apps/api/src/config.ts`). Business logic receives a typed
+    configuration object; it does not read `process.env`.
+-   Each application documents its variables in a committed
+    `.env.example`. Real `.env` files are git-ignored and never
+    committed.
+-   Locally, `npm run dev:api` loads `apps/api/.env` when present.
+    Staging and Production receive variables from their hosting
+    environment's secret management, never from files in the
+    repository.
+-   Client (Expo) variables must use the `EXPO_PUBLIC_` prefix and are
+    embedded in the client bundle, so they must never contain secrets.
+    The client reads no environment variables yet.
+-   Each environment uses its own credentials and data stores; none are
+    shared between environments.
 
 ## Architecture evolution
 

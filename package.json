@@ -1,0 +1,35 @@
+{
+  "name": "personalfin",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
+    "dev:api": "npm run dev --workspace @personalfin/api",
+    "dev:client": "npm run start --workspace @personalfin/client",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "contract:generate": "npm run generate --workspace @personalfin/api-contract",
+    "contract:check": "npm run check --workspace @personalfin/api-contract",
+    "validate": "npm run lint && npm run typecheck && npm run contract:check && npm run test"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@types/node": "24.13.6",
+    "openapi-typescript": "7.13.0",
+    "typescript": "6.0.3",
+    "vitest": "5.0.1"
+  }
+}
