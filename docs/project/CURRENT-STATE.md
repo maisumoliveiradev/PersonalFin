@@ -2,11 +2,9 @@
 
 ## Current Version
 
-Pre-release. SDD-001 (Project Foundation), SDD-002 (Base
-Authentication), SDD-003 (First Financial Space), SDD-004 (Initial
-Categories), SDD-005 (Manual Income and Expense), and SDD-006
-(Transaction List) implemented; SDD-007 (release validation) pending;
-`v0.1.0` in progress.
+`v0.1.0` release candidate. SDD-001 to SDD-007 implemented and
+validated (`docs/sdds/v0.1.0/SDD-007-validation-report.md`); release
+happens when the candidate is merged to `main`.
 
 ## Implemented Product Capabilities
 
@@ -72,7 +70,8 @@ Categories), SDD-005 (Manual Income and Expense), and SDD-006
 
 ## Active Target
 
-Execute `v0.1.0` incrementally.
+Release `v0.1.0`; the next increment (`v0.2.0`, Core Financial Control)
+has no SDDs yet.
 
 Target user flow:
 
@@ -85,4 +84,5 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.1.0/SDD-007-release-validation.md`.
+Project owner: merge PRs #1 to #7 in order, confirm or reject DR-072,
+and verify Android startup manually. Then write the v0.2.0 SDDs.
