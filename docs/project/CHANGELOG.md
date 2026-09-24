@@ -6,6 +6,17 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Consolidated Balance Snapshots (SDD-013)
+
+-   Each space shows its observed consolidated balance ("Saldo
+    observado") with the date it refers to; users record a new balance
+    (zero or negative allowed, optional note) and see the full history.
+-   Snapshots are append-only: new records never overwrite earlier ones,
+    enforced by the database (DR-024). They are not transactions.
+-   `GET` and `POST /financial-spaces/{spaceId}/balance-snapshots`;
+    migration `0009_balance_snapshots`.
+-   `packages/domain` parses signed balance input.
+
 ### Transaction Filters and Search (SDD-012)
 
 -   The transaction list is organized by month (current month by default,
