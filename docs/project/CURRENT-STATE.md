@@ -2,10 +2,9 @@
 
 ## Current Version
 
-`v0.2.0`, released on 2026-09-24 (`main`, tag `v0.2.0`). SDD-001 to
-SDD-016 implemented and validated. `develop` is building v0.3.0:
-SDD-017 to SDD-021 implemented; SDD-022 (release validation)
-pending.
+`v0.3.0`, released on 2026-09-24 (`main`, tag `v0.3.0`). SDD-001 to
+SDD-022 implemented and validated
+(`docs/sdds/v0.3.0/SDD-022-validation-report.md`).
 
 ## Implemented Product Capabilities
 
@@ -105,7 +104,8 @@ pending.
 
 ## Active Target
 
-`v0.3.0` --- Planning and Recurrence (`docs/sdds/v0.3.0/`).
+`v0.4.0` --- Credit Cards (`docs/product/ROADMAP.md`). No SDD drafted
+yet.
 
 ## Important Constraint
 
@@ -114,6 +114,6 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.3.0/SDD-022-release-validation.md`. Domain decisions
+Draft the v0.4.0 SDDs (Credit Cards) from the roadmap. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, DR-072 to DR-077).

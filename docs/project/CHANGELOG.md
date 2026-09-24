@@ -6,6 +6,11 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.3.0\] --- 2026-09-24
+
+Planning and Recurrence. Released to `main` and tagged `v0.3.0`;
+validated in SDD-022 (`docs/sdds/v0.3.0/SDD-022-validation-report.md`).
+
 ### Monthly Projection (SDD-021)
 
 -   The "Resumo do mês" card has a "Projeção" group with the projected
