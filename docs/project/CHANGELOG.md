@@ -6,6 +6,13 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+Nothing yet.
+
+## \[0.2.0\] --- 2026-09-24
+
+Core Financial Control. Released to `main` and tagged `v0.2.0`;
+validated in SDD-016 (`docs/sdds/v0.2.0/SDD-016-validation-report.md`).
+
 ### Current-Month Dashboard (SDD-015)
 
 -   "Resumo do mês" card on the space screen, following the selected

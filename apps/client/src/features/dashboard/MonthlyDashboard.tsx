@@ -113,14 +113,12 @@ export function MonthlyDashboard({ spaceId, month }: MonthlyDashboardProps) {
           {data.observedBalance === null ? (
             <BodyText muted>{messages.dashboard.noMonthEndBalance}</BodyText>
           ) : (
-            <>
-              <MetricRow
-                label={messages.dashboard.monthEndBalanceDate(
-                  formatDisplayDate(data.observedBalance.observedOn, 'pt-BR'),
-                )}
-                value={money(data, data.observedBalance.amountMinor)}
-              />
-            </>
+            <MetricRow
+              label={messages.dashboard.monthEndBalanceDate(
+                formatDisplayDate(data.observedBalance.observedOn, 'pt-BR'),
+              )}
+              value={money(data, data.observedBalance.amountMinor)}
+            />
           )}
         </>
       )}
