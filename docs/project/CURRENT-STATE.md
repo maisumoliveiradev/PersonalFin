@@ -104,8 +104,7 @@ SDD-022 implemented and validated
 
 ## Active Target
 
-`v0.4.0` --- Credit Cards (`docs/product/ROADMAP.md`). No SDD drafted
-yet.
+`v0.4.0` --- Credit Cards (`docs/sdds/v0.4.0/`).
 
 ## Important Constraint
 
@@ -114,6 +113,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.4.0 SDDs (Credit Cards) from the roadmap. Domain decisions
+`docs/sdds/v0.4.0/SDD-023-cards-and-limits.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, DR-072 to DR-077).
+`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, DR-072 to
+DR-077).
