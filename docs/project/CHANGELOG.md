@@ -6,6 +6,16 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Transaction List (SDD-006)
+
+-   The space screen lists its transactions (newest financial date
+    first) with type, description, amount, date, category/subcategory,
+    and status, plus loading, error, and empty states.
+-   `GET /financial-spaces/{spaceId}/transactions` with `limit`
+    (default 100, max 200) and `hasMore`.
+-   Amounts and dates are formatted for pt-BR without changing stored
+    values.
+
 ### Manual Income and Expense (SDD-005)
 
 -   Users register an Expense or Income with description, amount, date,

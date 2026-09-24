@@ -106,7 +106,11 @@ export interface paths {
             };
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List the most recent transactions of an accessible Financial Space
+         * @description Ordered by financial date (newest first), then by creation time (newest first).
+         */
+        get: operations["listTransactions"];
         put?: never;
         /** Register a manual income or expense in an accessible Financial Space */
         post: operations["createTransaction"];
@@ -224,6 +228,11 @@ export interface components {
             subcategory: components["schemas"]["CategoryReference"] | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        TransactionList: {
+            items: components["schemas"]["Transaction"][];
+            /** @description True when older transactions exist beyond the limit. */
+            hasMore: boolean;
         };
         ErrorResponse: {
             error: {
@@ -404,6 +413,33 @@ export interface operations {
                     "application/json": components["schemas"]["CategoryList"];
                 };
             };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    listTransactions: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The most recent transactions of the space. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionList"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };

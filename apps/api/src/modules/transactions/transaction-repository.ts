@@ -2,4 +2,5 @@ import type { FinancialTransaction, NewFinancialTransaction } from './transactio
 
 export interface TransactionRepository {
   create(transaction: NewFinancialTransaction): Promise<FinancialTransaction>;
+  listRecentForSpace(financialSpaceId: string, limit: number): Promise<FinancialTransaction[]>;
 }

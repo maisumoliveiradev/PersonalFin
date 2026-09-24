@@ -1,4 +1,7 @@
-import type { Transaction as TransactionResponse } from '@personalfin/api-contract';
+import type {
+  TransactionList,
+  Transaction as TransactionResponse,
+} from '@personalfin/api-contract';
 import {
   DEFAULT_TRANSACTION_STATUS,
   isValidAmountMinor,
@@ -36,6 +39,18 @@ const createTransactionSchema = z.strictObject({
 
 const spaceParamsSchema = z.object({ spaceId: z.string() });
 
+export const DEFAULT_TRANSACTION_LIST_LIMIT = 100;
+export const MAX_TRANSACTION_LIST_LIMIT = 200;
+
+const listTransactionsQuerySchema = z.object({
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(MAX_TRANSACTION_LIST_LIMIT)
+    .default(DEFAULT_TRANSACTION_LIST_LIMIT),
+});
+
 export function toTransactionResponse(transaction: FinancialTransaction): TransactionResponse {
   return {
     id: transaction.id,
@@ -52,6 +67,28 @@ export function toTransactionResponse(transaction: FinancialTransaction): Transa
 }
 
 export function registerTransactionRoutes(server: FastifyInstance, data: DataAccess): void {
+  server.get(
+    '/financial-spaces/:spaceId/transactions',
+    async (request): Promise<TransactionList> => {
+      const user = requireAuthenticatedUser(request);
+      const { spaceId } = parseInput(spaceParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        spaceId,
+      );
+      const { limit } = parseInput(listTransactionsQuerySchema, request.query);
+      const transactions = await data.repositories.transactions.listRecentForSpace(
+        space.id,
+        limit + 1,
+      );
+      return {
+        items: transactions.slice(0, limit).map(toTransactionResponse),
+        hasMore: transactions.length > limit,
+      };
+    },
+  );
+
   server.post(
     '/financial-spaces/:spaceId/transactions',
     async (request, reply): Promise<TransactionResponse> => {

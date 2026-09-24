@@ -108,6 +108,34 @@ paths:
   /financial-spaces/{spaceId}/transactions:
     parameters:
       - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listTransactions
+      summary: List the most recent transactions of an accessible Financial Space
+      description: >
+        Ordered by financial date (newest first), then by creation time
+        (newest first).
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+      responses:
+        '200':
+          description: The most recent transactions of the space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionList'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
     post:
       operationId: createTransaction
       summary: Register a manual income or expense in an accessible Financial Space
@@ -410,6 +438,20 @@ components:
         createdAt:
           type: string
           format: date-time
+    TransactionList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        hasMore:
+          type: boolean
+          description: True when older transactions exist beyond the limit.
     ErrorResponse:
       type: object
       additionalProperties: false

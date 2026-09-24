@@ -94,5 +94,16 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
       }
       return toTransaction(row);
     },
+
+    async listRecentForSpace(financialSpaceId, limit) {
+      const { rows } = await db.query<TransactionRow>(
+        `${SELECT_WITH_CATEGORIES}
+         WHERE t.financial_space_id = $1
+         ORDER BY t.financial_date DESC, t.created_at DESC, t.id DESC
+         LIMIT $2`,
+        [financialSpaceId, limit],
+      );
+      return rows.map(toTransaction);
+    },
   };
 }

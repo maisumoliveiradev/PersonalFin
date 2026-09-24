@@ -2,6 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useFinancialSpace } from '../../../../api/financial-spaces';
 import { CategoryOverview } from '../../../../features/categories/CategoryOverview';
+import { TransactionList } from '../../../../features/transactions/TransactionList';
 import { messages } from '../../../../i18n/messages';
 import { BodyText } from '../../../../ui/BodyText';
 import { Button } from '../../../../ui/Button';
@@ -47,6 +48,7 @@ export default function FinancialSpaceHomeScreen() {
           router.push({ pathname: '/spaces/[spaceId]/transactions/new', params: { spaceId } })
         }
       />
+      <TransactionList spaceId={space.data.id} />
       {backToSpaces}
       <CategoryOverview spaceId={space.data.id} />
     </Screen>

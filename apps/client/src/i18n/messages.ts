@@ -57,6 +57,19 @@ export const messages = {
     saveAction: 'Salvar lançamento',
     cancelAction: 'Cancelar',
     saved: 'Lançamento salvo.',
+    listTitle: 'Lançamentos',
+    empty: 'Nenhum lançamento neste espaço ainda. Registre sua primeira receita ou despesa.',
+    loadError: 'Não foi possível carregar os lançamentos.',
+    showingRecent: (count: number) => `Mostrando os ${count} lançamentos mais recentes.`,
+    rowAccessibilityLabel: (parts: {
+      type: string;
+      description: string;
+      amount: string;
+      date: string;
+      category: string;
+      status: string;
+    }) =>
+      `${parts.type}: ${parts.description}, ${parts.amount}, ${parts.date}, ${parts.category}, ${parts.status}`,
     errors: {
       descriptionRequired: 'Informe uma descrição.',
       descriptionTooLong: 'Use no máximo 140 caracteres na descrição.',

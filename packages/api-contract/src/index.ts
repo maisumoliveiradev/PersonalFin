@@ -15,3 +15,4 @@ export type TransactionType = components['schemas']['TransactionType'];
 export type TransactionStatus = components['schemas']['TransactionStatus'];
 export type CreateTransactionRequest = components['schemas']['CreateTransactionRequest'];
 export type Transaction = components['schemas']['Transaction'];
+export type TransactionList = components['schemas']['TransactionList'];

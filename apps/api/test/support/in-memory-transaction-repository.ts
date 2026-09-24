@@ -28,5 +28,15 @@ export function createInMemoryTransactionRepository(
       transactions.push(created);
       return created;
     },
+    async listRecentForSpace(financialSpaceId, limit) {
+      return transactions
+        .filter((transaction) => transaction.financialSpaceId === financialSpaceId)
+        .sort(
+          (left, right) =>
+            right.financialDate.localeCompare(left.financialDate) ||
+            right.createdAt.getTime() - left.createdAt.getTime(),
+        )
+        .slice(0, limit);
+    },
   };
 }

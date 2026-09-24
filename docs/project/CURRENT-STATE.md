@@ -4,7 +4,8 @@
 
 Pre-release. SDD-001 (Project Foundation), SDD-002 (Base
 Authentication), SDD-003 (First Financial Space), SDD-004 (Initial
-Categories), and SDD-005 (Manual Income and Expense) implemented;
+Categories), SDD-005 (Manual Income and Expense), and SDD-006
+(Transaction List) implemented; SDD-007 (release validation) pending;
 `v0.1.0` in progress.
 
 ## Implemented Product Capabilities
@@ -31,10 +32,13 @@ Categories), and SDD-005 (Manual Income and Expense) implemented;
 -   **Transactions (SDD-005):** users register Expense or Income with
     description, amount (BRL), financial date, category matching the
     type, optional subcategory, and status (Paid/Received or Pending).
-    Transactions cannot yet be listed, edited, or deleted; there are no
-    tags, notes, attachments, recurrence, cards, or other currencies.
-
-No transaction list exists yet (SDD-006).
+    Transactions cannot be edited or deleted; there are no tags, notes,
+    attachments, recurrence, cards, or other currencies.
+-   **Transaction list (SDD-006):** the space screen lists the space's
+    most recent transactions (up to 100; API limit up to 200 with
+    `hasMore`), newest financial date first, with type, description,
+    amount, date, category, and status. There is no search, filter,
+    pagination beyond the limit, or dashboard.
 
 ## Implemented Technical Foundation
 
@@ -61,7 +65,8 @@ No transaction list exists yet (SDD-006).
 
 ## Not Yet Present
 
--   Transaction list, edit, and deletion; category management.
+-   Transaction edit and deletion; category management; filters and
+    pagination.
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
 
@@ -80,4 +85,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.1.0/SDD-006-transaction-list.md`.
+`docs/sdds/v0.1.0/SDD-007-release-validation.md`.
