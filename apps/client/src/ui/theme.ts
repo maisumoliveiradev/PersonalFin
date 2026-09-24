@@ -10,6 +10,7 @@ const palettes = {
     primary: '#1D4ED8',
     onPrimary: '#FFFFFF',
     danger: '#B91C1C',
+    success: '#15803D',
   },
   dark: {
     background: '#0B0F14',
@@ -20,6 +21,7 @@ const palettes = {
     primary: '#60A5FA',
     onPrimary: '#0B0F14',
     danger: '#F87171',
+    success: '#4ADE80',
   },
 } as const;
 

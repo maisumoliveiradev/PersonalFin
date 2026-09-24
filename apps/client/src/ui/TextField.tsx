@@ -5,7 +5,14 @@ import { fontSize, radius, spacing, usePalette } from './theme';
 interface TextFieldProps
   extends Pick<
     TextInputProps,
-    'autoComplete' | 'keyboardType' | 'secureTextEntry' | 'textContentType' | 'onSubmitEditing'
+    | 'autoComplete'
+    | 'keyboardType'
+    | 'secureTextEntry'
+    | 'textContentType'
+    | 'onSubmitEditing'
+    | 'placeholder'
+    | 'inputMode'
+    | 'maxLength'
   > {
   label: string;
   value: string;

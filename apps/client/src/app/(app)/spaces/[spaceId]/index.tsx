@@ -8,11 +8,12 @@ import { Button } from '../../../../ui/Button';
 import { FormError } from '../../../../ui/FormError';
 import { LoadingScreen } from '../../../../ui/LoadingScreen';
 import { Screen } from '../../../../ui/Screen';
+import { StatusMessage } from '../../../../ui/StatusMessage';
 import { Title } from '../../../../ui/Title';
 
 export default function FinancialSpaceHomeScreen() {
   const router = useRouter();
-  const { spaceId } = useLocalSearchParams<{ spaceId: string }>();
+  const { spaceId, saved } = useLocalSearchParams<{ spaceId: string; saved?: string }>();
   const space = useFinancialSpace(spaceId);
   const backToSpaces = (
     <Button
@@ -39,6 +40,13 @@ export default function FinancialSpaceHomeScreen() {
     <Screen>
       <Title>{space.data.name}</Title>
       <BodyText muted>{messages.spaces.ownerRole}</BodyText>
+      {saved === '1' && <StatusMessage>{messages.transactions.saved}</StatusMessage>}
+      <Button
+        label={messages.transactions.newAction}
+        onPress={() =>
+          router.push({ pathname: '/spaces/[spaceId]/transactions/new', params: { spaceId } })
+        }
+      />
       {backToSpaces}
       <CategoryOverview spaceId={space.data.id} />
     </Screen>

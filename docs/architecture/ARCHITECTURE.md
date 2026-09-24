@@ -9,7 +9,8 @@ Accepted platform and tooling decisions: ADR-0001 (single Expo client
 for Web/Android/iOS in a monorepo), ADR-0005 (API shell), ADR-0006
 (quality toolchain and local CI), ADR-0007 (authentication), ADR-0008
 (PostgreSQL and migrations), ADR-0009 (client application
-architecture), ADR-0010 (Financial Space access model).
+architecture), ADR-0010 (Financial Space access model), ADR-0011
+(money and financial date formats, shared domain package).
 
 ## Repository structure
 
@@ -27,12 +28,15 @@ apps/
     src/database/    Connection pool, transactions (data-access.ts),
                      migration runner, SQL migrations
     src/http/        Authentication hook, input validation, error contract
-    src/modules/     Domain modules (financial-spaces/, categories/):
+    src/modules/     Domain modules (financial-spaces/, categories/,
+                     transactions/):
                      domain types, use cases, repository ports,
                      PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)
 packages/
   api-contract/    OpenAPI contract (openapi.yaml) and generated types
+  domain/          Shared domain rules: money parsing/formatting, financial
+                   dates, transaction types and statuses
 compose.yaml       Local PostgreSQL (development and test databases)
 .githooks/         Versioned git hooks (pre-push runs npm run validate)
 ```
@@ -151,6 +155,14 @@ Routes and use cases receive a `DataAccess` object
 together with its default categories, runs inside `transaction`, which
 gives it repositories bound to a single PostgreSQL transaction. Unit
 tests supply in-memory repositories through the same interface.
+
+### Money and dates (ADR-0011)
+
+Money is stored as `bigint` minor units with an ISO currency code and
+exchanged as the integer `amountMinor`. Financial dates are PostgreSQL
+`date` values exchanged as `YYYY-MM-DD` strings; the database driver is
+configured never to convert them to JavaScript `Date`. Parsing and
+formatting live in `packages/domain` and are shared by API and client.
 
 ## Offline evolution
 

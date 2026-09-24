@@ -37,7 +37,10 @@ Location: `apps/client/src/ui`.
     minimum height), `FormError` (alert role, polite live region),
     `LoadingScreen`, `BodyText` (regular and muted), `ListItem`
     (pressable row with title and subtitle, 56 px minimum height;
-    SDD-003), `SectionTitle` (header role; SDD-004).
+    SDD-003), `SectionTitle` (header role; SDD-004), `OptionGroup`
+    (single-choice radio group rendered as chips, 44 px minimum height)
+    and `StatusMessage` (success alert with `success` color token;
+    SDD-005).
 
 ## Components
 

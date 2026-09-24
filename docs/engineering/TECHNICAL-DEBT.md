@@ -121,3 +121,30 @@ implemented yet.
     limiting).
 -   **Resolution:** Revisit when email verification is introduced.
 -   **Target version:** Email verification SDD.
+
+### TD-008 --- Client form logic has no automated tests
+
+-   **Status:** Open
+-   **Priority:** Medium
+-   **Origin:** SDD-005
+-   **Reason:** `apps/client` has no React Native test runner yet
+    (ADR-0006). The underlying parsing rules are tested in
+    `packages/domain`, but the form mapping
+    (`features/transactions/transaction-form.ts`) and screens were
+    verified only through manual browser automation.
+-   **Impact:** UI regressions in forms are caught only manually.
+-   **Resolution:** Introduce `jest-expo` (or move pure form mapping into
+    a tested package) and cover the transaction form.
+-   **Target version:** v0.2.0.
+
+### TD-009 --- Date entry is a plain text field
+
+-   **Status:** Open
+-   **Priority:** Low
+-   **Origin:** SDD-005
+-   **Reason:** A cross-platform date picker would need a new
+    dependency. Typing `DD/MM/AAAA` (defaulting to today) is enough for
+    the v0.1.0 flow.
+-   **Impact:** Slower date entry, especially on mobile.
+-   **Resolution:** Adopt a date picker when the Design System adds one.
+-   **Target version:** v0.2.0.

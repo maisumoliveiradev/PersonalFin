@@ -6,6 +6,20 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Manual Income and Expense (SDD-005)
+
+-   Users register an Expense or Income with description, amount, date,
+    category, optional subcategory, and status (Paid/Received by
+    default, or Pending), in BRL.
+-   `POST /financial-spaces/{spaceId}/transactions`; categories must
+    belong to the space and match the type (`422 CATEGORY_NOT_AVAILABLE`).
+-   Money stored as integer centavos (`bigint`) and exchanged as
+    `amountMinor`; financial dates stored as `date` and exchanged as
+    `YYYY-MM-DD` without timezone conversion (ADR-0011).
+-   New shared package `packages/domain` for money and date rules.
+-   Migration `0004_transactions`; transaction author recorded.
+-   Recorded TD-008 and TD-009.
+
 ### Initial Categories (SDD-004)
 
 -   Every new Financial Space receives the default pt-BR category

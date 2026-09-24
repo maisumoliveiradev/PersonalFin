@@ -3,8 +3,8 @@
 ## Current Version
 
 Pre-release. SDD-001 (Project Foundation), SDD-002 (Base
-Authentication), SDD-003 (First Financial Space), and SDD-004 (Initial
-Categories) implemented;
+Authentication), SDD-003 (First Financial Space), SDD-004 (Initial
+Categories), and SDD-005 (Manual Income and Expense) implemented;
 `v0.1.0` in progress.
 
 ## Implemented Product Capabilities
@@ -28,8 +28,13 @@ Categories) implemented;
     at most). They can be read (API and space screen) but not created,
     renamed, archived, or deleted.
 
-No transaction functionality exists. Do not assume it until the
-corresponding SDD is implemented and this document is updated.
+-   **Transactions (SDD-005):** users register Expense or Income with
+    description, amount (BRL), financial date, category matching the
+    type, optional subcategory, and status (Paid/Received or Pending).
+    Transactions cannot yet be listed, edited, or deleted; there are no
+    tags, notes, attachments, recurrence, cards, or other currencies.
+
+No transaction list exists yet (SDD-006).
 
 ## Implemented Technical Foundation
 
@@ -43,9 +48,11 @@ corresponding SDD is implemented and this document is updated.
         error body, validated configuration, structured logs.
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
+    -   `packages/domain` --- shared money, financial date, and
+        transaction rules (ADR-0011).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
-    `session`, `account`, `verification`; `financial_space`, `category`.
+    `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -54,8 +61,7 @@ corresponding SDD is implemented and this document is updated.
 
 ## Not Yet Present
 
--   Transactions; category management.
--   Shared domain package.
+-   Transaction list, edit, and deletion; category management.
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
 
@@ -74,4 +80,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.1.0/SDD-005-manual-transaction.md`.
+`docs/sdds/v0.1.0/SDD-006-transaction-list.md`.

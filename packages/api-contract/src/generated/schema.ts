@@ -97,6 +97,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register a manual income or expense in an accessible Financial Space */
+        post: operations["createTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -152,6 +171,59 @@ export interface components {
         };
         CategoryList: {
             items: components["schemas"]["CategoryTreeItem"][];
+        };
+        /** @enum {string} */
+        TransactionType: "expense" | "income";
+        /**
+         * @description paid means Paid (expense) or Received (income).
+         * @enum {string}
+         */
+        TransactionStatus: "paid" | "pending";
+        /** @description Amount in the currency's minor units (for BRL, centavos). Always positive; the transaction type carries the direction. */
+        AmountMinor: number;
+        /**
+         * Format: date
+         * @description Calendar date without time or timezone (YYYY-MM-DD).
+         */
+        FinancialDate: string;
+        CategoryReference: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        CreateTransactionRequest: {
+            type: components["schemas"]["TransactionType"];
+            /** @description Defaults to paid. */
+            status?: components["schemas"]["TransactionStatus"];
+            /** @description Trimmed, internal whitespace collapsed; 1 to 140 characters. */
+            description: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            financialDate: components["schemas"]["FinancialDate"];
+            /**
+             * Format: uuid
+             * @description A top-level category of the space whose kind equals type.
+             */
+            categoryId: string;
+            /**
+             * Format: uuid
+             * @description Optional subcategory of categoryId.
+             */
+            subcategoryId?: string | null;
+        };
+        Transaction: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["TransactionType"];
+            status: components["schemas"]["TransactionStatus"];
+            description: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            /** @description ISO 4217 code. Currently always BRL. */
+            currency: string;
+            financialDate: components["schemas"]["FinancialDate"];
+            category: components["schemas"]["CategoryReference"];
+            subcategory: components["schemas"]["CategoryReference"] | null;
+            /** Format: date-time */
+            createdAt: string;
         };
         ErrorResponse: {
             error: {
@@ -334,6 +406,44 @@ export interface operations {
             };
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    createTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTransactionRequest"];
+            };
+        };
+        responses: {
+            /** @description The created transaction, recorded in the space currency (BRL). */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            /** @description The category is not a top-level category of this space with the same kind as the transaction type, or the subcategory does not belong to it (code CATEGORY_NOT_AVAILABLE). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
 }

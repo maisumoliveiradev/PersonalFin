@@ -11,3 +11,7 @@ export type FinancialSpaceList = components['schemas']['FinancialSpaceList'];
 export type CategoryKind = components['schemas']['CategoryKind'];
 export type CategoryTreeItem = components['schemas']['CategoryTreeItem'];
 export type CategoryList = components['schemas']['CategoryList'];
+export type TransactionType = components['schemas']['TransactionType'];
+export type TransactionStatus = components['schemas']['TransactionStatus'];
+export type CreateTransactionRequest = components['schemas']['CreateTransactionRequest'];
+export type Transaction = components['schemas']['Transaction'];

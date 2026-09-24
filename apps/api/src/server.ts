@@ -8,6 +8,7 @@ import { createAuthenticationHook } from './http/authenticate.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
 import { registerCategoryRoutes } from './modules/categories/category-routes.ts';
 import { registerFinancialSpaceRoutes } from './modules/financial-spaces/financial-space-routes.ts';
+import { registerTransactionRoutes } from './modules/transactions/transaction-routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './routes/auth.ts';
 import { registerHealthRoute } from './routes/health.ts';
 import { registerMeRoute } from './routes/me.ts';
@@ -53,6 +54,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerMeRoute(authenticated);
     registerFinancialSpaceRoutes(authenticated, options.data);
     registerCategoryRoutes(authenticated, options.data);
+    registerTransactionRoutes(authenticated, options.data);
   });
 
   return server;

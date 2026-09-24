@@ -105,6 +105,40 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/transactions:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    post:
+      operationId: createTransaction
+      summary: Register a manual income or expense in an accessible Financial Space
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '201':
+          description: The created transaction, recorded in the space currency (BRL).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '422':
+          description: >
+            The category is not a top-level category of this space with the
+            same kind as the transaction type, or the subcategory does not
+            belong to it (code CATEGORY_NOT_AVAILABLE).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     SpaceId:
@@ -266,6 +300,116 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CategoryTreeItem'
+    TransactionType:
+      type: string
+      enum:
+        - expense
+        - income
+    TransactionStatus:
+      type: string
+      description: paid means Paid (expense) or Received (income).
+      enum:
+        - paid
+        - pending
+    AmountMinor:
+      type: integer
+      description: >
+        Amount in the currency's minor units (for BRL, centavos). Always
+        positive; the transaction type carries the direction.
+      minimum: 1
+      maximum: 99999999999
+    FinancialDate:
+      type: string
+      format: date
+      description: Calendar date without time or timezone (YYYY-MM-DD).
+    CategoryReference:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+    CreateTransactionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - description
+        - amountMinor
+        - financialDate
+        - categoryId
+      properties:
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        status:
+          allOf:
+            - $ref: '#/components/schemas/TransactionStatus'
+          description: Defaults to paid.
+        description:
+          type: string
+          description: Trimmed, internal whitespace collapsed; 1 to 140 characters.
+          minLength: 1
+          maxLength: 140
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        financialDate:
+          $ref: '#/components/schemas/FinancialDate'
+        categoryId:
+          type: string
+          format: uuid
+          description: A top-level category of the space whose kind equals type.
+        subcategoryId:
+          type:
+            - string
+            - 'null'
+          format: uuid
+          description: Optional subcategory of categoryId.
+    Transaction:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - type
+        - status
+        - description
+        - amountMinor
+        - currency
+        - financialDate
+        - category
+        - subcategory
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        description:
+          type: string
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        currency:
+          type: string
+          description: ISO 4217 code. Currently always BRL.
+          pattern: '^[A-Z]{3}$'
+        financialDate:
+          $ref: '#/components/schemas/FinancialDate'
+        category:
+          $ref: '#/components/schemas/CategoryReference'
+        subcategory:
+          oneOf:
+            - $ref: '#/components/schemas/CategoryReference'
+            - type: 'null'
+        createdAt:
+          type: string
+          format: date-time
     ErrorResponse:
       type: object
       additionalProperties: false

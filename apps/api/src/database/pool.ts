@@ -1,5 +1,9 @@
 import pg from 'pg';
 
+const DATE_TYPE_OID = 1082;
+
+pg.types.setTypeParser(DATE_TYPE_OID, (value: string) => value);
+
 export type DatabasePool = pg.Pool;
 export type Queryable = pg.Pool | pg.PoolClient;
 

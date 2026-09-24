@@ -4,6 +4,7 @@ import type { AuthHandler } from '../../src/routes/auth.ts';
 import { buildServer } from '../../src/server.ts';
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
+import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
 
 export const SESSION_COOKIE = 'personalfin.session_token';
 
@@ -30,9 +31,11 @@ export function createFakeSessionResolver(
 const unusedAuthHandler: AuthHandler = async () => new Response(null, { status: 404 });
 
 export function createInMemoryRepositories() {
+  const categories = createInMemoryCategoryRepository();
   return {
     financialSpaces: createInMemoryFinancialSpaceRepository(),
-    categories: createInMemoryCategoryRepository(),
+    categories,
+    transactions: createInMemoryTransactionRepository(categories.categories),
   };
 }
 
