@@ -20,3 +20,6 @@ export type UpdateTransactionRequest = components['schemas']['UpdateTransactionR
 export type Category = components['schemas']['Category'];
 export type CreateCategoryRequest = components['schemas']['CreateCategoryRequest'];
 export type UpdateCategoryRequest = components['schemas']['UpdateCategoryRequest'];
+export type BalanceSnapshot = components['schemas']['BalanceSnapshot'];
+export type BalanceSnapshotList = components['schemas']['BalanceSnapshotList'];
+export type RecordBalanceSnapshotRequest = components['schemas']['RecordBalanceSnapshotRequest'];

@@ -3,7 +3,7 @@
 ## Current Version
 
 `v0.1.0` released on 2026-09-24 (`main`, tag `v0.1.0`). `develop` is
-building v0.2.0: SDD-008 to SDD-012 implemented.
+building v0.2.0: SDD-008 to SDD-013 implemented.
 
 ## Implemented Product Capabilities
 
@@ -39,6 +39,10 @@ building v0.2.0: SDD-008 to SDD-012 implemented.
 -   **Soft delete (SDD-009):** transactions can be deleted (with
     confirmation) and restored from the space's Lixeira; deletion and
     restore are audited. There is no permanent deletion.
+-   **Balance snapshots (SDD-013):** each space shows its latest observed
+    consolidated balance and date; users record new snapshots (zero or
+    negative allowed) and view the append-only history. There are no
+    reminders yet and no projection.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -65,7 +69,8 @@ building v0.2.0: SDD-008 to SDD-012 implemented.
         transaction rules (ADR-0011).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
-    `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`, `audit_event`.
+    `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`, `audit_event`,
+    `balance_snapshot`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -74,8 +79,7 @@ building v0.2.0: SDD-008 to SDD-012 implemented.
 
 ## Not Yet Present
 
--   Balance snapshots, balance reminders, and dashboard (remaining
-    v0.2.0 SDDs).
+-   Balance reminders and dashboard (remaining v0.2.0 SDDs).
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
 -   Client (React Native) test runner.
 
@@ -90,4 +94,4 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.2.0/SDD-013-balance-snapshots.md`.
+`docs/sdds/v0.2.0/SDD-014-balance-update-prompt.md`.

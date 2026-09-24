@@ -397,6 +397,59 @@ paths:
           $ref: '#/components/responses/TransactionNotFound'
         '409':
           $ref: '#/components/responses/StateConflict'
+  /financial-spaces/{spaceId}/balance-snapshots:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listBalanceSnapshots
+      summary: List observed balance snapshots, most recent first
+      description: >
+        Ordered by observed date, then recording instant (newest first).
+        current is the first item: the latest observed consolidated balance.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 100
+      responses:
+        '200':
+          description: Snapshot history of the space.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceSnapshotList'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: recordBalanceSnapshot
+      summary: Record an observed consolidated balance (append-only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordBalanceSnapshotRequest'
+      responses:
+        '201':
+          description: The recorded snapshot. Earlier snapshots are never changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceSnapshot'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     TransactionId:
@@ -863,6 +916,73 @@ components:
             - string
             - 'null'
           description: Pass as cursor to fetch the next page; null on the last page.
+    RecordBalanceSnapshotRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - amountMinor
+        - observedOn
+      properties:
+        amountMinor:
+          type: integer
+          minimum: -99999999999
+          maximum: 99999999999
+          description: Observed balance in minor units; may be zero or negative.
+        observedOn:
+          $ref: '#/components/schemas/FinancialDate'
+        note:
+          type:
+            - string
+            - 'null'
+          maxLength: 140
+    BalanceSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - amountMinor
+        - currency
+        - observedOn
+        - note
+        - recordedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        amountMinor:
+          type: integer
+          minimum: -99999999999
+          maximum: 99999999999
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        observedOn:
+          $ref: '#/components/schemas/FinancialDate'
+        note:
+          type:
+            - string
+            - 'null'
+        recordedAt:
+          type: string
+          format: date-time
+    BalanceSnapshotList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - current
+        - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BalanceSnapshot'
+        current:
+          oneOf:
+            - $ref: '#/components/schemas/BalanceSnapshot'
+            - type: 'null'
+        hasMore:
+          type: boolean
     ErrorResponse:
       type: object
       additionalProperties: false

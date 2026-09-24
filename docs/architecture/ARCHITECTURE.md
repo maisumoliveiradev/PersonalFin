@@ -30,7 +30,7 @@ apps/
                      migration runner, SQL migrations
     src/http/        Authentication hook, input validation, error contract
     src/modules/     Domain modules (financial-spaces/, categories/,
-                     transactions/, audit/):
+                     transactions/, audit/, balance/):
                      domain types, use cases, repository ports,
                      PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)
@@ -176,6 +176,13 @@ Transactions use soft deletion (`deleted_at`, `deleted_by_user_id`,
 both required together). Deleted rows are excluded from every active
 query and listed only in the space trash, from which they can be
 restored; there is no permanent deletion yet.
+
+### Consolidated balance (DR-021 to DR-025)
+
+Observed balances are stored in `balance_snapshot`, append-only at the
+database level. The current balance is the most recent snapshot by
+observed date, then recording instant. Snapshots are never transactions
+and never enter transaction totals.
 
 ## Offline evolution
 

@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { useCategories } from '../../../../api/categories';
 import { useFinancialSpace } from '../../../../api/financial-spaces';
+import { BalanceSummary } from '../../../../features/balance/BalanceSummary';
 import { MonthNavigator } from '../../../../features/transactions/MonthNavigator';
 import { TransactionFiltersPanel } from '../../../../features/transactions/TransactionFiltersPanel';
 import { TransactionList } from '../../../../features/transactions/TransactionList';
@@ -69,6 +70,7 @@ export default function FinancialSpaceHomeScreen() {
       {saved === 'created' && <StatusMessage>{messages.transactions.saved}</StatusMessage>}
       {saved === 'updated' && <StatusMessage>{messages.transactions.updated}</StatusMessage>}
       {saved === 'deleted' && <StatusMessage>{messages.transactions.deleted}</StatusMessage>}
+      <BalanceSummary spaceId={space.data.id} />
       <Button
         label={messages.transactions.newAction}
         onPress={() =>

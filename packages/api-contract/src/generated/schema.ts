@@ -187,6 +187,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/balance-snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List observed balance snapshots, most recent first
+         * @description Ordered by observed date, then recording instant (newest first). current is the first item: the latest observed consolidated balance.
+         */
+        get: operations["listBalanceSnapshots"];
+        put?: never;
+        /** Record an observed consolidated balance (append-only) */
+        post: operations["recordBalanceSnapshot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -352,6 +375,27 @@ export interface components {
             hasMore: boolean;
             /** @description Pass as cursor to fetch the next page; null on the last page. */
             nextCursor: string | null;
+        };
+        RecordBalanceSnapshotRequest: {
+            /** @description Observed balance in minor units; may be zero or negative. */
+            amountMinor: number;
+            observedOn: components["schemas"]["FinancialDate"];
+            note?: string | null;
+        };
+        BalanceSnapshot: {
+            /** Format: uuid */
+            id: string;
+            amountMinor: number;
+            currency: string;
+            observedOn: components["schemas"]["FinancialDate"];
+            note: string | null;
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        BalanceSnapshotList: {
+            items: components["schemas"]["BalanceSnapshot"][];
+            current: components["schemas"]["BalanceSnapshot"] | null;
+            hasMore: boolean;
         };
         ErrorResponse: {
             error: {
@@ -863,6 +907,62 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["TransactionNotFound"];
             409: components["responses"]["StateConflict"];
+        };
+    };
+    listBalanceSnapshots: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Snapshot history of the space. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceSnapshotList"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    recordBalanceSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordBalanceSnapshotRequest"];
+            };
+        };
+        responses: {
+            /** @description The recorded snapshot. Earlier snapshots are never changed. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BalanceSnapshot"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
 }
