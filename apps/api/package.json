@@ -1,16 +1,28 @@
 {
   "name": "@personalfin/api",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env src/main.ts",
     "start": "node src/main.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:migrate": "node --env-file-if-exists=.env src/database/migrate-cli.ts",
+    "auth:schema": "node --env-file-if-exists=.env src/auth/print-auth-schema.ts",
+    "test:integration": "node --env-file-if-exists=.env ../../node_modules/vitest/vitest.mjs run --config vitest.integration.config.ts"
   },
   "dependencies": {
+    "@better-auth/expo": "1.7.5",
+    "@fastify/cors": "11.3.0",
     "@personalfin/api-contract": "*",
-    "fastify": "5.12.5"
+    "better-auth": "1.7.5",
+    "fastify": "5.12.5",
+    "pg": "8.23.0",
+    "zod": "4.6.5",
+    "@personalfin/domain": "*"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1"
   }
 }

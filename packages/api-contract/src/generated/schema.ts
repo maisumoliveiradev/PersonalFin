@@ -21,6 +21,105 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Return the authenticated user */
+        get: operations["getCurrentUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the Financial Spaces the user can access */
+        get: operations["listFinancialSpaces"];
+        put?: never;
+        /** Create a Financial Space owned by the user */
+        post: operations["createFinancialSpace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Return one accessible Financial Space */
+        get: operations["getFinancialSpace"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List the categories of an accessible Financial Space
+         * @description Top-level categories ordered by position, each with its subcategories. Every new space receives the default catalog once.
+         */
+        get: operations["listCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * List the most recent transactions of an accessible Financial Space
+         * @description Ordered by financial date (newest first), then by creation time (newest first).
+         */
+        get: operations["listTransactions"];
+        put?: never;
+        /** Register a manual income or expense in an accessible Financial Space */
+        post: operations["createTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -29,9 +128,153 @@ export interface components {
             /** @constant */
             status: "ok";
         };
+        CurrentUser: {
+            /** Format: uuid */
+            id: string;
+            /** Format: email */
+            email: string;
+            name: string;
+        };
+        CreateFinancialSpaceRequest: {
+            /** @description Trimmed, internal whitespace collapsed; 1 to 80 characters. */
+            name: string;
+        };
+        FinancialSpace: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            lifecycleState: "active";
+            /**
+             * @description The requesting user's role in the space.
+             * @enum {string}
+             */
+            role: "owner";
+            /** Format: date-time */
+            createdAt: string;
+        };
+        FinancialSpaceList: {
+            items: components["schemas"]["FinancialSpace"][];
+        };
+        /**
+         * @description Transaction type a category applies to.
+         * @enum {string}
+         */
+        CategoryKind: "expense" | "income";
+        Subcategory: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        CategoryTreeItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            kind: components["schemas"]["CategoryKind"];
+            subcategories: components["schemas"]["Subcategory"][];
+        };
+        CategoryList: {
+            items: components["schemas"]["CategoryTreeItem"][];
+        };
+        /** @enum {string} */
+        TransactionType: "expense" | "income";
+        /**
+         * @description paid means Paid (expense) or Received (income).
+         * @enum {string}
+         */
+        TransactionStatus: "paid" | "pending";
+        /** @description Amount in the currency's minor units (for BRL, centavos). Always positive; the transaction type carries the direction. */
+        AmountMinor: number;
+        /**
+         * Format: date
+         * @description Calendar date without time or timezone (YYYY-MM-DD).
+         */
+        FinancialDate: string;
+        CategoryReference: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        CreateTransactionRequest: {
+            type: components["schemas"]["TransactionType"];
+            /** @description Defaults to paid. */
+            status?: components["schemas"]["TransactionStatus"];
+            /** @description Trimmed, internal whitespace collapsed; 1 to 140 characters. */
+            description: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            financialDate: components["schemas"]["FinancialDate"];
+            /**
+             * Format: uuid
+             * @description A top-level category of the space whose kind equals type.
+             */
+            categoryId: string;
+            /**
+             * Format: uuid
+             * @description Optional subcategory of categoryId.
+             */
+            subcategoryId?: string | null;
+        };
+        Transaction: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["TransactionType"];
+            status: components["schemas"]["TransactionStatus"];
+            description: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            /** @description ISO 4217 code. Currently always BRL. */
+            currency: string;
+            financialDate: components["schemas"]["FinancialDate"];
+            category: components["schemas"]["CategoryReference"];
+            subcategory: components["schemas"]["CategoryReference"] | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        TransactionList: {
+            items: components["schemas"]["Transaction"][];
+            /** @description True when older transactions exist beyond the limit. */
+            hasMore: boolean;
+        };
+        ErrorResponse: {
+            error: {
+                /** @description Stable machine-readable error code. */
+                code: string;
+                /** @description Human-readable description; not localized. */
+                message: string;
+            };
+        };
     };
-    responses: never;
-    parameters: never;
+    responses: {
+        /** @description The request is invalid (code VALIDATION_FAILED). */
+        ValidationFailed: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description The Financial Space does not exist or is not accessible to the user (code FINANCIAL_SPACE_NOT_FOUND). Both cases return 404 so that inaccessible spaces are not revealed. */
+        FinancialSpaceNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description No valid session was provided. */
+        Unauthenticated: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+    };
+    parameters: {
+        SpaceId: string;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -54,6 +297,187 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthStatus"];
+                };
+            };
+        };
+    };
+    getCurrentUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The user bound to the current session. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUser"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+        };
+    };
+    listFinancialSpaces: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accessible Financial Spaces, oldest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancialSpaceList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+        };
+    };
+    createFinancialSpace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFinancialSpaceRequest"];
+            };
+        };
+        responses: {
+            /** @description The created Financial Space. The creator is its Owner. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancialSpace"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+        };
+    };
+    getFinancialSpace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The Financial Space. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancialSpace"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    listCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The category tree of the space. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    listTransactions: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The most recent transactions of the space. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionList"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    createTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTransactionRequest"];
+            };
+        };
+        responses: {
+            /** @description The created transaction, recorded in the space currency (BRL). */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            /** @description The category is not a top-level category of this space with the same kind as the transaction type, or the subcategory does not belong to it (code CATEGORY_NOT_AVAILABLE). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
