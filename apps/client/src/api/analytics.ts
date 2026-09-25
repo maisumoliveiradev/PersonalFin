@@ -28,3 +28,15 @@ export function useComparison(spaceId: string, month: string) {
       ),
   });
 }
+
+export function useBreakdown(spaceId: string, fromMonth: string, months: 1 | 3 | 6 | 12) {
+  return useQuery({
+    queryKey: [...analyticsKey(spaceId), 'breakdown', fromMonth, months] as const,
+    queryFn: async () =>
+      expectData(
+        await apiClient.GET('/financial-spaces/{spaceId}/analytics/breakdown', {
+          params: { path: { spaceId }, query: { fromMonth, months } },
+        }),
+      ),
+  });
+}

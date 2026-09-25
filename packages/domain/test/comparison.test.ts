@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compareAmounts, formatPercentTenths } from '../src/comparison.ts';
+import { compareAmounts, formatPercentTenths, shareTenths } from '../src/comparison.ts';
 
 describe('comparisons', () => {
   it.each([
@@ -30,5 +30,14 @@ describe('comparisons', () => {
     expect(formatPercentTenths(123, 'pt-BR')).toBe('+12,3%');
     expect(formatPercentTenths(-5, 'pt-BR')).toBe('-0,5%');
     expect(formatPercentTenths(0, 'en')).toBe('0.0%');
+  });
+});
+
+describe('shares', () => {
+  it('gives the share of a total in tenths of a percent', () => {
+    expect(shareTenths(1, 3)).toBe(333);
+    expect(shareTenths(2, 3)).toBe(667);
+    expect(shareTenths(1, 2_000)).toBe(1);
+    expect(shareTenths(5, 0)).toBeNull();
   });
 });

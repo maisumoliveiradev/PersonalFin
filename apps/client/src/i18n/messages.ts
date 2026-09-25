@@ -411,6 +411,19 @@ export const messages = {
     definitionsHint:
       'Valores realizados consideram lançamentos pagos/recebidos; compras no cartão contam no mês da fatura.',
     loadError: 'Não foi possível carregar as análises.',
+    breakdownTitle: 'Para onde foi o dinheiro',
+    periodLabel: 'Período',
+    months: (count: number) => (count === 1 ? '1 mês' : `${count} meses`),
+    breakdownTotal: (from: string, through: string, total: string, previous: string) =>
+      `Despesas realizadas de ${from} a ${through}: ${total} (período anterior: ${previous})`,
+    breakdownRow: (amount: string, share: string | null, previous: string) =>
+      share === null
+        ? `${amount} · anterior ${previous}`
+        : `${amount} · ${share} · anterior ${previous}`,
+    noExpenses: 'Nenhuma despesa realizada no período.',
+    noSubcategory: 'Sem subcategoria',
+    tagsTitle: 'Por tag',
+    tagsHint: 'Um lançamento conta inteiro em cada uma de suas tags.',
   },
   tags: {
     action: 'Tags',

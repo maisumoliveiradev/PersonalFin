@@ -27,3 +27,10 @@ export function formatPercentTenths(tenths: number, locale: 'pt-BR' | 'en'): str
   const value = (tenths / 10).toFixed(1);
   return `${sign}${locale === 'pt-BR' ? value.replace('.', ',') : value}%`;
 }
+
+export function shareTenths(part: number, total: number): number | null {
+  if (total === 0) {
+    return null;
+  }
+  return Number(roundHalfAwayFromZero(BigInt(part) * 1000n, BigInt(Math.abs(total))));
+}

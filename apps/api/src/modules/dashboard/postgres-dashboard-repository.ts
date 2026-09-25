@@ -3,14 +3,7 @@ import type { FinancialDate } from '@personalfin/domain';
 import type { Queryable } from '../../database/pool.ts';
 import { toSafeAmount } from './dashboard.ts';
 import type { DashboardRepository } from './dashboard-repository.ts';
-
-const METRIC_DATE = 'COALESCE(i.reference_month, t.financial_date)';
-
-const EFFECTIVE_STATUS = `CASE
-    WHEN t.card_invoice_id IS NULL THEN t.status
-    WHEN b.total_minor > 0 AND b.paid_minor >= b.total_minor THEN 'paid'
-    ELSE 'pending'
-  END`;
+import { EFFECTIVE_STATUS, METRIC_DATE } from './metric-sql.ts';
 
 export function createPostgresDashboardRepository(db: Queryable): DashboardRepository {
   return {
