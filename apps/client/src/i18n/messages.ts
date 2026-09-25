@@ -14,6 +14,29 @@ export const messages = {
     done: (fileName: string) => `Backup ${fileName} gerado.`,
     failed: 'Não foi possível gerar o backup. Tente novamente.',
   },
+  attachments: {
+    title: 'Anexos',
+    hint: 'Fotos (JPEG, PNG, WebP, HEIC) ou PDF de até 5 MB, no máximo 10 por lançamento.',
+    empty: 'Nenhum anexo.',
+    addFileAction: 'Anexar foto ou PDF',
+    takePhotoAction: 'Tirar foto',
+    item: (name: string, size: string) => `${name} (${size})`,
+    openAction: (name: string) => `Abrir ${name}`,
+    openLabel: 'Abrir',
+    removeAction: (name: string) => `Remover ${name}`,
+    removeLabel: 'Remover',
+    added: 'Anexo adicionado.',
+    removed: 'Anexo removido.',
+    rowCount: (count: number) => (count === 1 ? '1 anexo' : `${count} anexos`),
+    errors: {
+      ATTACHMENT_TOO_LARGE: 'O arquivo tem mais de 5 MB.',
+      ATTACHMENT_TYPE_NOT_ALLOWED: 'Só são aceitas fotos (JPEG, PNG, WebP, HEIC) e PDF.',
+      ATTACHMENT_LIMIT_REACHED: 'Este lançamento já tem 10 anexos.',
+      PERMISSION_DENIED: 'Você não tem permissão para esta ação neste espaço.',
+    } as Record<string, string>,
+    failed: 'Não foi possível concluir. Tente novamente.',
+    offline: 'Anexos precisam de conexão.',
+  },
   currencies: {
     label: 'Moeda',
     names: {
@@ -850,6 +873,7 @@ export const messages = {
       debt_payment: 'Pagamento de dívida',
       goal: 'Meta',
       import_batch: 'Importação',
+      attachment: 'Anexo',
     },
     actions: {
       create: 'criação',

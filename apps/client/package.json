@@ -1,6 +1,6 @@
 {
   "name": "@personalfin/client",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "main": "expo-router/entry",
   "dependencies": {
     "@better-auth/expo": "1.7.5",
@@ -15,6 +15,7 @@
     "expo-crypto": "~57.0.3",
     "expo-document-picker": "~57.0.2",
     "expo-file-system": "~57.0.7",
+    "expo-image-picker": "~57.0.20",
     "expo-linking": "~57.0.10",
     "expo-network": "~57.0.2",
     "expo-router": "~57.0.22",

@@ -182,6 +182,20 @@ implemented yet.
 -   **Resolution:** Owner chooses an email provider (and its cost
     limits); then add delivery behind the existing invitation flow.
 
+### TD-014 --- Attachments are stored in the database
+
+-   **Status:** Accepted
+-   **Priority:** Low
+-   **Origin:** SDD-057
+-   **Reason:** Storing attachment bytes in PostgreSQL (`bytea`) keeps
+    access checks, backups, and local development simple, with no
+    storage service to operate.
+-   **Impact:** Database size grows with attachments (at most 5 MB each,
+    10 per transaction). Downloads go through the API.
+-   **Resolution:** When volume justifies it, move bytes to encrypted
+    object storage behind the same endpoints, keeping the metadata and
+    SHA-256 in the database.
+
 ### TD-013 --- Base currency is fixed to BRL
 
 -   **Status:** Open

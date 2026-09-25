@@ -47,6 +47,7 @@ interface TransactionRow {
   original_currency: CurrencyCode | null;
   fx_rate: string | null;
   fx_rate_source: RateSource | null;
+  attachment_count: number;
 }
 
 interface CursorKeys {
@@ -64,6 +65,8 @@ const COLUMNS = `t.id, t.financial_space_id, t.type, t.status, t.description, t.
          ci.reference_month AS invoice_month, t.installment_purchase_id, t.installment_number,
          ip.installment_count, t.original_amount_minor, t.original_currency, t.fx_rate::text AS fx_rate,
          t.fx_rate_source,
+         (SELECT count(*)::int FROM attachment a
+          WHERE a.transaction_id = t.id AND a.deleted_at IS NULL) AS attachment_count,
          COALESCE(cb.total_minor > 0 AND cb.paid_minor >= cb.total_minor, false) AS invoice_settled,
          COALESCE((
            SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name) ORDER BY lower(tg.name))
@@ -153,6 +156,7 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
             rate: normalizeRate(row.fx_rate),
             rateSource: row.fx_rate_source,
           },
+    attachmentCount: row.attachment_count,
   };
 }
 

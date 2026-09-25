@@ -49,6 +49,7 @@ export function createInMemoryTransactionRepository(
       const created: FinancialTransaction = {
         ...rest,
         original: original ?? null,
+        attachmentCount: 0,
         installment:
           installment === undefined
             ? null

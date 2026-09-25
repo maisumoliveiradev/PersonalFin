@@ -358,6 +358,22 @@ also stores `original_amount_minor`, `original_currency`, `fx_rate`
 - Rates are decimal strings end to end.
 - Exports add the original currency, amount, and rate columns.
 
+## Attachments (SDD-057, DR-099)
+
+`modules/attachments` stores bytes in `attachment` (`bytea`, SHA-256,
+soft delete, TD-014).
+- **Type check:** the type is detected from magic bytes (JPEG, PNG,
+  WebP, HEIC, PDF), so a renamed HTML file is refused.
+- **Upload:** uploads are base64 JSON with a route-specific body limit.
+- **Download:** content is served with the detected type, `nosniff`, and
+  `cache-control: private, no-store`.
+- **List count:** transactions expose `attachmentCount` through a
+  subquery in the list query.
+- **Backup:** the portable backup lists metadata only.
+
+The client adds files with the shared document picker and photos with
+`expo-image-picker` on native.
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:

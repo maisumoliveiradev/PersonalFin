@@ -20,6 +20,7 @@ export const SPACE_TABLES = [
   'goal',
   'goal_progress',
   'import_batch',
+  'attachment',
   'audit_event',
 ] as const;
 
