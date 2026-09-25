@@ -6,6 +6,19 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Invitations (SDD-035)
+
+-   "Membros" screen: invite a person by email as Visualizador,
+    Colaborador, or Administrador; the single-use link (valid 7 days) is
+    shown once to be shared; pending invitations can be cancelled
+    (DR-086).
+-   Invitation screen at `/invite/{token}`: shows the space and access,
+    and only the account of the invited email can accept.
+-   Invitation links are not emailed yet (TD-011).
+-   `GET`/`POST .../invitations`, `DELETE .../invitations/{id}`,
+    `GET /invitations/{token}`, `POST /invitations/{token}/accept`;
+    migration `0020_space_invitations`.
+
 ### Membership and Permissions (SDD-034)
 
 -   Spaces can have members with permission sets (Viewer, Contributor,

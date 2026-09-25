@@ -5,7 +5,7 @@
 `v0.5.0`, released on 2026-09-25 (`main`, tag `v0.5.0`). SDD-001 to
 SDD-033 implemented and validated
 (`docs/sdds/v0.5.0/SDD-033-validation-report.md`). `develop` is building
-v0.6.0: SDD-034 implemented.
+v0.6.0: SDD-034 and SDD-035 implemented.
 
 ## Implemented Product Capabilities
 
@@ -16,9 +16,10 @@ v0.6.0: SDD-034 implemented.
     management.
 
 -   **Shared access (SDD-034):** spaces may have members with permission
-    sets checked on every endpoint (ADR-0015, DR-085); the UI hides
-    actions without permission. Members can only be added from SDD-035
-    (invitations) on.
+    sets checked on every endpoint (ADR-0015, DR-086); the UI hides
+    actions without permission. People join through single-use
+    invitation links (SDD-035, DR-086); links are not emailed (TD-011).
+    Members cannot yet be removed or have their access changed.
 -   **Financial Spaces (SDD-003):** an authenticated user creates spaces
     by name, becomes their single Owner, and lists, selects, and enters
     them. The Owner and members can access a space (ADR-0015). Spaces are always
@@ -144,7 +145,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.6.0/SDD-035-invitations.md`. Domain decisions
+`docs/sdds/v0.6.0/SDD-036-member-management.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, DR-072 to
 DR-078).

@@ -34,7 +34,7 @@ apps/
     src/modules/     Domain modules (financial-spaces/, categories/,
                      transactions/, audit/, balance/, dashboard/,
                      recurrences/, cards/, tags/, analytics/,
-                     preferences/):
+                     preferences/, members/):
                      domain types, use cases, repository ports,
                      PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)
@@ -242,7 +242,9 @@ permission set (`view`, `record`, `plan`, `classify`, `manage_members`,
 `requireAccessibleSpace(userId, spaceId, permission)`, which returns
 `404 FINANCIAL_SPACE_NOT_FOUND` for missing and inaccessible spaces
 alike and `403 PERMISSION_DENIED` for members without the permission.
-ADR-0010 (owner-only access) is superseded.
+ADR-0010 (owner-only access) is superseded. Invitations
+(`space_invitation`) store only a SHA-256 hash of a random single-use
+token; acceptance checks the signed-in user's email.
 
 ## Security boundaries
 

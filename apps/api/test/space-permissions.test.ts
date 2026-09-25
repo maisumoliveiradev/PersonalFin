@@ -121,6 +121,14 @@ const ENDPOINTS: Endpoint[] = [
   { method: 'GET', path: '/analytics/evolution?fromMonth=2026-10', permission: 'view' },
   { method: 'GET', path: '/analytics/comparison?month=2026-10', permission: 'view' },
   { method: 'GET', path: '/analytics/breakdown?fromMonth=2026-10', permission: 'view' },
+  { method: 'GET', path: '/invitations', permission: 'manage_members' },
+  {
+    method: 'POST',
+    path: '/invitations',
+    permission: 'manage_members',
+    payload: { email: 'carla@example.com', preset: 'viewer' },
+  },
+  { method: 'DELETE', path: `/invitations/${MISSING}`, permission: 'manage_members' },
   { method: 'GET', path: '/dashboard-preferences', permission: 'view' },
   {
     method: 'PUT',

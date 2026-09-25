@@ -57,3 +57,7 @@ export type Breakdown = components['schemas']['Breakdown'];
 export type DashboardPreferences = components['schemas']['DashboardPreferences'];
 export type DashboardSections = components['schemas']['DashboardSections'];
 export type SpacePermission = components['schemas']['SpacePermission'];
+export type Invitation = components['schemas']['Invitation'];
+export type InvitationList = components['schemas']['InvitationList'];
+export type CreatedInvitation = components['schemas']['CreatedInvitation'];
+export type InvitationPreview = components['schemas']['InvitationPreview'];
