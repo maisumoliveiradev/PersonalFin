@@ -184,6 +184,13 @@ export default function FinancialSpaceHomeScreen() {
         variant="link"
         onPress={() => router.push({ pathname: '/spaces/[spaceId]/members', params: { spaceId } })}
       />
+      {can(space.data, 'view_audit') && (
+        <Button
+          label={messages.audit.action}
+          variant="link"
+          onPress={() => router.push({ pathname: '/spaces/[spaceId]/audit', params: { spaceId } })}
+        />
+      )}
       <Button
         label={messages.preferences.action}
         variant="link"
