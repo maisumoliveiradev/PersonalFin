@@ -1564,10 +1564,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Aggregate platform health and adoption (platform administrators only) */
+        get: operations["getPlatformOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        PlatformOverview: {
+            users: {
+                total: number;
+                createdLast30Days: number;
+                activeLast30Days: number;
+            };
+            spaces: {
+                total: number;
+                shared: number;
+                createdLast30Days: number;
+            };
+            transactions: {
+                total: number;
+                createdLast30Days: number;
+            };
+            /** @description Number of spaces using each feature. */
+            featureAdoption: {
+                cards: number;
+                recurrences: number;
+                debts: number;
+                goals: number;
+                imports: number;
+                attachments: number;
+                foreignCurrency: number;
+                tags: number;
+            };
+            database: {
+                migrations: number;
+                latestMigration: string | null;
+            };
+        };
         Attachment: {
             /** Format: uuid */
             id: string;
@@ -2060,6 +2108,8 @@ export interface components {
             status: "ok";
         };
         CurrentUser: {
+            /** @description Platform (Super Admin) role; never grants access to financial spaces (FR-100, FR-101). */
+            platformAdmin: boolean;
             /** Format: uuid */
             id: string;
             /** Format: email */
@@ -6378,6 +6428,37 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             /** @description The space, transaction, or attachment does not exist (FINANCIAL_SPACE_NOT_FOUND, TRANSACTION_NOT_FOUND, ATTACHMENT_NOT_FOUND). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getPlatformOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Counts only; no financial values or per-user data (FR-102). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlatformOverview"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            /** @description PLATFORM_ADMIN_REQUIRED. */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

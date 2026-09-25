@@ -443,6 +443,22 @@ the current record writes nothing.
 one signed-in user. The local cache is removed at sign-out; unsynchronized
 changes are only discarded after explicit confirmation.
 
+## Platform administration
+
+**DR-100** *(SDD-059; decided under delegation.)* Platform administrators
+are named by the operator outside the application. They see aggregate
+platform counts only, and have no access to any financial space by
+virtue of the role.
+
+**DR-101** *(SDD-060; decided under delegation.)* Support access to a
+space exists only while an Owner's grant is active:
+- **Scope:** the grant names one administrator, carries a reason, and is
+  read-only.
+- **Expiry and revocation:** it expires in 1 to 7 days and can be
+  revoked by the Owner at any time.
+- **Audit:** every access made through it is recorded in the space's
+  audit history.
+
 ## Metrics
 
 **DR-066** Each built-in metric has one canonical definition.

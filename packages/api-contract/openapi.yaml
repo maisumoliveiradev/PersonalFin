@@ -3398,6 +3398,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/overview:
+    get:
+      operationId: getPlatformOverview
+      summary: Aggregate platform health and adoption (platform administrators only)
+      responses:
+        '200':
+          description: Counts only; no financial values or per-user data (FR-102).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformOverview'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          description: >
+            PLATFORM_ADMIN_REQUIRED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     AttachmentId:
@@ -3594,6 +3616,73 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    PlatformOverview:
+      type: object
+      additionalProperties: false
+      required: [users, spaces, transactions, featureAdoption, database]
+      properties:
+        users:
+          type: object
+          additionalProperties: false
+          required: [total, createdLast30Days, activeLast30Days]
+          properties:
+            total:
+              type: integer
+            createdLast30Days:
+              type: integer
+            activeLast30Days:
+              type: integer
+        spaces:
+          type: object
+          additionalProperties: false
+          required: [total, shared, createdLast30Days]
+          properties:
+            total:
+              type: integer
+            shared:
+              type: integer
+            createdLast30Days:
+              type: integer
+        transactions:
+          type: object
+          additionalProperties: false
+          required: [total, createdLast30Days]
+          properties:
+            total:
+              type: integer
+            createdLast30Days:
+              type: integer
+        featureAdoption:
+          type: object
+          additionalProperties: false
+          description: Number of spaces using each feature.
+          required: [cards, recurrences, debts, goals, imports, attachments, foreignCurrency, tags]
+          properties:
+            cards:
+              type: integer
+            recurrences:
+              type: integer
+            debts:
+              type: integer
+            goals:
+              type: integer
+            imports:
+              type: integer
+            attachments:
+              type: integer
+            foreignCurrency:
+              type: integer
+            tags:
+              type: integer
+        database:
+          type: object
+          additionalProperties: false
+          required: [migrations, latestMigration]
+          properties:
+            migrations:
+              type: integer
+            latestMigration:
+              type: [string, 'null']
     Attachment:
       type: object
       additionalProperties: false
@@ -4668,7 +4757,11 @@ components:
         - id
         - email
         - name
+        - platformAdmin
       properties:
+        platformAdmin:
+          type: boolean
+          description: Platform (Super Admin) role; never grants access to financial spaces (FR-100, FR-101).
         id:
           type: string
           format: uuid

@@ -6,6 +6,22 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Platform Administration Foundation (SDD-059)
+
+-   Platform administrators are named with
+    `npm run admin -- grant <email>` (also `revoke` and `list`) in
+    `apps/api`. There is no way to become an administrator from the app.
+-   "Administração da plataforma" shows aggregate counts only:
+    - users, spaces, and transactions (total and last 30 days);
+    - active users;
+    - shared spaces;
+    - spaces using each feature;
+    - migrations.
+
+    It gives no access to financial data (FR-100 to FR-102, ADR-0018).
+-   API: `GET /admin/overview`, and `platformAdmin` in `/me`. Migration
+    `0029_platform_admin`.
+
 ## \[0.11.0\] --- 2026-09-25
 
 Documents (attachments). Released to `main` and tagged `v0.11.0`;

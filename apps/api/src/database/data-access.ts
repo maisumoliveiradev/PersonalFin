@@ -1,3 +1,5 @@
+import type { PlatformAdminRepository } from '../modules/admin/platform-admin.ts';
+import { createPostgresPlatformAdminRepository } from '../modules/admin/postgres-platform-admin-repository.ts';
 import type { AnalyticsRepository } from '../modules/analytics/analytics-repository.ts';
 import { createPostgresAnalyticsRepository } from '../modules/analytics/postgres-analytics-repository.ts';
 import type { AttachmentRepository } from '../modules/attachments/attachment.ts';
@@ -67,6 +69,7 @@ export interface Repositories {
   backup: BackupRepository;
   exchangeRates: ExchangeRateRepository;
   attachments: AttachmentRepository;
+  platformAdmins: PlatformAdminRepository;
 }
 
 export interface DataAccess {
@@ -98,6 +101,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     backup: createPostgresBackupRepository(db),
     exchangeRates: createPostgresExchangeRateRepository(db),
     attachments: createPostgresAttachmentRepository(db),
+    platformAdmins: createPostgresPlatformAdminRepository(db),
   };
 }
 
