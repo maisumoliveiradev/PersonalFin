@@ -1046,10 +1046,197 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the callers global goals */
+        get: operations["listGoals"];
+        put?: never;
+        /** Create a global goal */
+        post: operations["createGoal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/goals/{goalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        /** Get a goal with its progress history */
+        get: operations["getGoal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit or archive a goal */
+        patch: operations["updateGoal"];
+        trace?: never;
+    };
+    "/goals/{goalId}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set the accumulated amount (kept in the progress history)
+         * @description Goals are manually maintained and never change projections (DR-049, DR-050).
+         */
+        post: operations["recordGoalProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the space goals */
+        get: operations["listSpaceGoals"];
+        put?: never;
+        /** Create a space goal (audited) */
+        post: operations["createSpaceGoal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/goals/{goalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        /** Get a goal with its progress history */
+        get: operations["getSpaceGoal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit or archive a goal */
+        patch: operations["updateSpaceGoal"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/goals/{goalId}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set the accumulated amount (kept in the progress history)
+         * @description Goals are manually maintained and never change projections (DR-049, DR-050).
+         */
+        post: operations["recordSpaceGoalProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        GoalSummary: {
+            remainingMinor: number;
+            /** @description Accumulated share of the target in tenths of a percent, rounded down and capped at 1000. */
+            progressTenths: number;
+            reached: boolean;
+        };
+        Goal: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            scope: "global" | "space";
+            name: string;
+            targetAmountMinor: number;
+            accumulatedMinor: number;
+            currency: string;
+            /** Format: date */
+            targetDate: string | null;
+            archived: boolean;
+            version: number;
+            summary: components["schemas"]["GoalSummary"];
+        };
+        GoalDetail: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            scope: "global" | "space";
+            name: string;
+            targetAmountMinor: number;
+            accumulatedMinor: number;
+            currency: string;
+            /** Format: date */
+            targetDate: string | null;
+            archived: boolean;
+            version: number;
+            summary: components["schemas"]["GoalSummary"];
+            /** @description Accumulated-amount updates, newest first. */
+            progress: {
+                accumulatedMinor: number;
+                /** Format: date-time */
+                recordedAt: string;
+            }[];
+        };
+        GoalList: {
+            items: components["schemas"]["Goal"][];
+        };
+        CreateGoalRequest: {
+            name: string;
+            targetAmountMinor: number;
+            /** Format: date */
+            targetDate?: string | null;
+        };
+        UpdateGoalRequest: {
+            version: number;
+            name?: string;
+            targetAmountMinor?: number;
+            /** Format: date */
+            targetDate?: string | null;
+            archived?: boolean;
+        };
+        GoalProgressRequest: {
+            version: number;
+            accumulatedMinor: number;
+        };
         /**
          * @description reduce_term keeps the installment and lowers the count; reduce_installment keeps the count and lowers the installment.
          * @enum {string}
@@ -1251,7 +1438,7 @@ export interface components {
                 occurredAt: string;
                 actorName: string;
                 /** @enum {string} */
-                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation" | "debt" | "debt_payment";
+                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation" | "debt" | "debt_payment" | "goal";
                 entityId: string;
                 /** @enum {string} */
                 action: "create" | "update" | "delete" | "restore";
@@ -2000,6 +2187,7 @@ export interface components {
         };
     };
     parameters: {
+        GoalId: string;
         DebtId: string;
         InvoiceMonth: string;
         CardId: string;
@@ -4305,6 +4493,372 @@ export interface operations {
             };
             /** @description DEBT_OVERPAYMENT (larger than the outstanding balance). */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listGoals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Goals in creation order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    createGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description The created goal. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The goal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    updateGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated goal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    recordGoalProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description The goal with the new progress. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listSpaceGoals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Goals in creation order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    createSpaceGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description The created goal. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getSpaceGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The goal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    updateSpaceGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated goal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    recordSpaceGoalProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description The goal with the new progress. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -6,6 +6,7 @@ export * from './comparison.ts';
 export * from './dashboard-preferences.ts';
 export * from './debt.ts';
 export * from './financial-date.ts';
+export * from './goal.ts';
 export * from './money.ts';
 export * from './month.ts';
 export * from './permissions.ts';

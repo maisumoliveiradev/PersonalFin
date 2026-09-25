@@ -125,6 +125,10 @@ SDD-044 implemented and validated
     (DR-092). They are separate from transactions, and there is no
     interest model. Prepayments can be simulated (reduce the term or
     reduce the installment) and confirmed (SDD-046, DR-093).
+-   **Goals (SDD-047):** space goals (visible to members; changing them
+    needs `plan`) and global goals (owner only). The accumulated amount is
+    updated manually with an append-only history. Goals never affect
+    projections (DR-094).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -151,14 +155,14 @@ SDD-044 implemented and validated
         month, balance-reminder, business-day, card, comparison, dashboard-preference, and client-version rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
-    checksum verification (ADR-0008), `0001` to `0023`. Tables: Better
+    checksum verification (ADR-0008), `0001` to `0024`. Tables: Better
     Auth `user`, `session`, `account`, `verification`; `financial_space`,
     `financial_space_member`, `space_invitation`, `category`,
     `financial_transaction`, `transaction_tag`, `tag`, `audit_event`,
     `balance_snapshot`, `balance_reminder_setting`, `recurrence_series`,
     `card`, `card_limit_change`, `card_invoice`, `card_invoice_payment`,
     `card_installment_purchase`, `dashboard_preference`, `debt`,
-    `debt_payment`; view
+    `debt_payment`, `goal`, `goal_progress`; view
     `card_invoice_balance`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
@@ -175,7 +179,7 @@ SDD-044 implemented and validated
 ## Active Target
 
 `v0.8.0` --- Debts, Goals, and Reminders (`docs/sdds/v0.8.0/README.md`,
-SDD-045 to SDD-049). SDD-045 and SDD-046 implemented.
+SDD-045 to SDD-049). SDD-045 to SDD-047 implemented.
 
 ## Important Constraint
 
@@ -184,7 +188,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Implement SDD-047 (goals). Owner decision
+Implement SDD-048 (in-app reminders). Owner decision
 pending on invitation email delivery (TD-011). Domain decisions taken
 under delegation await owner review (`docs/sdds/v0.2.0/README.md` to
 `docs/sdds/v0.8.0/README.md`, DR-072 to DR-094, ADR-0013 to ADR-0016).

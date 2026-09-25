@@ -12,7 +12,8 @@ export type AuditEntityType =
   | 'financial_space_member'
   | 'space_invitation'
   | 'debt'
-  | 'debt_payment';
+  | 'debt_payment'
+  | 'goal';
 export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
 
 export interface AuditContext {

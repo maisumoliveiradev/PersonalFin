@@ -72,6 +72,11 @@ export default function FinancialSpacesScreen() {
         />
       ))}
       <Button label={messages.spaces.newSpaceAction} onPress={() => router.push('/spaces/new')} />
+      <Button
+        label={messages.goals.globalAction}
+        variant="link"
+        onPress={() => router.push('/goals')}
+      />
       {signOutButton}
     </Screen>
   );

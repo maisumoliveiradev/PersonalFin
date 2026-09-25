@@ -250,6 +250,21 @@ it in the same database transaction (debt row locked, version checked),
 records the prepayment, and stores the plan. What is confirmed is
 therefore exactly what was simulated.
 
+## Goals (SDD-047, DR-094)
+
+`modules/goals` serves the same handlers under two scopes:
+- `/goals` for global goals, which belong only to the caller;
+- `/financial-spaces/{id}/goals` for space goals, where reading needs
+  `view` and changing needs `plan`.
+
+A scope resolver turns the request into
+`{ kind: 'global', ownerUserId }` or `{ kind: 'space', financialSpaceId }`,
+and every repository query is filtered by it. Accumulated-amount updates
+are appended to `goal_progress`, which has an append-only trigger. Only
+space goals are recorded in `audit_event`, because that table is scoped
+to a space. Goals are never read by the dashboard or projection
+(DR-050).
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:

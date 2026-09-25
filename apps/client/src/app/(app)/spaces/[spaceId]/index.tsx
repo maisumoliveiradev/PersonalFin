@@ -180,6 +180,11 @@ export default function FinancialSpaceHomeScreen() {
         onPress={() => router.push({ pathname: '/spaces/[spaceId]/cards', params: { spaceId } })}
       />
       <Button
+        label={messages.goals.spaceAction}
+        variant="link"
+        onPress={() => router.push({ pathname: '/spaces/[spaceId]/goals', params: { spaceId } })}
+      />
+      <Button
         label={messages.debts.action}
         variant="link"
         onPress={() => router.push({ pathname: '/spaces/[spaceId]/debts', params: { spaceId } })}
