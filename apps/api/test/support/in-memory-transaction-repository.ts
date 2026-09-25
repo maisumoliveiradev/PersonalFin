@@ -37,7 +37,14 @@ export function createInMemoryTransactionRepository(
   return {
     transactions,
     async create(transaction) {
-      const { categoryId, subcategoryId, cardInvoiceId, installment, ...rest } = transaction;
+      const {
+        categoryId,
+        subcategoryId,
+        cardInvoiceId,
+        installment,
+        importBatchId: _importBatchId,
+        ...rest
+      } = transaction;
       const created: FinancialTransaction = {
         ...rest,
         installment:

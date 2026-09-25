@@ -20,6 +20,7 @@ import { registerDashboardRoutes } from './modules/dashboard/dashboard-routes.ts
 import { registerDebtRoutes } from './modules/debts/debt-routes.ts';
 import { registerFinancialSpaceRoutes } from './modules/financial-spaces/financial-space-routes.ts';
 import { registerGoalRoutes } from './modules/goals/goal-routes.ts';
+import { registerImportRoutes } from './modules/imports/import-routes.ts';
 import { registerInvitationRoutes } from './modules/members/invitation-routes.ts';
 import { registerMemberRoutes } from './modules/members/member-routes.ts';
 import { registerDashboardPreferenceRoutes } from './modules/preferences/dashboard-preference-routes.ts';
@@ -93,6 +94,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerDebtRoutes(authenticated, options.data);
     registerGoalRoutes(authenticated, options.data);
     registerReminderRoutes(authenticated, options.data);
+    registerImportRoutes(authenticated, options.data);
   });
 
   return server;

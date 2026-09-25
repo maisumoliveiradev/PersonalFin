@@ -369,6 +369,29 @@ discard data.
 **DR-061** After validated initial spreadsheet migration, the
 application becomes the official source of truth.
 
+**DR-096** *(SDD-050; decided under delegation.)* Imports keep the
+original file and follow read, map, validate, preview, resolve, confirm.
+Nothing ambiguous is guessed:
+- **Dates and decimals:** date order and decimal separator are chosen by
+  the user. Amounts are read as text and never rounded; more than two
+  decimals is an error.
+- **Sign:** the sign convention is chosen explicitly. A negative amount
+  under any other convention is an error.
+- **Type and status:** unknown type or status words are errors.
+- **Categories:** unmatched categories use a fallback category chosen by
+  the user, or make the row invalid.
+
+A row with the same type, date, and amount as an active transaction or
+an earlier row is a suspected duplicate and needs an import or skip
+decision. Confirmed imports link their transactions to the batch and
+can be undone by moving them all to the trash.
+
+**DR-097** *(SDD-051 to SDD-053; decided under delegation.)* Exports
+(CSV, XLSX, PDF) are reports of the data visible to the user and use the
+canonical metric definitions. The portable backup is a separate,
+versioned JSON document containing every accessible record, and is not
+a report.
+
 ## Synchronization
 
 **DR-062** Safe non-conflicting field changes may merge automatically.

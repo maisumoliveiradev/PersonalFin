@@ -62,6 +62,7 @@ export interface NewFinancialTransaction {
   createdByUserId: string;
   cardInvoiceId?: string | null;
   installment?: { purchaseId: string; number: number };
+  importBatchId?: string | null;
 }
 
 export interface TransactionFields {

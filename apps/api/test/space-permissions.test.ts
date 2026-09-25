@@ -172,6 +172,15 @@ const ENDPOINTS: Endpoint[] = [
     permission: 'view',
     payload: { offsets: [0], kinds: ['transactions'] },
   },
+  { method: 'GET', path: '/imports', permission: 'view' },
+  { method: 'POST', path: '/imports', permission: 'record', payload: {} },
+  { method: 'GET', path: `/imports/${MISSING}`, permission: 'view' },
+  { method: 'GET', path: `/imports/${MISSING}/rows`, permission: 'view' },
+  { method: 'PUT', path: `/imports/${MISSING}/mapping`, permission: 'record', payload: {} },
+  { method: 'PUT', path: `/imports/${MISSING}/decisions`, permission: 'record', payload: {} },
+  { method: 'POST', path: `/imports/${MISSING}/confirm`, permission: 'record', payload: {} },
+  { method: 'POST', path: `/imports/${MISSING}/undo`, permission: 'record', payload: {} },
+  { method: 'POST', path: `/imports/${MISSING}/discard`, permission: 'record', payload: {} },
 ];
 
 async function shareWith(permissions: SpacePermission[]): Promise<string> {

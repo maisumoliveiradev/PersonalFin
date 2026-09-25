@@ -22,6 +22,8 @@ import type { FinancialSpaceRepository } from '../modules/financial-spaces/finan
 import { createPostgresFinancialSpaceRepository } from '../modules/financial-spaces/postgres-financial-space-repository.ts';
 import type { GoalRepository } from '../modules/goals/goal.ts';
 import { createPostgresGoalRepository } from '../modules/goals/postgres-goal-repository.ts';
+import type { ImportRepository } from '../modules/imports/import-model.ts';
+import { createPostgresImportRepository } from '../modules/imports/postgres-import-repository.ts';
 import type { MemberRepository } from '../modules/members/member-repository.ts';
 import { createPostgresMemberRepository } from '../modules/members/postgres-member-repository.ts';
 import type { DashboardPreferenceRepository } from '../modules/preferences/dashboard-preference-repository.ts';
@@ -55,6 +57,7 @@ export interface Repositories {
   debts: DebtRepository;
   goals: GoalRepository;
   reminders: ReminderRepository;
+  imports: ImportRepository;
 }
 
 export interface DataAccess {
@@ -82,6 +85,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     debts: createPostgresDebtRepository(db),
     goals: createPostgresGoalRepository(db),
     reminders: createPostgresReminderRepository(db),
+    imports: createPostgresImportRepository(db),
   };
 }
 

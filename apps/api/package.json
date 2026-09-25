@@ -16,11 +16,13 @@
     "@better-auth/expo": "1.7.5",
     "@fastify/cors": "11.3.0",
     "@personalfin/api-contract": "*",
+    "@personalfin/domain": "*",
     "better-auth": "1.7.5",
+    "csv-parse": "7.0.3",
     "fastify": "5.12.5",
     "pg": "8.23.0",
-    "zod": "4.6.5",
-    "@personalfin/domain": "*"
+    "read-excel-file": "9.3.10",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@types/pg": "8.23.1"
