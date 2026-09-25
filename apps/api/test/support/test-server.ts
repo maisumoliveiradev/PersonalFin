@@ -12,6 +12,7 @@ import { createInMemoryDashboardRepository } from './in-memory-dashboard-reposit
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
 import { createInMemoryInstallmentRepository } from './in-memory-installment-repository.ts';
 import { createInMemoryRecurrenceRepository } from './in-memory-recurrence-repository.ts';
+import { createInMemoryTagRepository } from './in-memory-tag-repository.ts';
 import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
 
 export const SESSION_COOKIE = 'personalfin.session_token';
@@ -82,6 +83,7 @@ export function createInMemoryRepositories() {
     cards,
     cardInvoices,
     installments,
+    tags: createInMemoryTagRepository(() => transactions.transactions),
   };
 }
 

@@ -17,6 +17,7 @@ export interface TransactionListQuery {
   categoryId?: string;
   text?: string;
   cardInvoiceId?: string;
+  tagId?: string;
   excludeCardPurchases?: boolean;
 }
 

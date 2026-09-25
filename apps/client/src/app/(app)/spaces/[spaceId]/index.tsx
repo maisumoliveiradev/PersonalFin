@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useCategories } from '../../../../api/categories';
 import { useFinancialSpace } from '../../../../api/financial-spaces';
 import { useMaterializeRecurrences } from '../../../../api/recurrences';
+import { useTags } from '../../../../api/tags';
 import { BalanceSummary } from '../../../../features/balance/BalanceSummary';
 import { BalanceUpdatePrompt } from '../../../../features/balance/BalanceUpdatePrompt';
 import { MonthlyDashboard } from '../../../../features/dashboard/MonthlyDashboard';
@@ -40,6 +41,7 @@ export default function FinancialSpaceHomeScreen() {
   const month = monthFromParam(params.month);
   const space = useFinancialSpace(spaceId);
   const categories = useCategories(spaceId);
+  const tags = useTags(spaceId);
   const materializeRecurrences = useMaterializeRecurrences(spaceId);
   const [optionalFilters, setOptionalFilters] = useState<OptionalFilters>({});
   const [showFilters, setShowFilters] = useState(false);
@@ -114,6 +116,7 @@ export default function FinancialSpaceHomeScreen() {
         <TransactionFiltersPanel
           filters={filters}
           categories={categories.data ?? []}
+          tags={tags.data ?? []}
           onChange={changeFilters}
         />
       )}
@@ -150,6 +153,11 @@ export default function FinancialSpaceHomeScreen() {
         onPress={() =>
           router.push({ pathname: '/spaces/[spaceId]/recurrences', params: { spaceId } })
         }
+      />
+      <Button
+        label={messages.tags.action}
+        variant="link"
+        onPress={() => router.push({ pathname: '/spaces/[spaceId]/tags', params: { spaceId } })}
       />
       <Button
         label={messages.categories.manageAction}

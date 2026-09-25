@@ -613,6 +613,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the tags of the space */
+        get: operations["listTags"];
+        put?: never;
+        /** Create a tag */
+        post: operations["createTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Permanently delete a never-used tag */
+        delete: operations["deleteTag"];
+        options?: never;
+        head?: never;
+        /** Rename, archive, or unarchive a tag */
+        patch: operations["updateTag"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -784,6 +825,8 @@ export interface components {
             cardId?: string;
             /** @description Invoice (reference month) for a card purchase, from the month before to two months after financialDate. Defaults to the invoice whose closing date is after financialDate. */
             invoiceMonth?: string;
+            /** @description Active tags of the space; tags never change amounts (DR-013). */
+            tagIds?: string[];
             /** @description Splits a card purchase into this many installments (amountMinor is the total; the remainder cents go to the first). Installment k is dated k - 1 months after financialDate and goes to the invoice k - 1 months after the first. The response is the first installment. */
             installments?: number;
         };
@@ -820,8 +863,20 @@ export interface components {
             occurrenceDate: string | null;
             /** @description The card and invoice of a card purchase; null otherwise. A card purchase counts in the metrics of its invoice month (DR-035). */
             cardPurchase: components["schemas"]["CardPurchase"] | null;
+            /** @description Tags of the transaction, by name. */
+            tags: components["schemas"]["CategoryReference"][];
             /** @description Installment number and count of an installment purchase; null otherwise. */
             installment: components["schemas"]["Installment"] | null;
+        };
+        Tag: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            archived: boolean;
+            version: number;
+        };
+        TagList: {
+            items: components["schemas"]["Tag"][];
         };
         Installment: {
             /** Format: uuid */
@@ -919,6 +974,8 @@ export interface components {
             subcategoryId?: string | null;
             /** @description Moves a card purchase to another invoice of the same card. */
             invoiceMonth?: string;
+            /** @description Replaces the tags; tags already on the transaction may be archived; tags never change amounts (DR-013). */
+            tagIds?: string[];
         };
         TransactionList: {
             items: components["schemas"]["Transaction"][];
@@ -1101,7 +1158,25 @@ export interface components {
         };
     };
     responses: {
-        /** @description CATEGORY_NOT_AVAILABLE (category not usable for the type), CARD_NOT_AVAILABLE (missing or archived card), or INVALID_CARD_PURCHASE (income, status sent, invoice out of range, or invoice change on a non-card transaction). */
+        /** @description The tag does not exist in this space (code TAG_NOT_FOUND). */
+        TagNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description VERSION_CONFLICT, TAG_NAME_TAKEN, or TAG_IN_USE (archive instead). */
+        TagConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description CATEGORY_NOT_AVAILABLE (category not usable for the type), TAG_NOT_AVAILABLE (tag missing or archived), CARD_NOT_AVAILABLE (missing or archived card), or INVALID_CARD_PURCHASE (income, status sent, invoice out of range, or invoice change on a non-card transaction). */
         TransactionRejected: {
             headers: {
                 [name: string]: unknown;
@@ -1468,6 +1543,8 @@ export interface operations {
                 status?: components["schemas"]["TransactionStatus"];
                 /** @description Matches the category or the subcategory. */
                 categoryId?: string;
+                /** @description Transactions carrying this tag. */
+                tagId?: string;
                 /** @description Case- and accent-insensitive search in the description. */
                 q?: string;
                 /** @description Opaque cursor from a previous page's nextCursor. */
@@ -2361,6 +2438,123 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["CardNotFound"];
+        };
+    };
+    listTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active tags first, then archived, by name. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    createTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The created tag. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            409: components["responses"]["TagConflict"];
+        };
+    };
+    deleteTag: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TagNotFound"];
+            409: components["responses"]["TagConflict"];
+        };
+    };
+    updateTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    version: number;
+                    name?: string;
+                    archived?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The tag after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TagNotFound"];
+            409: components["responses"]["TagConflict"];
         };
     };
 }

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useCards } from '../../../../../api/cards';
 import { useCategories } from '../../../../../api/categories';
 import { useCreateRecurrence } from '../../../../../api/recurrences';
+import { useTags } from '../../../../../api/tags';
 import { useCreateTransaction } from '../../../../../api/transactions';
 import {
   emptyTransactionFormValues,
@@ -23,6 +24,7 @@ export default function NewTransactionScreen() {
   const router = useRouter();
   const { spaceId } = useLocalSearchParams<{ spaceId: string }>();
   const categories = useCategories(spaceId);
+  const tags = useTags(spaceId);
   const cards = useCards(spaceId);
   const createTransaction = useCreateTransaction(spaceId);
   const createRecurrence = useCreateRecurrence(spaceId);
@@ -93,6 +95,7 @@ export default function NewTransactionScreen() {
           submitError={createTransaction.error ?? createRecurrence.error}
           allowRecurrence
           cards={cards.data ?? []}
+          tags={tags.data ?? []}
           allowCardChoice
           onSubmit={handleSubmit}
           onCancel={() => router.back()}

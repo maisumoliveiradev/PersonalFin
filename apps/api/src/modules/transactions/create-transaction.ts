@@ -15,6 +15,7 @@ import {
   InvalidCardPurchaseError,
   resolvePurchaseInvoice,
 } from '../cards/card-invoice-management.ts';
+import { assertTagSelection } from '../tags/tag-management.ts';
 import { assertCategorySelection } from './category-selection.ts';
 import type { FinancialTransaction } from './transaction.ts';
 
@@ -29,6 +30,7 @@ export interface CreateTransactionInput {
   categoryId: string;
   subcategoryId: string | null;
   card?: { cardId: string; invoiceMonth?: Month };
+  tagIds?: readonly string[];
 }
 
 const SPACE_CURRENCY: CurrencyCode = DEFAULT_CURRENCY;
@@ -38,34 +40,41 @@ export async function createTransaction(
   input: CreateTransactionInput,
 ): Promise<FinancialTransaction> {
   await assertCategorySelection(data.repositories.categories, input);
-  const { card: cardSelection, ...fields } = input;
-  if (cardSelection === undefined) {
-    return data.repositories.transactions.create({
-      id: randomUUID(),
-      currency: SPACE_CURRENCY,
-      ...fields,
-    });
-  }
-  if (fields.type !== 'expense') {
+  const { card: cardSelection, tagIds = [], ...fields } = input;
+  if (cardSelection !== undefined && fields.type !== 'expense') {
     throw new InvalidCardPurchaseError('Card purchases must be expenses');
   }
   return data.transaction(async (repositories) => {
-    const card = await repositories.cards.findInSpace(input.financialSpaceId, cardSelection.cardId);
-    if (card === null || card.archivedAt !== null) {
-      throw new CardNotAvailableError();
+    await assertTagSelection(repositories, input.financialSpaceId, tagIds);
+    let cardFields = {};
+    if (cardSelection !== undefined) {
+      const card = await repositories.cards.findInSpace(
+        input.financialSpaceId,
+        cardSelection.cardId,
+      );
+      if (card === null || card.archivedAt !== null) {
+        throw new CardNotAvailableError();
+      }
+      const invoice = await resolvePurchaseInvoice(
+        repositories,
+        card,
+        fields.financialDate,
+        cardSelection.invoiceMonth,
+      );
+      cardFields = { status: 'pending', cardInvoiceId: invoice.id };
     }
-    const invoice = await resolvePurchaseInvoice(
-      repositories,
-      card,
-      fields.financialDate,
-      cardSelection.invoiceMonth,
-    );
-    return repositories.transactions.create({
+    const created = await repositories.transactions.create({
       id: randomUUID(),
       currency: SPACE_CURRENCY,
       ...fields,
-      status: 'pending',
-      cardInvoiceId: invoice.id,
+      ...cardFields,
     });
+    if (tagIds.length === 0) {
+      return created;
+    }
+    await repositories.tags.setForTransaction(input.financialSpaceId, created.id, tagIds);
+    return (
+      (await repositories.transactions.findInSpace(input.financialSpaceId, created.id)) ?? created
+    );
   });
 }

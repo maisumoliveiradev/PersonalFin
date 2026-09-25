@@ -27,6 +27,7 @@ import { isUuid, parseInput } from '../../http/validation.ts';
 import { createInstallmentPurchase } from '../cards/card-installment-management.ts';
 import { InvalidCardPurchaseError } from '../cards/card-invoice-management.ts';
 import { requireAccessibleSpace } from '../financial-spaces/financial-space-access.ts';
+import { MAX_TAGS_PER_TRANSACTION } from '../tags/tag.ts';
 import { createTransaction } from './create-transaction.ts';
 import type { FinancialTransaction } from './transaction.ts';
 import { deleteTransaction, restoreTransaction } from './transaction-deletion.ts';
@@ -48,6 +49,7 @@ const createTransactionSchema = z.strictObject({
   subcategoryId: z.uuid().nullable().optional(),
   cardId: z.uuid().optional(),
   invoiceMonth: z.string().refine(isValidMonth, 'must be a month (YYYY-MM)').optional(),
+  tagIds: z.array(z.uuid()).max(MAX_TAGS_PER_TRANSACTION).optional(),
   installments: z
     .number()
     .refine(
@@ -80,6 +82,7 @@ const updateTransactionSchema = z.strictObject({
   categoryId: z.uuid().optional(),
   subcategoryId: z.uuid().nullable().optional(),
   invoiceMonth: z.string().refine(isValidMonth, 'must be a month (YYYY-MM)').optional(),
+  tagIds: z.array(z.uuid()).max(MAX_TAGS_PER_TRANSACTION).optional(),
 });
 
 export const DEFAULT_TRANSACTION_LIST_LIMIT = 100;
@@ -94,6 +97,7 @@ const listTransactionsQuerySchema = z.object({
   type: z.enum(TRANSACTION_TYPES).optional(),
   status: z.enum(TRANSACTION_STATUSES).optional(),
   categoryId: z.uuid().optional(),
+  tagId: z.uuid().optional(),
   q: z.string().trim().min(1).max(100).optional(),
   cursor: z.string().min(1).max(500).optional(),
   limit: z.coerce
@@ -130,6 +134,7 @@ export function toTransactionResponse(transaction: FinancialTransaction): Transa
             invoiceSettled: transaction.cardPurchase.invoiceSettled,
           },
     installment: transaction.installment,
+    tags: transaction.tags,
   };
 }
 
@@ -221,7 +226,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       if (!isUuid(transactionId)) {
         throw new TransactionNotFoundError();
       }
-      const { version, invoiceMonth, ...changes } = parseInput(
+      const { version, invoiceMonth, tagIds, ...changes } = parseInput(
         updateTransactionSchema,
         request.body,
       );
@@ -232,6 +237,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         expectedVersion: version,
         changes: withoutUndefined(changes),
         ...(invoiceMonth === undefined ? {} : { invoiceMonth }),
+        ...(tagIds === undefined ? {} : { tagIds }),
       });
       return toTransactionResponse(transaction);
     },
@@ -258,6 +264,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
           ...(filters.type === undefined ? {} : { type: filters.type }),
           ...(filters.status === undefined ? {} : { status: filters.status }),
           ...(filters.categoryId === undefined ? {} : { categoryId: filters.categoryId }),
+          ...(filters.tagId === undefined ? {} : { tagId: filters.tagId }),
           ...(filters.q === undefined ? {} : { text: filters.q }),
         });
         return {
@@ -290,6 +297,9 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       }
       if (input.cardId === undefined && input.installments !== undefined) {
         throw new InvalidCardPurchaseError('installments require cardId');
+      }
+      if (input.installments !== undefined && (input.tagIds ?? []).length > 0) {
+        throw new ValidationError('tagIds: not supported on installment purchases');
       }
       if (input.cardId !== undefined && input.status !== undefined) {
         throw new InvalidCardPurchaseError('Card purchases have no status; it follows the invoice');
@@ -326,6 +336,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       } else {
         transaction = await createTransaction(data, {
           ...fields,
+          ...(input.tagIds === undefined ? {} : { tagIds: input.tagIds }),
           ...(card === undefined ? {} : { card }),
         });
       }

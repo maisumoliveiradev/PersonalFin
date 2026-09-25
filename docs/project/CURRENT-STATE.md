@@ -4,7 +4,8 @@
 
 `v0.4.0`, released on 2026-09-25 (`main`, tag `v0.4.0`). SDD-001 to
 SDD-028 implemented and validated
-(`docs/sdds/v0.4.0/SDD-028-validation-report.md`).
+(`docs/sdds/v0.4.0/SDD-028-validation-report.md`). `develop` is building
+v0.5.0: SDD-029 implemented.
 
 ## Implemented Product Capabilities
 
@@ -31,8 +32,7 @@ SDD-028 implemented and validated
 -   **Transactions (SDD-005):** users register Expense or Income with
     description, amount (BRL), financial date, category matching the
     type, optional subcategory, and status (Paid/Received or Pending).
-    There are no tags, notes, attachments, recurrence, cards, or other
-    currencies.
+    There are no notes, attachments, or other currencies.
 -   **Transaction edit (SDD-008):** every field can be edited from the
     list; edits are audited (actor, instant, before/after) and protected
     by optimistic concurrency (`version`, `409 VERSION_CONFLICT`). There
@@ -63,7 +63,7 @@ SDD-028 implemented and validated
     income/expenses (7, 30, or 90 days) with exact totals. There are no
     notifications.
 -   **Cards (SDD-023):** cards with name, closing and due days, and an
-    append-only limit history with effective dates (DR-082); archive and
+    append-only limit history with effective dates (DR-083); archive and
     reactivate.
 -   **Card purchases and invoices (SDD-024):** expenses paid with a card
     are assigned to an invoice (suggested from the closing day,
@@ -81,6 +81,8 @@ SDD-028 implemented and validated
 -   **Installments (SDD-025):** card purchases split into 2--48
     installments across consecutive invoices (DR-080); later installments
     can be cancelled. Installments are edited one at a time.
+-   **Tags (SDD-029):** per-space tags (DR-083) on transactions, shown in
+    the list and usable as a filter. There is no tag analytics yet.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -132,7 +134,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.5.0/SDD-029-tags.md`. Domain decisions
+`docs/sdds/v0.5.0/SDD-030-evolution-and-comparisons.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, DR-072 to
 DR-078).

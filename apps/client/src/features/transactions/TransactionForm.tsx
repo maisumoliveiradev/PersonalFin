@@ -1,4 +1,9 @@
-import type { Card, CategoryTreeItem, CreateTransactionRequest } from '@personalfin/api-contract';
+import type {
+  Card,
+  CategoryTreeItem,
+  CreateTransactionRequest,
+  Tag,
+} from '@personalfin/api-contract';
 import {
   candidateInvoiceMonths,
   DEFAULT_TRANSACTION_STATUS,
@@ -20,6 +25,7 @@ import { ApiRequestError } from '../../api/api-client';
 import { messages } from '../../i18n/messages';
 import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
+import { CheckboxGroup } from '../../ui/CheckboxGroup';
 import { FormError } from '../../ui/FormError';
 import { type Option, OptionGroup } from '../../ui/OptionGroup';
 import { TextField } from '../../ui/TextField';
@@ -44,6 +50,9 @@ function statusOptions(type: TransactionType): Option<TransactionStatus>[] {
 const ACCOUNT = 'account';
 
 function describeSubmitError(error: Error): string {
+  if (error instanceof ApiRequestError && error.code === 'TAG_NOT_AVAILABLE') {
+    return messages.tags.errors.notAvailable;
+  }
   if (error instanceof ApiRequestError && error.code === 'CARD_NOT_AVAILABLE') {
     return messages.cards.errors.cardNotAvailable;
   }
@@ -71,6 +80,7 @@ export function emptyTransactionFormValues(): TransactionFormValues {
     cardId: null,
     invoiceMonth: null,
     installments: '1',
+    tagIds: [],
   };
 }
 
@@ -114,6 +124,7 @@ interface TransactionFormProps {
   allowRecurrence?: boolean;
   cards?: readonly Card[];
   allowCardChoice?: boolean;
+  tags?: readonly Tag[];
   onSubmit: (request: CreateTransactionRequest, recurrence: RecurrenceChoice | null) => void;
   onCancel: () => void;
 }
@@ -126,6 +137,7 @@ export function TransactionForm({
   allowRecurrence = false,
   cards = [],
   allowCardChoice = false,
+  tags = [],
   onSubmit,
   onCancel,
 }: TransactionFormProps) {
@@ -143,6 +155,16 @@ export function TransactionForm({
   const [cardId, setCardId] = useState<string | null>(initialValues.cardId);
   const [chosenInvoice, setChosenInvoice] = useState<Month | null>(initialValues.invoiceMonth);
   const [installments, setInstallments] = useState(initialValues.installments);
+  const [tagIds, setTagIds] = useState<string[]>(initialValues.tagIds);
+  const tagOptions = tags
+    .filter((tag) => !tag.archived || initialValues.tagIds.includes(tag.id))
+    .map((tag) => ({ value: tag.id, label: tag.name }));
+
+  function toggleTag(tagId: string): void {
+    setTagIds((current) =>
+      current.includes(tagId) ? current.filter((id) => id !== tagId) : [...current, tagId],
+    );
+  }
 
   const isCardPurchase = cardId !== null;
   const lockedToCard = initialValues.cardId !== null;
@@ -200,6 +222,7 @@ export function TransactionForm({
       cardId,
       invoiceMonth,
       installments,
+      tagIds,
     });
     if (!result.ok) {
       setValidationError(result.error);
@@ -277,6 +300,14 @@ export function TransactionForm({
           options={subcategoryOptions}
           selected={subcategoryId ?? NO_SUBCATEGORY}
           onSelect={(value) => setSubcategoryId(value === NO_SUBCATEGORY ? null : value)}
+        />
+      )}
+      {tagOptions.length > 0 && (
+        <CheckboxGroup
+          label={messages.tags.fieldLabel}
+          options={tagOptions}
+          selected={tagIds}
+          onToggle={toggleTag}
         />
       )}
       {allowCardChoice &&
