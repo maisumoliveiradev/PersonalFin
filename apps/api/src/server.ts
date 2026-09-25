@@ -6,6 +6,7 @@ import type { AppEnvironment, LogLevel } from './config.ts';
 import type { DataAccess } from './database/data-access.ts';
 import { createAuthenticationHook } from './http/authenticate.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
+import { registerAnalyticsRoutes } from './modules/analytics/analytics-routes.ts';
 import { registerBalanceRoutes } from './modules/balance/balance-routes.ts';
 import { registerCardInstallmentRoutes } from './modules/cards/card-installment-routes.ts';
 import { registerCardInvoiceRoutes } from './modules/cards/card-invoice-routes.ts';
@@ -14,7 +15,9 @@ import { registerCategoryRoutes } from './modules/categories/category-routes.ts'
 import { registerCommitmentRoutes } from './modules/commitments/commitment-routes.ts';
 import { registerDashboardRoutes } from './modules/dashboard/dashboard-routes.ts';
 import { registerFinancialSpaceRoutes } from './modules/financial-spaces/financial-space-routes.ts';
+import { registerDashboardPreferenceRoutes } from './modules/preferences/dashboard-preference-routes.ts';
 import { registerRecurrenceRoutes } from './modules/recurrences/recurrence-routes.ts';
+import { registerTagRoutes } from './modules/tags/tag-routes.ts';
 import { registerTransactionRoutes } from './modules/transactions/transaction-routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './routes/auth.ts';
 import { registerHealthRoute } from './routes/health.ts';
@@ -69,6 +72,9 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerCardRoutes(authenticated, options.data);
     registerCardInvoiceRoutes(authenticated, options.data);
     registerCardInstallmentRoutes(authenticated, options.data);
+    registerTagRoutes(authenticated, options.data);
+    registerAnalyticsRoutes(authenticated, options.data);
+    registerDashboardPreferenceRoutes(authenticated, options.data);
   });
 
   return server;

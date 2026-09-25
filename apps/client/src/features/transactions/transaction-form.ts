@@ -26,6 +26,7 @@ export interface TransactionFormValues {
   cardId: string | null;
   invoiceMonth: Month | null;
   installments: string;
+  tagIds: string[];
 }
 
 export type TransactionFormResult =
@@ -59,6 +60,9 @@ export function toCreateTransactionRequest(values: TransactionFormValues): Trans
   if (values.categoryId === null) {
     return { ok: false, error: messages.transactions.errors.categoryRequired };
   }
+  if (values.tagIds.length > 10) {
+    return { ok: false, error: messages.tags.errors.tooMany };
+  }
   const request: CreateTransactionRequest = {
     type: values.type,
     description,
@@ -66,6 +70,7 @@ export function toCreateTransactionRequest(values: TransactionFormValues): Trans
     financialDate,
     categoryId: values.categoryId,
     subcategoryId: values.subcategoryId,
+    tagIds: values.tagIds,
   };
   if (values.cardId === null) {
     return { ok: true, request: { ...request, status: values.status } };
@@ -73,6 +78,9 @@ export function toCreateTransactionRequest(values: TransactionFormValues): Trans
   const installments = parseInstallments(values.installments);
   if (installments === null || amount.amountMinor < installments) {
     return { ok: false, error: messages.cards.errors.installmentsInvalid };
+  }
+  if (installments > 1 && values.tagIds.length > 0) {
+    return { ok: false, error: messages.cards.errors.installmentTags };
   }
   return {
     ok: true,
@@ -113,5 +121,6 @@ export function transactionToFormValues(transaction: Transaction): TransactionFo
     cardId: transaction.cardPurchase?.cardId ?? null,
     invoiceMonth: transaction.cardPurchase?.invoiceMonth ?? null,
     installments: '1',
+    tagIds: transaction.tags.map((tag) => tag.id),
   };
 }

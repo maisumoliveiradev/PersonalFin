@@ -45,6 +45,7 @@ export function createInMemoryTransactionRepository(
             ? null
             : { ...installment, count: installmentCount(installment.purchaseId) },
         cardPurchase: cardInvoiceId == null ? null : cardPurchase(cardInvoiceId),
+        tags: [],
         category: reference(categoryId),
         subcategory: subcategoryId === null ? null : reference(subcategoryId),
         createdAt: new Date(Date.UTC(2026, 0, 1, 12, 0, transactions.length)),
@@ -105,6 +106,7 @@ export function createInMemoryTransactionRepository(
             (transaction.financialDate >= query.range.start &&
               transaction.financialDate < query.range.endExclusive)) &&
           (query.type === undefined || transaction.type === query.type) &&
+          (query.tagId === undefined || transaction.tags.some((tag) => tag.id === query.tagId)) &&
           (query.cardInvoiceId === undefined ||
             transaction.cardPurchase?.invoiceId === query.cardInvoiceId) &&
           (query.excludeCardPurchases !== true || transaction.cardPurchase === null) &&

@@ -2,16 +2,19 @@ import type { AuthenticatedUser, SessionResolver } from '../../src/auth/authenti
 import type { DataAccess } from '../../src/database/data-access.ts';
 import type { AuthHandler } from '../../src/routes/auth.ts';
 import { buildServer } from '../../src/server.ts';
+import { createInMemoryAnalyticsRepository } from './in-memory-analytics-repository.ts';
 import { createInMemoryAuditRepository } from './in-memory-audit-repository.ts';
 import { createInMemoryBalanceReminderRepository } from './in-memory-balance-reminder-repository.ts';
 import { createInMemoryBalanceSnapshotRepository } from './in-memory-balance-snapshot-repository.ts';
 import { createInMemoryCardInvoiceRepository } from './in-memory-card-invoice-repository.ts';
 import { createInMemoryCardRepository } from './in-memory-card-repository.ts';
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
+import { createInMemoryDashboardPreferenceRepository } from './in-memory-dashboard-preference-repository.ts';
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
 import { createInMemoryInstallmentRepository } from './in-memory-installment-repository.ts';
 import { createInMemoryRecurrenceRepository } from './in-memory-recurrence-repository.ts';
+import { createInMemoryTagRepository } from './in-memory-tag-repository.ts';
 import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
 
 export const SESSION_COOKIE = 'personalfin.session_token';
@@ -82,6 +85,9 @@ export function createInMemoryRepositories() {
     cards,
     cardInvoices,
     installments,
+    tags: createInMemoryTagRepository(() => transactions.transactions),
+    analytics: createInMemoryAnalyticsRepository(() => transactions.transactions),
+    dashboardPreferences: createInMemoryDashboardPreferenceRepository(),
   };
 }
 

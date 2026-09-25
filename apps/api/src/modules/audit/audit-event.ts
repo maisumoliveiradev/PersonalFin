@@ -4,7 +4,8 @@ export type AuditEntityType =
   | 'recurrence_series'
   | 'card'
   | 'card_invoice'
-  | 'card_invoice_payment';
+  | 'card_invoice_payment'
+  | 'tag';
 export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
 
 export type AuditValue = string | number | boolean | null;

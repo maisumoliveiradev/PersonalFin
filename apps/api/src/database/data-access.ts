@@ -1,3 +1,5 @@
+import type { AnalyticsRepository } from '../modules/analytics/analytics-repository.ts';
+import { createPostgresAnalyticsRepository } from '../modules/analytics/postgres-analytics-repository.ts';
 import type { AuditRepository } from '../modules/audit/audit-repository.ts';
 import { createPostgresAuditRepository } from '../modules/audit/postgres-audit-repository.ts';
 import type { BalanceReminderRepository } from '../modules/balance/balance-reminder-repository.ts';
@@ -16,8 +18,12 @@ import type { DashboardRepository } from '../modules/dashboard/dashboard-reposit
 import { createPostgresDashboardRepository } from '../modules/dashboard/postgres-dashboard-repository.ts';
 import type { FinancialSpaceRepository } from '../modules/financial-spaces/financial-space-repository.ts';
 import { createPostgresFinancialSpaceRepository } from '../modules/financial-spaces/postgres-financial-space-repository.ts';
+import type { DashboardPreferenceRepository } from '../modules/preferences/dashboard-preference-repository.ts';
+import { createPostgresDashboardPreferenceRepository } from '../modules/preferences/postgres-dashboard-preference-repository.ts';
 import { createPostgresRecurrenceRepository } from '../modules/recurrences/postgres-recurrence-repository.ts';
 import type { RecurrenceRepository } from '../modules/recurrences/recurrence-repository.ts';
+import { createPostgresTagRepository } from '../modules/tags/postgres-tag-repository.ts';
+import type { TagRepository } from '../modules/tags/tag-repository.ts';
 import { createPostgresTransactionRepository } from '../modules/transactions/postgres-transaction-repository.ts';
 import type { TransactionRepository } from '../modules/transactions/transaction-repository.ts';
 import { type DatabasePool, type Queryable, withTransaction } from './pool.ts';
@@ -34,6 +40,9 @@ export interface Repositories {
   cards: CardRepository;
   cardInvoices: CardInvoiceRepository;
   installments: InstallmentRepository;
+  tags: TagRepository;
+  analytics: AnalyticsRepository;
+  dashboardPreferences: DashboardPreferenceRepository;
 }
 
 export interface DataAccess {
@@ -54,6 +63,9 @@ function createPostgresRepositories(db: Queryable): Repositories {
     cards: createPostgresCardRepository(db),
     cardInvoices: createPostgresCardInvoiceRepository(db),
     installments: createPostgresInstallmentRepository(db),
+    tags: createPostgresTagRepository(db),
+    analytics: createPostgresAnalyticsRepository(db),
+    dashboardPreferences: createPostgresDashboardPreferenceRepository(db),
   };
 }
 

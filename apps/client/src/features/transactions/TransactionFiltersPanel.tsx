@@ -1,5 +1,6 @@
 import type {
   CategoryTreeItem,
+  Tag,
   TransactionStatus,
   TransactionType,
 } from '@personalfin/api-contract';
@@ -28,10 +29,11 @@ const STATUS_OPTIONS: readonly Option<TransactionStatus | typeof ALL>[] = [
 interface TransactionFiltersPanelProps {
   filters: TransactionFilters;
   categories: readonly CategoryTreeItem[];
+  tags: readonly Tag[];
   onChange: (filters: TransactionFilters) => void;
 }
 
-function withOptional<Key extends 'type' | 'status' | 'categoryId' | 'q'>(
+function withOptional<Key extends 'type' | 'status' | 'categoryId' | 'tagId' | 'q'>(
   filters: TransactionFilters,
   key: Key,
   value: TransactionFilters[Key] | undefined,
@@ -44,6 +46,7 @@ function withOptional<Key extends 'type' | 'status' | 'categoryId' | 'q'>(
 export function TransactionFiltersPanel({
   filters,
   categories,
+  tags,
   onChange,
 }: TransactionFiltersPanelProps) {
   const [search, setSearch] = useState(filters.q ?? '');
@@ -92,6 +95,19 @@ export function TransactionFiltersPanel({
           onChange(withOptional(filters, 'categoryId', value === ALL ? undefined : value))
         }
       />
+      {tags.length > 0 && (
+        <OptionGroup
+          label={messages.tags.filterLabel}
+          options={[
+            { value: ALL, label: messages.transactions.allFemale },
+            ...tags.map((tag) => ({ value: tag.id, label: tag.name })),
+          ]}
+          selected={filters.tagId ?? ALL}
+          onSelect={(value) =>
+            onChange(withOptional(filters, 'tagId', value === ALL ? undefined : value))
+          }
+        />
+      )}
       <TextField
         label={messages.transactions.searchLabel}
         value={search}

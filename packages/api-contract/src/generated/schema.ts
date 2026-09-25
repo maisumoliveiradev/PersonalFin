@@ -613,6 +613,130 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the tags of the space */
+        get: operations["listTags"];
+        put?: never;
+        /** Create a tag */
+        post: operations["createTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Permanently delete a never-used tag */
+        delete: operations["deleteTag"];
+        options?: never;
+        head?: never;
+        /** Rename, archive, or unarchive a tag */
+        patch: operations["updateTag"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/analytics/evolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Month-by-month realized metrics and observed balance (M-009) */
+        get: operations["getEvolution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/analytics/comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Compare a month with the previous month and the same month a year earlier (M-010) */
+        get: operations["getComparison"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/analytics/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Realized expenses of a month range by category and tag (M-011, M-012) */
+        get: operations["getBreakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/dashboard-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * The current user's dashboard preferences for the space
+         * @description Defaults to the advanced profile without overrides (isDefault true).
+         */
+        get: operations["getDashboardPreferences"];
+        /**
+         * Save the experience profile and section overrides
+         * @description Overrides equal to the profile default are dropped. Preferences only change visibility for this user; values are never affected.
+         */
+        put: operations["saveDashboardPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -784,6 +908,8 @@ export interface components {
             cardId?: string;
             /** @description Invoice (reference month) for a card purchase, from the month before to two months after financialDate. Defaults to the invoice whose closing date is after financialDate. */
             invoiceMonth?: string;
+            /** @description Active tags of the space; tags never change amounts (DR-013). */
+            tagIds?: string[];
             /** @description Splits a card purchase into this many installments (amountMinor is the total; the remainder cents go to the first). Installment k is dated k - 1 months after financialDate and goes to the invoice k - 1 months after the first. The response is the first installment. */
             installments?: number;
         };
@@ -820,8 +946,121 @@ export interface components {
             occurrenceDate: string | null;
             /** @description The card and invoice of a card purchase; null otherwise. A card purchase counts in the metrics of its invoice month (DR-035). */
             cardPurchase: components["schemas"]["CardPurchase"] | null;
+            /** @description Tags of the transaction, by name. */
+            tags: components["schemas"]["CategoryReference"][];
             /** @description Installment number and count of an installment purchase; null otherwise. */
             installment: components["schemas"]["Installment"] | null;
+        };
+        Change: {
+            /** @description current - base, in minor units. */
+            difference: number;
+            /** @description Percentage change in tenths of a percent (123 = +12.3%), rounded half away from zero; null when the base is zero. */
+            percentChangeTenths: number | null;
+        };
+        MetricSet: {
+            realizedIncome: number;
+            realizedExpenses: number;
+            realizedNet: number;
+            forecastIncome: number;
+            forecastExpenses: number;
+        };
+        MetricChanges: {
+            realizedIncome: components["schemas"]["Change"];
+            realizedExpenses: components["schemas"]["Change"];
+            realizedNet: components["schemas"]["Change"];
+            forecastIncome: components["schemas"]["Change"];
+            forecastExpenses: components["schemas"]["Change"];
+        };
+        ComparisonPeriod: {
+            month: string;
+            values: components["schemas"]["MetricSet"];
+            changes: components["schemas"]["MetricChanges"];
+        };
+        Comparison: {
+            month: string;
+            current: components["schemas"]["MetricSet"];
+            previousMonth: components["schemas"]["ComparisonPeriod"];
+            previousYear: components["schemas"]["ComparisonPeriod"];
+        };
+        Evolution: {
+            items: {
+                month: string;
+                realizedIncome: number;
+                realizedExpenses: number;
+                realizedNet: number;
+                observedBalance: {
+                    amountMinor: number;
+                    observedOn: components["schemas"]["FinancialDate"];
+                } | null;
+            }[];
+        };
+        Breakdown: {
+            fromMonth: string;
+            throughMonth: string;
+            previousFromMonth: string;
+            totalMinor: number;
+            previousTotalMinor: number;
+            categories: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                amountMinor: number;
+                /** @description Share of totalMinor in tenths of a percent; null when the total is zero. */
+                shareTenths: number | null;
+                previousAmountMinor: number;
+                subcategories: {
+                    /** Format: uuid */
+                    id: string | null;
+                    /** @description Null for expenses without a subcategory. */
+                    name: string | null;
+                    amountMinor: number;
+                }[];
+            }[];
+            tags: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                amountMinor: number;
+                /** @description Share of totalMinor in tenths of a percent; null when the total is zero. */
+                shareTenths: number | null;
+                previousAmountMinor: number;
+            }[];
+        };
+        /** @enum {string} */
+        ExperienceProfile: "basic" | "intermediate" | "advanced";
+        SectionOverrides: {
+            observedBalance?: boolean;
+            realized?: boolean;
+            forecast?: boolean;
+            projection?: boolean;
+            projectionSeries?: boolean;
+            commitments?: boolean;
+            analytics?: boolean;
+        };
+        DashboardSections: {
+            observedBalance: boolean;
+            realized: boolean;
+            forecast: boolean;
+            projection: boolean;
+            projectionSeries: boolean;
+            commitments: boolean;
+            analytics: boolean;
+        };
+        DashboardPreferences: {
+            profile: components["schemas"]["ExperienceProfile"];
+            overrides: components["schemas"]["SectionOverrides"];
+            sections: components["schemas"]["DashboardSections"];
+            isDefault: boolean;
+        };
+        Tag: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            archived: boolean;
+            version: number;
+        };
+        TagList: {
+            items: components["schemas"]["Tag"][];
         };
         Installment: {
             /** Format: uuid */
@@ -919,6 +1158,8 @@ export interface components {
             subcategoryId?: string | null;
             /** @description Moves a card purchase to another invoice of the same card. */
             invoiceMonth?: string;
+            /** @description Replaces the tags; tags already on the transaction may be archived; tags never change amounts (DR-013). */
+            tagIds?: string[];
         };
         TransactionList: {
             items: components["schemas"]["Transaction"][];
@@ -1101,7 +1342,25 @@ export interface components {
         };
     };
     responses: {
-        /** @description CATEGORY_NOT_AVAILABLE (category not usable for the type), CARD_NOT_AVAILABLE (missing or archived card), or INVALID_CARD_PURCHASE (income, status sent, invoice out of range, or invoice change on a non-card transaction). */
+        /** @description The tag does not exist in this space (code TAG_NOT_FOUND). */
+        TagNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description VERSION_CONFLICT, TAG_NAME_TAKEN, or TAG_IN_USE (archive instead). */
+        TagConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description CATEGORY_NOT_AVAILABLE (category not usable for the type), TAG_NOT_AVAILABLE (tag missing or archived), CARD_NOT_AVAILABLE (missing or archived card), or INVALID_CARD_PURCHASE (income, status sent, invoice out of range, or invoice change on a non-card transaction). */
         TransactionRejected: {
             headers: {
                 [name: string]: unknown;
@@ -1468,6 +1727,8 @@ export interface operations {
                 status?: components["schemas"]["TransactionStatus"];
                 /** @description Matches the category or the subcategory. */
                 categoryId?: string;
+                /** @description Transactions carrying this tag. */
+                tagId?: string;
                 /** @description Case- and accent-insensitive search in the description. */
                 q?: string;
                 /** @description Opaque cursor from a previous page's nextCursor. */
@@ -2361,6 +2622,262 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["CardNotFound"];
+        };
+    };
+    listTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active tags first, then archived, by name. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    createTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                };
+            };
+        };
+        responses: {
+            /** @description The created tag. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            409: components["responses"]["TagConflict"];
+        };
+    };
+    deleteTag: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TagNotFound"];
+            409: components["responses"]["TagConflict"];
+        };
+    };
+    updateTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    version: number;
+                    name?: string;
+                    archived?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description The tag after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Tag"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["TagNotFound"];
+            409: components["responses"]["TagConflict"];
+        };
+    };
+    getEvolution: {
+        parameters: {
+            query: {
+                fromMonth: string;
+                months?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One entry per month, oldest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evolution"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getComparison: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The comparison. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comparison"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getBreakdown: {
+        parameters: {
+            query: {
+                fromMonth: string;
+                months?: 1 | 3 | 6 | 12;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Categories add up exactly to totalMinor. A transaction counts in full under each of its tags, so tag amounts may add up to more than totalMinor (DR-013). Items include those with an amount only in the previous range of equal length. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Breakdown"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getDashboardPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Preferences and the resolved section visibility. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardPreferences"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    saveDashboardPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    profile: components["schemas"]["ExperienceProfile"];
+                    overrides: components["schemas"]["SectionOverrides"];
+                };
+            };
+        };
+        responses: {
+            /** @description The saved preferences. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardPreferences"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
 }

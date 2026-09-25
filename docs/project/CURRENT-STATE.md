@@ -2,9 +2,9 @@
 
 ## Current Version
 
-`v0.4.0`, released on 2026-09-25 (`main`, tag `v0.4.0`). SDD-001 to
-SDD-028 implemented and validated
-(`docs/sdds/v0.4.0/SDD-028-validation-report.md`).
+`v0.5.0`, released on 2026-09-25 (`main`, tag `v0.5.0`). SDD-001 to
+SDD-033 implemented and validated
+(`docs/sdds/v0.5.0/SDD-033-validation-report.md`).
 
 ## Implemented Product Capabilities
 
@@ -31,8 +31,7 @@ SDD-028 implemented and validated
 -   **Transactions (SDD-005):** users register Expense or Income with
     description, amount (BRL), financial date, category matching the
     type, optional subcategory, and status (Paid/Received or Pending).
-    There are no tags, notes, attachments, recurrence, cards, or other
-    currencies.
+    There are no notes, attachments, or other currencies.
 -   **Transaction edit (SDD-008):** every field can be edited from the
     list; edits are audited (actor, instant, before/after) and protected
     by optimistic concurrency (`version`, `409 VERSION_CONFLICT`). There
@@ -63,7 +62,7 @@ SDD-028 implemented and validated
     income/expenses (7, 30, or 90 days) with exact totals. There are no
     notifications.
 -   **Cards (SDD-023):** cards with name, closing and due days, and an
-    append-only limit history with effective dates (DR-082); archive and
+    append-only limit history with effective dates (DR-084); archive and
     reactivate.
 -   **Card purchases and invoices (SDD-024):** expenses paid with a card
     are assigned to an invoice (suggested from the closing day,
@@ -81,6 +80,15 @@ SDD-028 implemented and validated
 -   **Installments (SDD-025):** card purchases split into 2--48
     installments across consecutive invoices (DR-080); later installments
     can be cancelled. Installments are edited one at a time.
+-   **Analytics (SDD-030):** month comparison (previous month and previous
+    year) and twelve-month evolution (M-009, M-010), and
+    expenses by category and tag over 1--12 months (M-011, M-012,
+    SDD-031). There are no charts, exports, or custom metrics.
+-   **Dashboard personalization (SDD-032):** per-user, per-space
+    experience profile and section visibility (DR-084). There is no
+    onboarding recommendation or section reordering.
+-   **Tags (SDD-029):** per-space tags (DR-083) on transactions, shown in
+    the list and usable as a filter. There is no tag analytics yet.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -104,7 +112,7 @@ SDD-028 implemented and validated
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
     -   `packages/domain` --- shared money, financial date, transaction,
-        month, balance-reminder, business-day, and card rules (ADR-0011;
+        month, balance-reminder, business-day, card, comparison, and dashboard-preference rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
@@ -123,7 +131,8 @@ SDD-028 implemented and validated
 
 ## Active Target
 
-`v0.5.0` --- Analytics (`docs/product/ROADMAP.md`). No SDD drafted yet.
+`v0.6.0` --- Collaboration (`docs/product/ROADMAP.md`). No SDD drafted
+yet.
 
 ## Important Constraint
 
@@ -132,7 +141,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.5.0 SDDs (Analytics) from the roadmap. Domain decisions
+Draft the v0.6.0 SDDs (Collaboration) from the roadmap. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, DR-072 to
+`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, DR-072 to
 DR-078).

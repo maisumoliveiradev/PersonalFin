@@ -6,6 +6,50 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.5.0\] --- 2026-09-25
+
+Analytics. Released to `main` and tagged `v0.5.0`; validated in SDD-033
+(`docs/sdds/v0.5.0/SDD-033-validation-report.md`).
+
+### Dashboard Personalization (SDD-032)
+
+-   "Personalizar resumo": each user picks an experience profile per
+    space (Básico, Intermediário, Avançado; default Avançado) and can
+    show or hide individual sections on top of it (DR-084).
+-   The space screen shows the observed balance, realized and forecast
+    groups, projection, next months, commitments, and analytics according
+    to the preferences.
+-   `GET`/`PUT .../dashboard-preferences`; migration
+    `0018_dashboard_preferences`.
+
+### Category and Tag Analytics (SDD-031)
+
+-   "Para onde foi o dinheiro" on the Análises screen: realized expenses
+    of 1, 3, 6, or 12 months by category (with subcategories) and by tag,
+    with share and the previous period of equal length.
+-   Metric catalog: M-011 and M-012.
+-   `GET .../analytics/breakdown`.
+
+### Evolution and Comparisons (SDD-030)
+
+-   "Análises" screen: the selected month against the previous month and
+    the same month of the previous year (difference and percentage), and
+    the twelve-month evolution of realized income, expenses, and net with
+    proportional bars.
+-   Metric catalog: M-009 (evolution) and M-010 (comparison).
+-   `GET .../analytics/evolution` and `GET .../analytics/comparison`.
+
+### Tags (SDD-029)
+
+-   "Tags" screen per space: create, rename, archive/reactivate, and
+    delete never-used tags (audited, DR-083).
+-   Transactions take up to 10 tags in the form, show them as `#tag`
+    in the list, and can be filtered by tag; tags never change amounts
+    (DR-013).
+-   `GET`/`POST .../tags`, `PATCH`/`DELETE .../tags/{tagId}`, `tagIds`
+    on transactions, `tags` in responses, `tagId` filter; migration
+    `0017_tags`.
+
 ## \[0.4.0\] --- 2026-09-25
 
 Credit Cards. Released to `main` and tagged `v0.4.0`; validated in
