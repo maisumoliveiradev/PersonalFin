@@ -12,9 +12,10 @@ import { balanceAmountLabel, balanceDateLabel } from './balance-presentation';
 
 interface BalanceSummaryProps {
   spaceId: string;
+  canRecord: boolean;
 }
 
-export function BalanceSummary({ spaceId }: BalanceSummaryProps) {
+export function BalanceSummary({ spaceId, canRecord }: BalanceSummaryProps) {
   const palette = usePalette();
   const router = useRouter();
   const snapshots = useBalanceSnapshots(spaceId);
@@ -41,12 +42,14 @@ export function BalanceSummary({ spaceId }: BalanceSummaryProps) {
         </>
       )}
       <BodyText muted>{messages.balance.explanation}</BodyText>
-      <Button
-        label={messages.balance.updateAction}
-        onPress={() =>
-          router.push({ pathname: '/spaces/[spaceId]/balance/new', params: { spaceId } })
-        }
-      />
+      {canRecord && (
+        <Button
+          label={messages.balance.updateAction}
+          onPress={() =>
+            router.push({ pathname: '/spaces/[spaceId]/balance/new', params: { spaceId } })
+          }
+        />
+      )}
       {current !== null && (
         <Button
           label={messages.balance.historyAction}

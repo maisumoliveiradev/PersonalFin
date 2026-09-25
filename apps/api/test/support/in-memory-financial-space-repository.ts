@@ -1,12 +1,40 @@
-import type { FinancialSpace } from '../../src/modules/financial-spaces/financial-space.ts';
+import type { SpacePermission } from '@personalfin/domain';
+
+import {
+  type AccessibleSpace,
+  type FinancialSpace,
+  OWNER_ACCESS,
+} from '../../src/modules/financial-spaces/financial-space.ts';
 import type { FinancialSpaceRepository } from '../../src/modules/financial-spaces/financial-space-repository.ts';
+
+export interface InMemoryMember {
+  financialSpaceId: string;
+  userId: string;
+  permissions: SpacePermission[];
+}
 
 export function createInMemoryFinancialSpaceRepository(): FinancialSpaceRepository & {
   spaces: FinancialSpace[];
+  members: InMemoryMember[];
 } {
   const spaces: FinancialSpace[] = [];
+  const members: InMemoryMember[] = [];
+
+  function accessible(userId: string, space: FinancialSpace): AccessibleSpace | null {
+    if (space.ownerUserId === userId) {
+      return { ...space, access: OWNER_ACCESS };
+    }
+    const member = members.find(
+      (candidate) => candidate.financialSpaceId === space.id && candidate.userId === userId,
+    );
+    return member === undefined
+      ? null
+      : { ...space, access: { role: 'member', permissions: member.permissions } };
+  }
+
   return {
     spaces,
+    members,
     async create(space) {
       const created: FinancialSpace = {
         ...space,
@@ -17,10 +45,13 @@ export function createInMemoryFinancialSpaceRepository(): FinancialSpaceReposito
       return created;
     },
     async listAccessibleTo(userId) {
-      return spaces.filter((space) => space.ownerUserId === userId);
+      return spaces
+        .map((space) => accessible(userId, space))
+        .filter((space): space is AccessibleSpace => space !== null);
     },
     async findAccessibleTo(userId, spaceId) {
-      return spaces.find((space) => space.id === spaceId && space.ownerUserId === userId) ?? null;
+      const space = spaces.find((candidate) => candidate.id === spaceId);
+      return space === undefined ? null : accessible(userId, space);
     },
   };
 }

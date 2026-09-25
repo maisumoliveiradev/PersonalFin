@@ -14,6 +14,8 @@ import {
   FINANCIAL_SPACE_NAME_MAX_LENGTH,
   type FinancialSpace,
   normalizeFinancialSpaceName,
+  OWNER_ACCESS,
+  type SpaceAccess,
 } from './financial-space.ts';
 import { requireAccessibleSpace } from './financial-space-access.ts';
 
@@ -26,12 +28,13 @@ const createFinancialSpaceSchema = z.strictObject({
 
 const spaceParamsSchema = z.object({ spaceId: z.string() });
 
-function toResponse(space: FinancialSpace): FinancialSpaceResponse {
+function toResponse(space: FinancialSpace, access: SpaceAccess): FinancialSpaceResponse {
   return {
     id: space.id,
     name: space.name,
     lifecycleState: space.lifecycleState,
-    role: 'owner',
+    role: access.role,
+    permissions: access.permissions,
     createdAt: space.createdAt.toISOString(),
   };
 }
@@ -42,7 +45,7 @@ export function registerFinancialSpaceRoutes(server: FastifyInstance, data: Data
   server.get('/financial-spaces', async (request): Promise<FinancialSpaceList> => {
     const user = requireAuthenticatedUser(request);
     const spaces = await repository.listAccessibleTo(user.id);
-    return { items: spaces.map(toResponse) };
+    return { items: spaces.map((space) => toResponse(space, space.access)) };
   });
 
   server.post('/financial-spaces', async (request, reply): Promise<FinancialSpaceResponse> => {
@@ -50,12 +53,13 @@ export function registerFinancialSpaceRoutes(server: FastifyInstance, data: Data
     const input = parseInput(createFinancialSpaceSchema, request.body);
     const space = await createFinancialSpace(data, { name: input.name, ownerUserId: user.id });
     reply.status(201);
-    return toResponse(space);
+    return toResponse(space, OWNER_ACCESS);
   });
 
   server.get('/financial-spaces/:spaceId', async (request): Promise<FinancialSpaceResponse> => {
     const user = requireAuthenticatedUser(request);
     const { spaceId } = parseInput(spaceParamsSchema, request.params);
-    return toResponse(await requireAccessibleSpace(repository, user.id, spaceId));
+    const space = await requireAccessibleSpace(repository, user.id, spaceId, 'view');
+    return toResponse(space, space.access);
   });
 }

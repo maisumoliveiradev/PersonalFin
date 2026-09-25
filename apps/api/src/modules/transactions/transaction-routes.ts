@@ -154,6 +154,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const transaction = isUuid(transactionId)
         ? await data.repositories.transactions.findInSpace(space.id, transactionId)
@@ -174,6 +175,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'record',
       );
       if (!isUuid(transactionId)) {
         throw new TransactionNotFoundError();
@@ -198,6 +200,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'record',
       );
       if (!isUuid(transactionId)) {
         throw new TransactionNotFoundError();
@@ -222,6 +225,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'record',
       );
       if (!isUuid(transactionId)) {
         throw new TransactionNotFoundError();
@@ -252,6 +256,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const filters = parseInput(listTransactionsQuerySchema, request.query);
       try {
@@ -290,6 +295,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'record',
       );
       const input = parseInput(createTransactionSchema, request.body);
       if (input.cardId === undefined && input.invoiceMonth !== undefined) {

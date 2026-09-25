@@ -6,6 +6,19 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Membership and Permissions (SDD-034)
+
+-   Spaces can have members with permission sets (Viewer, Contributor,
+    Administrator, or custom; DR-085). Every space endpoint checks the
+    permission of its action; members without it receive
+    `403 PERMISSION_DENIED`, non-members still receive 404 (ADR-0015,
+    superseding ADR-0010).
+-   Space responses include the caller's `role` and `permissions`; the
+    space list and screen show "Proprietário" or "Membro", and actions
+    the member cannot perform are hidden.
+-   Migration `0019_space_members`. Adding members arrives with
+    invitations (SDD-035).
+
 ## \[0.5.0\] --- 2026-09-25
 
 Analytics. Released to `main` and tagged `v0.5.0`; validated in SDD-033

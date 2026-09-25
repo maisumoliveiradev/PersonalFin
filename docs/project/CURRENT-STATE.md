@@ -4,7 +4,8 @@
 
 `v0.5.0`, released on 2026-09-25 (`main`, tag `v0.5.0`). SDD-001 to
 SDD-033 implemented and validated
-(`docs/sdds/v0.5.0/SDD-033-validation-report.md`).
+(`docs/sdds/v0.5.0/SDD-033-validation-report.md`). `develop` is building
+v0.6.0: SDD-034 implemented.
 
 ## Implemented Product Capabilities
 
@@ -14,9 +15,13 @@ SDD-033 implemented and validated
     verification, password recovery, social login, MFA, or device/session
     management.
 
+-   **Shared access (SDD-034):** spaces may have members with permission
+    sets checked on every endpoint (ADR-0015, DR-085); the UI hides
+    actions without permission. Members can only be added from SDD-035
+    (invitations) on.
 -   **Financial Spaces (SDD-003):** an authenticated user creates spaces
     by name, becomes their single Owner, and lists, selects, and enters
-    them. Only the Owner can access a space (ADR-0010). Spaces are always
+    them. The Owner and members can access a space (ADR-0015). Spaces are always
     Active; there is no rename, archive, deletion, sharing, or
     invitation. The selected space is carried in the URL
     (`/spaces/{spaceId}`), not persisted as a preference.
@@ -62,7 +67,7 @@ SDD-033 implemented and validated
     income/expenses (7, 30, or 90 days) with exact totals. There are no
     notifications.
 -   **Cards (SDD-023):** cards with name, closing and due days, and an
-    append-only limit history with effective dates (DR-084); archive and
+    append-only limit history with effective dates (DR-085); archive and
     reactivate.
 -   **Card purchases and invoices (SDD-024):** expenses paid with a card
     are assigned to an invoice (suggested from the closing day,
@@ -140,7 +145,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.6.0/SDD-034-membership-and-permissions.md`. Domain decisions
+`docs/sdds/v0.6.0/SDD-035-invitations.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, DR-072 to
 DR-078).

@@ -59,6 +59,14 @@ preferences belong to one user and one space: an experience profile
 (Basic, Intermediate, or Advanced; default Advanced) and per-section
 overrides. They change only what is displayed, never any value.
 
+**DR-085** *(SDD-034; decided under delegation.)* Space permissions are
+`view`, `record` (transactions, balance snapshots, invoice payments,
+installment cancellation), `plan` (recurrences, cards, invoice dates),
+`classify` (categories and tags), `manage_members`, and `view_audit`;
+`view` is always included. Presets: Viewer (view), Contributor (view,
+record), Administrator (all). Personal settings need only `view`. The
+Owner holds every permission (ADR-0015).
+
 **DR-014** Split transactions are outside the initial model.
 
 **DR-015** A transaction uses one primary financial calendar date. The

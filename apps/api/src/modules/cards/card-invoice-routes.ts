@@ -9,6 +9,7 @@ import {
   isValidMonth,
   MAX_AMOUNT_MINOR,
   monthRange,
+  type SpacePermission,
   shiftMonth,
 } from '@personalfin/domain';
 import type { FastifyInstance } from 'fastify';
@@ -75,12 +76,17 @@ function invoiceState(invoice: CardInvoice | null): CardInvoiceResponse['state']
 }
 
 export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAccess): void {
-  async function requireCard(request: { params: unknown }, userId: string) {
+  async function requireCard(
+    request: { params: unknown },
+    userId: string,
+    permission: SpacePermission,
+  ) {
     const params = parseInput(invoiceParamsSchema, request.params);
     const space = await requireAccessibleSpace(
       data.repositories.financialSpaces,
       userId,
       params.spaceId,
+      permission,
     );
     const card = isUuid(params.cardId)
       ? await data.repositories.cards.findInSpace(space.id, params.cardId)
@@ -136,7 +142,7 @@ export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAcc
     '/financial-spaces/:spaceId/cards/:cardId/invoices/:month',
     async (request): Promise<CardInvoiceResponse> => {
       const user = requireAuthenticatedUser(request);
-      const { card, month } = await requireCard(request, user.id);
+      const { card, month } = await requireCard(request, user.id, 'view');
       const invoice = await data.repositories.cardInvoices.findByMonth(
         card.financialSpaceId,
         card.id,
@@ -150,7 +156,7 @@ export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAcc
     '/financial-spaces/:spaceId/cards/:cardId/invoices/:month/dates',
     async (request): Promise<CardInvoiceResponse> => {
       const user = requireAuthenticatedUser(request);
-      const { card, month } = await requireCard(request, user.id);
+      const { card, month } = await requireCard(request, user.id, 'plan');
       const input = parseInput(invoiceDatesSchema, request.body);
       const invoice = await updateInvoiceDates(data, {
         financialSpaceId: card.financialSpaceId,
@@ -169,7 +175,7 @@ export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAcc
     '/financial-spaces/:spaceId/cards/:cardId/invoices/:month/payments',
     async (request, reply): Promise<CardInvoiceResponse> => {
       const user = requireAuthenticatedUser(request);
-      const { card, month } = await requireCard(request, user.id);
+      const { card, month } = await requireCard(request, user.id, 'record');
       const input = parseInput(paymentSchema, request.body);
       const invoice = await payInvoice(data, {
         financialSpaceId: card.financialSpaceId,
@@ -187,7 +193,7 @@ export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAcc
     '/financial-spaces/:spaceId/cards/:cardId/invoices/:month/payments/:paymentId',
     async (request): Promise<CardInvoiceResponse> => {
       const user = requireAuthenticatedUser(request);
-      const { card, month } = await requireCard(request, user.id);
+      const { card, month } = await requireCard(request, user.id, 'record');
       const { paymentId } = parseInput(paymentParamsSchema, request.params);
       if (!isUuid(paymentId)) {
         throw new InvoicePaymentNotFoundError();
@@ -212,6 +218,7 @@ export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAcc
         data.repositories.financialSpaces,
         user.id,
         params.spaceId,
+        'view',
       );
       const card = isUuid(params.cardId)
         ? await data.repositories.cards.findInSpace(space.id, params.cardId)

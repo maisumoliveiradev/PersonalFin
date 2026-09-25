@@ -3,6 +3,7 @@ export const messages = {
     appName: 'PersonalFin',
     loading: 'Carregando…',
     retry: 'Tentar novamente',
+    permissionDenied: 'Você não tem permissão para esta ação neste espaço.',
   },
   auth: {
     signInTitle: 'Entrar',
@@ -497,6 +498,7 @@ export const messages = {
     cancelAction: 'Cancelar',
     openSpaceHint: 'Abre este espaço financeiro',
     ownerRole: 'Proprietário',
+    memberRole: 'Membro',
     backToSpaces: 'Trocar de espaço',
     backToSpace: 'Voltar ao espaço',
     loadError: 'Não foi possível carregar os espaços.',

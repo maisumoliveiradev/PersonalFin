@@ -1,7 +1,16 @@
+import { SPACE_PERMISSIONS, type SpacePermission } from '@personalfin/domain';
+
 export const FINANCIAL_SPACE_NAME_MAX_LENGTH = 80;
 
 export type FinancialSpaceLifecycleState = 'active';
-export type FinancialSpaceRole = 'owner';
+export type FinancialSpaceRole = 'owner' | 'member';
+
+export interface SpaceAccess {
+  role: FinancialSpaceRole;
+  permissions: SpacePermission[];
+}
+
+export const OWNER_ACCESS: SpaceAccess = { role: 'owner', permissions: [...SPACE_PERMISSIONS] };
 
 export interface FinancialSpace {
   id: string;
@@ -9,6 +18,10 @@ export interface FinancialSpace {
   ownerUserId: string;
   lifecycleState: FinancialSpaceLifecycleState;
   createdAt: Date;
+}
+
+export interface AccessibleSpace extends FinancialSpace {
+  access: SpaceAccess;
 }
 
 export interface NewFinancialSpace {

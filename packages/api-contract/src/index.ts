@@ -56,3 +56,4 @@ export type Comparison = components['schemas']['Comparison'];
 export type Breakdown = components['schemas']['Breakdown'];
 export type DashboardPreferences = components['schemas']['DashboardPreferences'];
 export type DashboardSections = components['schemas']['DashboardSections'];
+export type SpacePermission = components['schemas']['SpacePermission'];

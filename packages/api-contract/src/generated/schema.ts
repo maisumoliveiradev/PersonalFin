@@ -810,10 +810,14 @@ export interface components {
              * @description The requesting user's role in the space.
              * @enum {string}
              */
-            role: "owner";
+            role: "owner" | "member";
+            /** @description The requesting user's permissions (ADR-0015). The Owner has all of them. */
+            permissions: components["schemas"]["SpacePermission"][];
             /** Format: date-time */
             createdAt: string;
         };
+        /** @enum {string} */
+        SpacePermission: "view" | "record" | "plan" | "classify" | "manage_members" | "view_audit";
         FinancialSpaceList: {
             items: components["schemas"]["FinancialSpace"][];
         };
@@ -1459,6 +1463,15 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
+        /** @description The user is a member of the space but lacks the permission for this action (code PERMISSION_DENIED). */
+        PermissionDenied: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description No valid session was provided. */
         Unauthenticated: {
             headers: {
@@ -1591,6 +1604,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -1615,6 +1629,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -1644,6 +1659,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
             409: components["responses"]["CategoryConflict"];
             /** @description The parent is not an active top-level category of the same kind (code PARENT_CATEGORY_NOT_AVAILABLE). */
@@ -1680,6 +1696,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CategoryNotFound"];
             409: components["responses"]["CategoryConflict"];
         };
@@ -1711,6 +1728,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CategoryNotFound"];
             409: components["responses"]["CategoryConflict"];
         };
@@ -1753,6 +1771,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -1782,6 +1801,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
             422: components["responses"]["TransactionRejected"];
         };
@@ -1808,6 +1828,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TransactionNotFound"];
         };
     };
@@ -1836,6 +1857,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TransactionNotFound"];
             409: components["responses"]["StateConflict"];
         };
@@ -1867,6 +1889,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TransactionNotFound"];
             409: components["responses"]["StateConflict"];
             422: components["responses"]["TransactionRejected"];
@@ -1899,6 +1922,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TransactionNotFound"];
             409: components["responses"]["StateConflict"];
         };
@@ -1927,6 +1951,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -1956,6 +1981,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -1980,6 +2006,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2009,6 +2036,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2036,6 +2064,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2060,6 +2089,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2089,6 +2119,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
             422: components["responses"]["CategoryNotAvailable"];
         };
@@ -2120,6 +2151,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["RecurrenceNotFound"];
             409: components["responses"]["StateConflict"];
             422: components["responses"]["CategoryNotAvailable"];
@@ -2155,6 +2187,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["RecurrenceNotFound"];
             409: components["responses"]["StateConflict"];
         };
@@ -2189,6 +2222,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2217,6 +2251,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2246,6 +2281,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2270,6 +2306,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2299,6 +2336,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
             409: components["responses"]["CardConflict"];
         };
@@ -2325,6 +2363,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
         };
     };
@@ -2355,6 +2394,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
             409: components["responses"]["CardConflict"];
         };
@@ -2386,6 +2426,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
         };
     };
@@ -2413,6 +2454,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
         };
     };
@@ -2444,6 +2486,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
             409: components["responses"]["StateConflict"];
         };
@@ -2479,6 +2522,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             /** @description The purchase does not exist in this space (code INSTALLMENT_PURCHASE_NOT_FOUND). */
             404: {
                 headers: {
@@ -2521,6 +2565,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
             /** @description The invoice has no open amount this large (code PAYMENT_EXCEEDS_OUTSTANDING). */
             422: {
@@ -2557,6 +2602,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             /** @description CARD_NOT_FOUND or INVOICE_PAYMENT_NOT_FOUND. */
             404: {
                 headers: {
@@ -2592,6 +2638,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2621,6 +2668,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
         };
     };
@@ -2645,6 +2693,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2676,6 +2725,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
             409: components["responses"]["TagConflict"];
         };
@@ -2702,6 +2752,7 @@ export interface operations {
                 content?: never;
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TagNotFound"];
             409: components["responses"]["TagConflict"];
         };
@@ -2737,6 +2788,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TagNotFound"];
             409: components["responses"]["TagConflict"];
         };
@@ -2766,6 +2818,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2793,6 +2846,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2821,6 +2875,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2845,6 +2900,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
@@ -2877,6 +2933,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
         };
     };

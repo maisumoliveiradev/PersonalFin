@@ -35,6 +35,7 @@ export function registerAnalyticsRoutes(server: FastifyInstance, data: DataAcces
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const { fromMonth, months } = parseInput(evolutionQuerySchema, request.query);
       return { items: await getEvolution(data, space.id, fromMonth, months) };
@@ -50,6 +51,7 @@ export function registerAnalyticsRoutes(server: FastifyInstance, data: DataAcces
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const { month } = parseInput(comparisonQuerySchema, request.query);
       return getComparison(data, space.id, month);
@@ -65,6 +67,7 @@ export function registerAnalyticsRoutes(server: FastifyInstance, data: DataAcces
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const { fromMonth, months } = parseInput(breakdownQuerySchema, request.query);
       return getBreakdown(data, space.id, fromMonth, months);

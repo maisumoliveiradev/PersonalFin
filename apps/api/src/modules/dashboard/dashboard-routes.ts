@@ -32,6 +32,7 @@ export function registerDashboardRoutes(server: FastifyInstance, data: DataAcces
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const { month } = parseInput(dashboardQuerySchema, request.query);
       return getMonthlyDashboard(data, space.id, month);
@@ -47,6 +48,7 @@ export function registerDashboardRoutes(server: FastifyInstance, data: DataAcces
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const { fromMonth, months } = parseInput(projectionQuerySchema, request.query);
       return { items: await getProjectionSeries(data, space.id, fromMonth, months) };

@@ -41,6 +41,7 @@ export function registerDashboardPreferenceRoutes(server: FastifyInstance, data:
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const stored = await data.repositories.dashboardPreferences.find(user.id, space.id);
       return stored === null
@@ -58,6 +59,7 @@ export function registerDashboardPreferenceRoutes(server: FastifyInstance, data:
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const input = parseInput(preferenceSchema, request.body);
       const preference = {
