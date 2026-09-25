@@ -6,6 +6,17 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Installment Purchases (SDD-025)
+
+-   Card purchases can be split into 2 to 48 installments ("Parcelas"),
+    one per invoice, with exact cents (remainder on the first) and
+    "parcela k/n" in the list (DR-080).
+-   "Cancelar parcelas seguintes" on an installment moves the later
+    installments to the trash, keeping this and earlier ones (audited).
+-   `installments` on transaction creation, `installment` in responses,
+    `POST .../installment-purchases/{purchaseId}/cancel`; migration
+    `0015_installment_purchases`.
+
 ### Card Purchases and Invoices (SDD-024)
 
 -   Expenses can be paid with a card ("Pagamento"): the invoice is

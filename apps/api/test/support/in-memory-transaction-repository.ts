@@ -13,6 +13,9 @@ export function createInMemoryTransactionRepository(
   cardPurchase: (invoiceId: string) => CardPurchaseReference = () => {
     throw new Error('Card purchases are not configured');
   },
+  installmentCount: (purchaseId: string) => number = () => {
+    throw new Error('Installments are not configured');
+  },
 ): TransactionRepository & { transactions: FinancialTransaction[] } {
   const transactions: FinancialTransaction[] = [];
 
@@ -34,9 +37,13 @@ export function createInMemoryTransactionRepository(
   return {
     transactions,
     async create(transaction) {
-      const { categoryId, subcategoryId, cardInvoiceId, ...rest } = transaction;
+      const { categoryId, subcategoryId, cardInvoiceId, installment, ...rest } = transaction;
       const created: FinancialTransaction = {
         ...rest,
+        installment:
+          installment === undefined
+            ? null
+            : { ...installment, count: installmentCount(installment.purchaseId) },
         cardPurchase: cardInvoiceId == null ? null : cardPurchase(cardInvoiceId),
         category: reference(categoryId),
         subcategory: subcategoryId === null ? null : reference(subcategoryId),

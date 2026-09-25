@@ -78,3 +78,23 @@ export function defaultInvoiceMonth(purchaseDate: FinancialDate, schedule: CardS
   }
   return match;
 }
+
+export const MIN_INSTALLMENTS = 2;
+export const MAX_INSTALLMENTS = 48;
+
+export function isValidInstallmentCount(count: number): boolean {
+  return Number.isInteger(count) && count >= MIN_INSTALLMENTS && count <= MAX_INSTALLMENTS;
+}
+
+export function splitInstallments(totalMinor: number, count: number): number[] {
+  if (!isValidInstallmentCount(count) || !Number.isSafeInteger(totalMinor) || totalMinor < count) {
+    throw new RangeError('Each installment must be at least one minor unit');
+  }
+  const base = Math.floor(totalMinor / count);
+  const remainder = totalMinor - base * count;
+  return Array.from({ length: count }, (_, index) => (index === 0 ? base + remainder : base));
+}
+
+export function installmentDate(purchaseDate: FinancialDate, index: number): FinancialDate {
+  return cardDayInMonth(shiftMonth(monthOf(purchaseDate), index), Number(purchaseDate.slice(8)));
+}

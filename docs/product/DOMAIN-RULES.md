@@ -198,6 +198,16 @@ Invoices are created when first needed with the card's days at that
 time. Card purchases are Expense transactions without a status of their
 own; commitments and the cash projection use their invoices instead.
 
+**DR-080** *(SDD-025; decided under delegation.)* An installment
+purchase (2 to 48 installments) keeps its total, count, purchase date,
+and first invoice. The total is split into equal installments in minor
+units with the remainder on the first; installment k is dated k − 1
+months after the purchase (clamped to short months) and belongs to the
+invoice k − 1 months after the first. Each installment is an independent
+card purchase linked to the original purchase. Cancelling future
+installments moves to the trash only the installments whose invoice is
+after a chosen invoice month; earlier installments are kept (DR-043).
+
 **DR-040** Interest/fees may be represented as separate expenses rather
 than inferred automatically.
 

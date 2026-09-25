@@ -7,6 +7,7 @@ import type { DataAccess } from './database/data-access.ts';
 import { createAuthenticationHook } from './http/authenticate.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
 import { registerBalanceRoutes } from './modules/balance/balance-routes.ts';
+import { registerCardInstallmentRoutes } from './modules/cards/card-installment-routes.ts';
 import { registerCardInvoiceRoutes } from './modules/cards/card-invoice-routes.ts';
 import { registerCardRoutes } from './modules/cards/card-routes.ts';
 import { registerCategoryRoutes } from './modules/categories/category-routes.ts';
@@ -67,6 +68,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerRecurrenceRoutes(authenticated, options.data);
     registerCardRoutes(authenticated, options.data);
     registerCardInvoiceRoutes(authenticated, options.data);
+    registerCardInstallmentRoutes(authenticated, options.data);
   });
 
   return server;

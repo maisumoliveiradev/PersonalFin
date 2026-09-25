@@ -37,6 +37,9 @@ interface TransactionRow {
   card_id: string | null;
   card_name: string | null;
   invoice_month: FinancialDate | null;
+  installment_purchase_id: string | null;
+  installment_number: number | null;
+  installment_count: number | null;
 }
 
 interface CursorKeys {
@@ -51,7 +54,8 @@ const COLUMNS = `t.id, t.financial_space_id, t.type, t.status, t.description, t.
          t.subcategory_id, s.name AS subcategory_name, t.created_by_user_id, t.created_at,
          t.version, t.deleted_at, t.recurrence_series_id, t.occurrence_date,
          t.individually_modified, t.card_invoice_id, ci.card_id, cd.name AS card_name,
-         ci.reference_month AS invoice_month`;
+         ci.reference_month AS invoice_month, t.installment_purchase_id, t.installment_number,
+         ip.installment_count`;
 
 const CURSOR_KEY_COLUMNS = `to_char(t.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at_key,
          to_char(t.deleted_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS deleted_at_key`;
@@ -60,7 +64,8 @@ const FROM_WITH_CATEGORIES = `FROM financial_transaction t
   JOIN category c ON c.id = t.category_id
   LEFT JOIN category s ON s.id = t.subcategory_id
   LEFT JOIN card_invoice ci ON ci.id = t.card_invoice_id
-  LEFT JOIN card cd ON cd.id = ci.card_id`;
+  LEFT JOIN card cd ON cd.id = ci.card_id
+  LEFT JOIN card_installment_purchase ip ON ip.id = t.installment_purchase_id`;
 
 const SELECT_WITH_CATEGORIES = `SELECT ${COLUMNS} ${FROM_WITH_CATEGORIES}`;
 
@@ -108,6 +113,16 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
             cardName: row.card_name,
             invoiceId: row.card_invoice_id,
             invoiceMonth: row.invoice_month.slice(0, 7),
+          },
+    installment:
+      row.installment_purchase_id === null ||
+      row.installment_number === null ||
+      row.installment_count === null
+        ? null
+        : {
+            purchaseId: row.installment_purchase_id,
+            number: row.installment_number,
+            count: row.installment_count,
           },
   };
 }
@@ -158,8 +173,9 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
       await db.query(
         `INSERT INTO financial_transaction (
            id, financial_space_id, type, status, description, amount_minor, currency,
-           financial_date, category_id, subcategory_id, created_by_user_id, card_invoice_id
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+           financial_date, category_id, subcategory_id, created_by_user_id, card_invoice_id,
+           installment_purchase_id, installment_number
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
         [
           transaction.id,
           transaction.financialSpaceId,
@@ -173,6 +189,8 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
           transaction.subcategoryId,
           transaction.createdByUserId,
           transaction.cardInvoiceId ?? null,
+          transaction.installment?.purchaseId ?? null,
+          transaction.installment?.number ?? null,
         ],
       );
       const created = await findInSpace(transaction.financialSpaceId, transaction.id);

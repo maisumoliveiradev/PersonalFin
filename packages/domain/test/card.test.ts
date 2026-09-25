@@ -5,7 +5,9 @@ import {
   currentCardLimit,
   defaultInvoiceDates,
   defaultInvoiceMonth,
+  installmentDate,
   isValidCardDay,
+  splitInstallments,
 } from '../src/card.ts';
 
 describe('card days', () => {
@@ -94,5 +96,33 @@ describe('default invoice month', () => {
     expect(defaultInvoiceMonth('2026-02-27', lateClosing)).toBe('2026-03');
     expect(defaultInvoiceMonth('2026-02-28', lateClosing)).toBe('2026-04');
     expect(defaultInvoiceMonth('2026-03-01', lateClosing)).toBe('2026-04');
+  });
+});
+
+describe('installments', () => {
+  it('splits the total exactly, with the remainder on the first installment', () => {
+    expect(splitInstallments(100_000, 3)).toEqual([33_334, 33_333, 33_333]);
+    expect(splitInstallments(1_000, 4)).toEqual([250, 250, 250, 250]);
+    expect(splitInstallments(99_999_999_999, 48).reduce((sum, value) => sum + value, 0)).toBe(
+      99_999_999_999,
+    );
+  });
+
+  it.each([
+    [1, 2],
+    [100, 1],
+    [100, 49],
+    [100, 2.5],
+  ])('rejects %i in %d installments', (total, count) => {
+    expect(() => splitInstallments(total, count)).toThrow(RangeError);
+  });
+
+  it('dates each installment one month later, clamped to short months', () => {
+    expect([0, 1, 2, 12].map((index) => installmentDate('2026-01-31', index))).toEqual([
+      '2026-01-31',
+      '2026-02-28',
+      '2026-03-31',
+      '2027-01-31',
+    ]);
   });
 });

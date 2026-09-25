@@ -7,6 +7,7 @@ import { useCards } from '../../../../../../api/cards';
 import { useCategories } from '../../../../../../api/categories';
 import { useRecurrences, useUpdateRecurrence } from '../../../../../../api/recurrences';
 import { useTransaction, useUpdateTransaction } from '../../../../../../api/transactions';
+import { CancelInstallmentsSection } from '../../../../../../features/cards/CancelInstallmentsSection';
 import { DeleteTransactionSection } from '../../../../../../features/transactions/DeleteTransactionSection';
 import { TransactionForm } from '../../../../../../features/transactions/TransactionForm';
 import { transactionToFormValues } from '../../../../../../features/transactions/transaction-form';
@@ -130,6 +131,7 @@ export default function EditTransactionScreen() {
         onSubmit={handleSubmit}
         onCancel={() => router.back()}
       />
+      <CancelInstallmentsSection spaceId={spaceId} transaction={current} />
       <DeleteTransactionSection
         spaceId={spaceId}
         transactionId={transactionId}
