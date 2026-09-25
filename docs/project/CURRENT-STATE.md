@@ -123,7 +123,7 @@ SDD-028 implemented and validated
 
 ## Active Target
 
-`v0.5.0` --- Analytics (`docs/product/ROADMAP.md`). No SDD drafted yet.
+`v0.5.0` --- Analytics (`docs/sdds/v0.5.0/`).
 
 ## Important Constraint
 
@@ -132,7 +132,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.5.0 SDDs (Analytics) from the roadmap. Domain decisions
+`docs/sdds/v0.5.0/SDD-029-tags.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, DR-072 to
+`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, DR-072 to
 DR-078).
