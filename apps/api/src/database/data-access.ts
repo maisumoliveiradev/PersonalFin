@@ -2,6 +2,8 @@ import type { AnalyticsRepository } from '../modules/analytics/analytics-reposit
 import { createPostgresAnalyticsRepository } from '../modules/analytics/postgres-analytics-repository.ts';
 import type { AuditRepository } from '../modules/audit/audit-repository.ts';
 import { createPostgresAuditRepository } from '../modules/audit/postgres-audit-repository.ts';
+import type { BackupRepository } from '../modules/backup/backup.ts';
+import { createPostgresBackupRepository } from '../modules/backup/postgres-backup-repository.ts';
 import type { BalanceReminderRepository } from '../modules/balance/balance-reminder-repository.ts';
 import type { BalanceSnapshotRepository } from '../modules/balance/balance-snapshot-repository.ts';
 import { createPostgresBalanceReminderRepository } from '../modules/balance/postgres-balance-reminder-repository.ts';
@@ -22,6 +24,8 @@ import type { FinancialSpaceRepository } from '../modules/financial-spaces/finan
 import { createPostgresFinancialSpaceRepository } from '../modules/financial-spaces/postgres-financial-space-repository.ts';
 import type { GoalRepository } from '../modules/goals/goal.ts';
 import { createPostgresGoalRepository } from '../modules/goals/postgres-goal-repository.ts';
+import type { ImportRepository } from '../modules/imports/import-model.ts';
+import { createPostgresImportRepository } from '../modules/imports/postgres-import-repository.ts';
 import type { MemberRepository } from '../modules/members/member-repository.ts';
 import { createPostgresMemberRepository } from '../modules/members/postgres-member-repository.ts';
 import type { DashboardPreferenceRepository } from '../modules/preferences/dashboard-preference-repository.ts';
@@ -55,6 +59,8 @@ export interface Repositories {
   debts: DebtRepository;
   goals: GoalRepository;
   reminders: ReminderRepository;
+  imports: ImportRepository;
+  backup: BackupRepository;
 }
 
 export interface DataAccess {
@@ -82,6 +88,8 @@ function createPostgresRepositories(db: Queryable): Repositories {
     debts: createPostgresDebtRepository(db),
     goals: createPostgresGoalRepository(db),
     reminders: createPostgresReminderRepository(db),
+    imports: createPostgresImportRepository(db),
+    backup: createPostgresBackupRepository(db),
   };
 }
 

@@ -1,0 +1,69 @@
+import { useMutation } from '@tanstack/react-query';
+
+import type { TransactionFilters } from '../features/transactions/transaction-filters';
+import { ApiRequestError, apiClient } from './api-client';
+
+export type ExportFormat = 'csv' | 'xlsx';
+
+export const EXPORT_MIME_TYPES: Record<ExportFormat, string> = {
+  csv: 'text/csv',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+};
+
+export function useExportTransactions(spaceId: string) {
+  return useMutation({
+    mutationFn: async ({
+      format,
+      filters,
+    }: {
+      format: ExportFormat;
+      filters: TransactionFilters;
+    }) => {
+      const result = await apiClient.GET('/financial-spaces/{spaceId}/exports/transactions', {
+        params: { path: { spaceId }, query: { format, ...filters } },
+        parseAs: 'arrayBuffer',
+      });
+      if (!result.response.ok || result.data === undefined) {
+        throw new ApiRequestError(result.response.status, 'EXPORT_FAILED');
+      }
+      return {
+        bytes: result.data as ArrayBuffer,
+        fileName: `lancamentos-${filters.month}.${format}`,
+        mimeType: EXPORT_MIME_TYPES[format],
+      };
+    },
+  });
+}
+
+export function useMonthlyReport(spaceId: string) {
+  return useMutation({
+    mutationFn: async (month: string) => {
+      const result = await apiClient.GET('/financial-spaces/{spaceId}/reports/monthly', {
+        params: { path: { spaceId }, query: { month } },
+        parseAs: 'arrayBuffer',
+      });
+      if (!result.response.ok || result.data === undefined) {
+        throw new ApiRequestError(result.response.status, 'REPORT_FAILED');
+      }
+      return {
+        bytes: result.data as ArrayBuffer,
+        fileName: `relatorio-${month}.pdf`,
+        mimeType: 'application/pdf',
+      };
+    },
+  });
+}
+
+export function useDownloadBackup() {
+  return useMutation({
+    mutationFn: async () => {
+      const result = await apiClient.GET('/me/backup', { parseAs: 'arrayBuffer' });
+      if (!result.response.ok || result.data === undefined) {
+        throw new ApiRequestError(result.response.status, 'BACKUP_FAILED');
+      }
+      const disposition = result.response.headers.get('content-disposition') ?? '';
+      const fileName = /filename="([^"]+)"/.exec(disposition)?.[1] ?? 'personalfin-backup.json';
+      return { bytes: result.data as ArrayBuffer, fileName, mimeType: 'application/json' };
+    },
+  });
+}

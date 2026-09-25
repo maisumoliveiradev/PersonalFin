@@ -6,6 +6,67 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.9.0\] --- 2026-09-25
+
+Import, Export, and Data Portability. Released to `main` and tagged
+`v0.9.0`; validated in SDD-054
+(`docs/sdds/v0.9.0/SDD-054-validation-report.md`).
+
+### Portable Backup (SDD-053)
+
+-   "Baixar backup dos meus dados" on the home screen downloads a
+    versioned JSON with every space you can access (deleted transactions
+    and audit history included), your personal settings, and your global
+    goals.
+-   The backup is distinct from the reports (DR-097). Restore is not
+    available yet.
+-   API: `GET /me/backup`.
+
+### Monthly PDF Report (SDD-052)
+
+-   "Relatório do mês (PDF)" on the space screen generates the month's
+    report:
+    - realized and forecast income and expenses;
+    - the realized net;
+    - the projected and observed balance;
+    - expenses by category;
+    - every transaction.
+
+    The figures match the dashboard.
+-   API: `GET .../reports/monthly?month=`. New dependency: `pdfkit`.
+
+### CSV and Excel Exports (SDD-051)
+
+-   "Exportar CSV" and "Exportar Excel" on the space screen export the
+    month's transactions with the filters applied.
+    - Columns: date, type, description, category, subcategory, amount,
+      signed amount, currency, status, tags, card, invoice, installment,
+      id.
+    - The CSV opens directly in Excel pt-BR. The XLSX has real date and
+      number cells.
+-   API: `GET .../exports/transactions?format=csv|xlsx` with the list
+    filters. New dependencies: `write-excel-file` (API) and
+    `expo-sharing` (client).
+
+### CSV/Excel Import (SDD-050)
+
+-   "Importar planilha" reads a CSV (UTF-8 or Latin-1, detected
+    separator) or an Excel file of up to 5 MB and 5,000 rows. The file is
+    stored for traceability.
+-   You map the columns: date, description, amount, and optionally type,
+    category, subcategory, and status. You also choose the date order,
+    the decimal separator, how to tell income from expense, and fallback
+    categories. Nothing ambiguous is guessed (DR-058, DR-096).
+-   The preview lists invalid rows with their reasons and the suspected
+    duplicates (the same as an existing transaction or another row). Each
+    duplicate must be imported or skipped explicitly.
+-   Importing creates the transactions in one step. An import can be
+    undone (the transactions go to the trash) or discarded while in
+    review. Every action is audited.
+-   Dependencies: `csv-parse` and `read-excel-file` (API);
+    `expo-document-picker` and `expo-file-system` (client). Migration
+    `0026_imports`.
+
 ## \[0.8.0\] --- 2026-09-25
 
 Debts, Goals, and Reminders. Released to `main` and tagged `v0.8.0`;

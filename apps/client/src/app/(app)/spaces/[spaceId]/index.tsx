@@ -10,6 +10,7 @@ import { BalanceSummary } from '../../../../features/balance/BalanceSummary';
 import { BalanceUpdatePrompt } from '../../../../features/balance/BalanceUpdatePrompt';
 import { MonthlyDashboard } from '../../../../features/dashboard/MonthlyDashboard';
 import { ProjectionSeries } from '../../../../features/dashboard/ProjectionSeries';
+import { ExportButtons } from '../../../../features/exports/ExportButtons';
 import { can, roleLabel } from '../../../../features/financial-spaces/permissions';
 import { RemindersPanel } from '../../../../features/reminders/RemindersPanel';
 import { PendingChanges } from '../../../../features/sync/PendingChanges';
@@ -151,6 +152,16 @@ export default function FinancialSpaceHomeScreen() {
         filters={filters}
         canRecord={can(space.data, 'record')}
       />
+      <ExportButtons spaceId={space.data.id} filters={filters} />
+      {can(space.data, 'record') && (
+        <Button
+          label={messages.imports.action}
+          variant="link"
+          onPress={() =>
+            router.push({ pathname: '/spaces/[spaceId]/imports', params: { spaceId } })
+          }
+        />
+      )}
       <Button
         label={messages.transactions.trashAction}
         variant="link"

@@ -283,6 +283,67 @@ reflect current data.
 Push delivery is not implemented: it needs the owner to authorize a
 hosted push service. It will reuse this computation.
 
+## Imports (SDD-050, DR-096)
+
+`modules/imports` implements Read → Validate → Preview → Resolve →
+Confirm → Import:
+- **Read:** `import-file.ts` reads CSV with `csv-parse`. The delimiter
+  (`;`, `,`, or tab) and the encoding (UTF-8, falling back to Latin-1)
+  are detected. XLSX is read with `read-excel-file`, numbers as text so
+  they are never floating point, and dates as ISO strings. The original
+  bytes and their SHA-256 are stored in `import_batch`; each row's cells
+  go to `import_row`.
+- **Validate and preview:** `import-mapping.ts` evaluates every row
+  against the user's explicit mapping with the pure domain parsers
+  (`parseImportDate`, `parseImportAmount`). It marks suspected
+  duplicates: same type, date, and amount as an active transaction or an
+  earlier row. Results are written in bulk (`jsonb_to_recordset`).
+- **Resolve, confirm, undo:** duplicate decisions are required before
+  confirmation. Confirmation creates the transactions in one database
+  transaction, with `import_batch_id`, and records an `import_batch`
+  audit event. Undo soft-deletes them with a normal delete audit event
+  for each.
+- Bodies of up to about 7 MB are accepted on the create route only
+  (base64 of 5 MB).
+
+## Exports (SDD-051, DR-097)
+
+`GET .../exports/transactions` (`view`) pages through the same
+repository query as the transaction list. It accepts the list filters,
+or `from`/`to`, and allows at most 50,000 rows.
+- **CSV:** UTF-8 with BOM, `;`, and decimal commas. Amounts are
+  formatted from integer minor units with integer arithmetic.
+- **XLSX:** written with `write-excel-file`. Dates are UTC-midnight
+  serials, so they never shift. Money cells hold `amountMinor / 100`
+  only for display (`#,##0.00`); no calculation uses them.
+
+The client saves the file with `features/files/save-file` (browser
+download on Web, cache file plus share sheet with `expo-sharing` on
+native).
+
+## Monthly PDF report (SDD-052)
+
+`GET .../reports/monthly?month=` (`view`) renders an A4 PDF with
+`pdfkit` and its built-in Helvetica (WinAnsi, which covers pt-BR). The
+figures come from `getMonthlyDashboard`, the same function that serves
+the dashboard, so the report and the app never disagree (DR-066,
+DR-067). The transaction list uses the same query as the month list and
+continues on new pages.
+
+## Portable backup (SDD-053, DR-097)
+
+`GET /me/backup` builds a `personalfin-backup` document, format
+version 1, from `modules/backup`. For each accessible space it includes
+every row of the space tables (`row_to_json`, snake_case columns,
+deleted records included) and the caller's own personal settings. It
+also includes the caller's global goals.
+
+It excludes other users' personal data (memberships, invitations and
+their emails, other people's settings) and imported file bytes (only the
+SHA-256 is kept). The table list is a closed constant, so no SQL is
+built from input. Restore is a later roadmap item; a format version
+change must keep older backups readable.
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:

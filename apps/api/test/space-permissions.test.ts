@@ -172,6 +172,17 @@ const ENDPOINTS: Endpoint[] = [
     permission: 'view',
     payload: { offsets: [0], kinds: ['transactions'] },
   },
+  { method: 'GET', path: '/imports', permission: 'view' },
+  { method: 'POST', path: '/imports', permission: 'record', payload: {} },
+  { method: 'GET', path: `/imports/${MISSING}`, permission: 'view' },
+  { method: 'GET', path: `/imports/${MISSING}/rows`, permission: 'view' },
+  { method: 'PUT', path: `/imports/${MISSING}/mapping`, permission: 'record', payload: {} },
+  { method: 'PUT', path: `/imports/${MISSING}/decisions`, permission: 'record', payload: {} },
+  { method: 'POST', path: `/imports/${MISSING}/confirm`, permission: 'record', payload: {} },
+  { method: 'POST', path: `/imports/${MISSING}/undo`, permission: 'record', payload: {} },
+  { method: 'POST', path: `/imports/${MISSING}/discard`, permission: 'record', payload: {} },
+  { method: 'GET', path: '/exports/transactions?format=csv', permission: 'view' },
+  { method: 'GET', path: '/reports/monthly?month=2026-10', permission: 'view' },
 ];
 
 async function shareWith(permissions: SpacePermission[]): Promise<string> {
@@ -221,7 +232,9 @@ describe('space permissions', () => {
       const response = await call(spaceId, endpoint);
 
       expect(response.statusCode).not.toBe(403);
-      const body = response.body === '' ? null : response.json();
+      const body = String(response.headers['content-type']).startsWith('application/json')
+        ? response.json()
+        : null;
       expect(body?.error?.code).not.toBe('FINANCIAL_SPACE_NOT_FOUND');
     },
   );

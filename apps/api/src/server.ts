@@ -10,6 +10,7 @@ import { createClientVersionHook } from './http/client-version.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
 import { registerAnalyticsRoutes } from './modules/analytics/analytics-routes.ts';
 import { registerAuditRoutes } from './modules/audit/audit-routes.ts';
+import { registerBackupRoutes } from './modules/backup/backup-routes.ts';
 import { registerBalanceRoutes } from './modules/balance/balance-routes.ts';
 import { registerCardInstallmentRoutes } from './modules/cards/card-installment-routes.ts';
 import { registerCardInvoiceRoutes } from './modules/cards/card-invoice-routes.ts';
@@ -18,13 +19,16 @@ import { registerCategoryRoutes } from './modules/categories/category-routes.ts'
 import { registerCommitmentRoutes } from './modules/commitments/commitment-routes.ts';
 import { registerDashboardRoutes } from './modules/dashboard/dashboard-routes.ts';
 import { registerDebtRoutes } from './modules/debts/debt-routes.ts';
+import { registerExportRoutes } from './modules/exports/export-routes.ts';
 import { registerFinancialSpaceRoutes } from './modules/financial-spaces/financial-space-routes.ts';
 import { registerGoalRoutes } from './modules/goals/goal-routes.ts';
+import { registerImportRoutes } from './modules/imports/import-routes.ts';
 import { registerInvitationRoutes } from './modules/members/invitation-routes.ts';
 import { registerMemberRoutes } from './modules/members/member-routes.ts';
 import { registerDashboardPreferenceRoutes } from './modules/preferences/dashboard-preference-routes.ts';
 import { registerRecurrenceRoutes } from './modules/recurrences/recurrence-routes.ts';
 import { registerReminderRoutes } from './modules/reminders/reminder-routes.ts';
+import { registerReportRoutes } from './modules/reports/report-routes.ts';
 import { registerTagRoutes } from './modules/tags/tag-routes.ts';
 import { registerTransactionRoutes } from './modules/transactions/transaction-routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './routes/auth.ts';
@@ -93,6 +97,10 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerDebtRoutes(authenticated, options.data);
     registerGoalRoutes(authenticated, options.data);
     registerReminderRoutes(authenticated, options.data);
+    registerImportRoutes(authenticated, options.data);
+    registerExportRoutes(authenticated, options.data);
+    registerReportRoutes(authenticated, options.data);
+    registerBackupRoutes(authenticated, options.data);
   });
 
   return server;

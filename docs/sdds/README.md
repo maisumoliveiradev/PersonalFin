@@ -54,3 +54,7 @@ See `v0.7.0/README.md` (SDD-040 to SDD-044).
 ## v0.8.0 sequence
 
 See `v0.8.0/README.md` (SDD-045 to SDD-049).
+
+## v0.9.0 sequence
+
+See `v0.9.0/README.md` (SDD-050 to SDD-054).

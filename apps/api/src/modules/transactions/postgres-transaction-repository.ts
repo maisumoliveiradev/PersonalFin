@@ -185,8 +185,8 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
         `INSERT INTO financial_transaction (
            id, financial_space_id, type, status, description, amount_minor, currency,
            financial_date, category_id, subcategory_id, created_by_user_id, card_invoice_id,
-           installment_purchase_id, installment_number
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+           installment_purchase_id, installment_number, import_batch_id
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
         [
           transaction.id,
           transaction.financialSpaceId,
@@ -202,6 +202,7 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
           transaction.cardInvoiceId ?? null,
           transaction.installment?.purchaseId ?? null,
           transaction.installment?.number ?? null,
+          transaction.importBatchId ?? null,
         ],
       );
       const created = await findInSpace(transaction.financialSpaceId, transaction.id);

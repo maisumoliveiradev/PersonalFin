@@ -2,10 +2,10 @@
 
 ## Current Version
 
-`v0.8.0`, released on 2026-09-25 (`main`, tag `v0.8.0`). SDD-001 to
-SDD-049 implemented and validated
-(`docs/sdds/v0.8.0/SDD-049-validation-report.md`). Push notifications
-from the v0.8.0 roadmap item are pending an owner decision.
+`v0.9.0`, released on 2026-09-25 (`main`, tag `v0.9.0`). SDD-001 to
+SDD-054 implemented and validated
+(`docs/sdds/v0.9.0/SDD-054-validation-report.md`). Push notifications
+(v0.8.0 roadmap item) are pending an owner decision.
 
 ## Implemented Product Capabilities
 
@@ -135,6 +135,18 @@ from the v0.8.0 roadmap item are pending an owner decision.
     negative monthly projection. They use configurable offsets and can
     be dismissed per stage (DR-095). There are no push or email
     notifications (pending owner decision).
+-   **Import (SDD-050):** CSV/XLSX import of transactions with explicit
+    column mapping, per-row validation, duplicate review, confirmation,
+    undo, discard, and history. The original file is stored (DR-096).
+    There is no OFX and no saved mapping presets.
+-   **Exports (SDD-051):** CSV (pt-BR) and XLSX exports of the filtered
+    month's transactions, as a download on Web and through the share
+    sheet on native (DR-097).
+-   **Monthly PDF report (SDD-052):** metrics, expenses by category, and
+    transactions of a month, using the dashboard's definitions.
+-   **Portable backup (SDD-053):** a versioned JSON download of all
+    accessible data, excluding other people's personal data and imported
+    file bytes. There is no restore.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -161,7 +173,7 @@ from the v0.8.0 roadmap item are pending an owner decision.
         month, balance-reminder, business-day, card, comparison, dashboard-preference, and client-version rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
-    checksum verification (ADR-0008), `0001` to `0025`. Tables: Better
+    checksum verification (ADR-0008), `0001` to `0026`. Tables: Better
     Auth `user`, `session`, `account`, `verification`; `financial_space`,
     `financial_space_member`, `space_invitation`, `category`,
     `financial_transaction`, `transaction_tag`, `tag`, `audit_event`,
@@ -169,7 +181,7 @@ from the v0.8.0 roadmap item are pending an owner decision.
     `card`, `card_limit_change`, `card_invoice`, `card_invoice_payment`,
     `card_installment_purchase`, `dashboard_preference`, `debt`,
     `debt_payment`, `goal`, `goal_progress`, `reminder_setting`,
-    `reminder_dismissal`; view
+    `reminder_dismissal`, `import_batch`, `import_row`; view
     `card_invoice_balance`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
@@ -185,8 +197,8 @@ from the v0.8.0 roadmap item are pending an owner decision.
 
 ## Active Target
 
-`v0.9.0` --- Import, Export, and Data Portability
-(`docs/product/ROADMAP.md`). No SDD drafted yet.
+`v0.10.0` --- Multi-Currency (`docs/product/ROADMAP.md`). No SDD drafted
+yet.
 
 ## Important Constraint
 
@@ -195,8 +207,8 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.9.0 SDDs (Import, Export, and Data Portability). Owner
-decisions pending: push notifications (hosted push service) and
-invitation email delivery (TD-011). Domain decisions taken under
-delegation await owner review (`docs/sdds/v0.2.0/README.md` to
-`docs/sdds/v0.8.0/README.md`, DR-072 to DR-095, ADR-0013 to ADR-0016).
+Draft the v0.10.0 SDDs (Multi-Currency). Owner decisions pending: FX
+rate provider, push notifications (hosted push service), and invitation
+email delivery (TD-011). Domain decisions taken under delegation await
+owner review (`docs/sdds/v0.2.0/README.md` to
+`docs/sdds/v0.9.0/README.md`, DR-072 to DR-097, ADR-0013 to ADR-0016).
