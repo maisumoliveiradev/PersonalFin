@@ -4,7 +4,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { createPostgresDataAccess, type DataAccess } from '../../src/database/data-access.ts';
 import type { DatabasePool } from '../../src/database/pool.ts';
-import { getComparison, getEvolution } from '../../src/modules/analytics/analytics.ts';
+import {
+  getBreakdown,
+  getComparison,
+  getEvolution,
+} from '../../src/modules/analytics/analytics.ts';
 import { getMonthlyDashboard } from '../../src/modules/dashboard/get-dashboard.ts';
 import { createFinancialSpace } from '../../src/modules/financial-spaces/create-financial-space.ts';
 import { createTransaction } from '../../src/modules/transactions/create-transaction.ts';
@@ -81,5 +85,19 @@ describe('analytics against PostgreSQL', () => {
       difference: 70_000,
       percentChangeTenths: null,
     });
+  });
+});
+
+describe('breakdown against PostgreSQL', () => {
+  it('adds categories up to the realized expenses of the range', async () => {
+    const breakdown = await getBreakdown(data, spaceId, '2026-09', 3);
+    const september = await getMonthlyDashboard(data, spaceId, '2026-09');
+    const october = await getMonthlyDashboard(data, spaceId, '2026-10');
+
+    expect(breakdown.totalMinor).toBe(september.realizedExpenses + october.realizedExpenses);
+    expect(breakdown.categories.reduce((total, item) => total + item.amountMinor, 0)).toBe(
+      breakdown.totalMinor,
+    );
+    expect(breakdown).toMatchObject({ previousFromMonth: '2026-06', previousTotalMinor: 0 });
   });
 });

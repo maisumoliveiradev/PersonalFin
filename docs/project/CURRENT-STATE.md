@@ -5,7 +5,7 @@
 `v0.4.0`, released on 2026-09-25 (`main`, tag `v0.4.0`). SDD-001 to
 SDD-028 implemented and validated
 (`docs/sdds/v0.4.0/SDD-028-validation-report.md`). `develop` is building
-v0.5.0: SDD-029 and SDD-030 implemented.
+v0.5.0: SDD-029 to SDD-031 implemented.
 
 ## Implemented Product Capabilities
 
@@ -82,8 +82,9 @@ v0.5.0: SDD-029 and SDD-030 implemented.
     installments across consecutive invoices (DR-080); later installments
     can be cancelled. Installments are edited one at a time.
 -   **Analytics (SDD-030):** month comparison (previous month and previous
-    year) and twelve-month evolution (M-009, M-010). There are no
-    category or tag breakdowns across periods yet.
+    year) and twelve-month evolution (M-009, M-010), and
+    expenses by category and tag over 1--12 months (M-011, M-012,
+    SDD-031). There are no charts, exports, or custom metrics.
 -   **Tags (SDD-029):** per-space tags (DR-083) on transactions, shown in
     the list and usable as a filter. There is no tag analytics yet.
 -   **Quick status change (SDD-010):** each list item toggles between
@@ -137,7 +138,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.5.0/SDD-031-category-and-tag-analytics.md`. Domain decisions
+`docs/sdds/v0.5.0/SDD-032-dashboard-personalization.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, DR-072 to
 DR-078).

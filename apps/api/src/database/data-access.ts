@@ -1,3 +1,5 @@
+import type { AnalyticsRepository } from '../modules/analytics/analytics-repository.ts';
+import { createPostgresAnalyticsRepository } from '../modules/analytics/postgres-analytics-repository.ts';
 import type { AuditRepository } from '../modules/audit/audit-repository.ts';
 import { createPostgresAuditRepository } from '../modules/audit/postgres-audit-repository.ts';
 import type { BalanceReminderRepository } from '../modules/balance/balance-reminder-repository.ts';
@@ -37,6 +39,7 @@ export interface Repositories {
   cardInvoices: CardInvoiceRepository;
   installments: InstallmentRepository;
   tags: TagRepository;
+  analytics: AnalyticsRepository;
 }
 
 export interface DataAccess {
@@ -58,6 +61,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     cardInvoices: createPostgresCardInvoiceRepository(db),
     installments: createPostgresInstallmentRepository(db),
     tags: createPostgresTagRepository(db),
+    analytics: createPostgresAnalyticsRepository(db),
   };
 }
 

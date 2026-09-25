@@ -692,6 +692,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/analytics/breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Realized expenses of a month range by category and tag (M-011, M-012) */
+        get: operations["getBreakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -947,6 +966,38 @@ export interface components {
                     amountMinor: number;
                     observedOn: components["schemas"]["FinancialDate"];
                 } | null;
+            }[];
+        };
+        Breakdown: {
+            fromMonth: string;
+            throughMonth: string;
+            previousFromMonth: string;
+            totalMinor: number;
+            previousTotalMinor: number;
+            categories: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                amountMinor: number;
+                /** @description Share of totalMinor in tenths of a percent; null when the total is zero. */
+                shareTenths: number | null;
+                previousAmountMinor: number;
+                subcategories: {
+                    /** Format: uuid */
+                    id: string | null;
+                    /** @description Null for expenses without a subcategory. */
+                    name: string | null;
+                    amountMinor: number;
+                }[];
+            }[];
+            tags: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                amountMinor: number;
+                /** @description Share of totalMinor in tenths of a percent; null when the total is zero. */
+                shareTenths: number | null;
+                previousAmountMinor: number;
             }[];
         };
         Tag: {
@@ -2686,6 +2737,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Comparison"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getBreakdown: {
+        parameters: {
+            query: {
+                fromMonth: string;
+                months?: 1 | 3 | 6 | 12;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Categories add up exactly to totalMinor. A transaction counts in full under each of its tags, so tag amounts may add up to more than totalMinor (DR-013). Items include those with an amount only in the previous range of equal length. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Breakdown"];
                 };
             };
             400: components["responses"]["ValidationFailed"];

@@ -2,6 +2,7 @@ import type { AuthenticatedUser, SessionResolver } from '../../src/auth/authenti
 import type { DataAccess } from '../../src/database/data-access.ts';
 import type { AuthHandler } from '../../src/routes/auth.ts';
 import { buildServer } from '../../src/server.ts';
+import { createInMemoryAnalyticsRepository } from './in-memory-analytics-repository.ts';
 import { createInMemoryAuditRepository } from './in-memory-audit-repository.ts';
 import { createInMemoryBalanceReminderRepository } from './in-memory-balance-reminder-repository.ts';
 import { createInMemoryBalanceSnapshotRepository } from './in-memory-balance-snapshot-repository.ts';
@@ -84,6 +85,7 @@ export function createInMemoryRepositories() {
     cardInvoices,
     installments,
     tags: createInMemoryTagRepository(() => transactions.transactions),
+    analytics: createInMemoryAnalyticsRepository(() => transactions.transactions),
   };
 }
 

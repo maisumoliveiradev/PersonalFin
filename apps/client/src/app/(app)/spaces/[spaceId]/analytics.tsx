@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
+import { BreakdownCard } from '../../../../features/analytics/BreakdownCard';
 import { ComparisonCard } from '../../../../features/analytics/ComparisonCard';
 import { EvolutionCard } from '../../../../features/analytics/EvolutionCard';
 import { MonthNavigator } from '../../../../features/transactions/MonthNavigator';
@@ -21,6 +22,7 @@ export default function AnalyticsScreen() {
       <Title>{messages.analytics.title}</Title>
       <MonthNavigator month={month} onChange={(next) => router.setParams({ month: next })} />
       <ComparisonCard spaceId={spaceId} month={month} />
+      <BreakdownCard spaceId={spaceId} throughMonth={month} />
       <EvolutionCard spaceId={spaceId} throughMonth={month} />
       <BodyText muted>{messages.analytics.definitionsHint}</BodyText>
       <Button

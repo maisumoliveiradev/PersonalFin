@@ -1293,6 +1293,47 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/analytics/breakdown:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getBreakdown
+      summary: Realized expenses of a month range by category and tag (M-011, M-012)
+      parameters:
+        - name: fromMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        - name: months
+          in: query
+          required: false
+          schema:
+            type: integer
+            enum:
+              - 1
+              - 3
+              - 6
+              - 12
+            default: 1
+      responses:
+        '200':
+          description: >
+            Categories add up exactly to totalMinor. A transaction counts in
+            full under each of its tags, so tag amounts may add up to more
+            than totalMinor (DR-013). Items include those with an amount only
+            in the previous range of equal length.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Breakdown'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     InvoiceMonth:
@@ -2075,6 +2116,103 @@ components:
                       observedOn:
                         $ref: '#/components/schemas/FinancialDate'
                   - type: 'null'
+    Breakdown:
+      type: object
+      additionalProperties: false
+      required:
+        - fromMonth
+        - throughMonth
+        - previousFromMonth
+        - totalMinor
+        - previousTotalMinor
+        - categories
+        - tags
+      properties:
+        fromMonth:
+          type: string
+        throughMonth:
+          type: string
+        previousFromMonth:
+          type: string
+        totalMinor:
+          type: integer
+        previousTotalMinor:
+          type: integer
+        categories:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - name
+              - amountMinor
+              - shareTenths
+              - previousAmountMinor
+              - subcategories
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              amountMinor:
+                type: integer
+              shareTenths:
+                type:
+                  - integer
+                  - 'null'
+                description: Share of totalMinor in tenths of a percent; null when the total is zero.
+              previousAmountMinor:
+                type: integer
+              subcategories:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - id
+                    - name
+                    - amountMinor
+                  properties:
+                    id:
+                      type:
+                        - string
+                        - 'null'
+                      format: uuid
+                    name:
+                      type:
+                        - string
+                        - 'null'
+                      description: Null for expenses without a subcategory.
+                    amountMinor:
+                      type: integer
+        tags:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - name
+              - amountMinor
+              - shareTenths
+              - previousAmountMinor
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              amountMinor:
+                type: integer
+              shareTenths:
+                type:
+                  - integer
+                  - 'null'
+                description: Share of totalMinor in tenths of a percent; null when the total is zero.
+              previousAmountMinor:
+                type: integer
     Tag:
       type: object
       additionalProperties: false

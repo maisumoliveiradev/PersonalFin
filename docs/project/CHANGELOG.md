@@ -6,6 +6,14 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Category and Tag Analytics (SDD-031)
+
+-   "Para onde foi o dinheiro" on the Análises screen: realized expenses
+    of 1, 3, 6, or 12 months by category (with subcategories) and by tag,
+    with share and the previous period of equal length.
+-   Metric catalog: M-011 and M-012.
+-   `GET .../analytics/breakdown`.
+
 ### Evolution and Comparisons (SDD-030)
 
 -   "Análises" screen: the selected month against the previous month and

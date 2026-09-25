@@ -53,3 +53,4 @@ export type Tag = components['schemas']['Tag'];
 export type TagList = components['schemas']['TagList'];
 export type Evolution = components['schemas']['Evolution'];
 export type Comparison = components['schemas']['Comparison'];
+export type Breakdown = components['schemas']['Breakdown'];
