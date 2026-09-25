@@ -321,6 +321,15 @@ The client saves the file with `features/files/save-file` (browser
 download on Web, cache file plus share sheet with `expo-sharing` on
 native).
 
+## Monthly PDF report (SDD-052)
+
+`GET .../reports/monthly?month=` (`view`) renders an A4 PDF with
+`pdfkit` and its built-in Helvetica (WinAnsi, which covers pt-BR). The
+figures come from `getMonthlyDashboard`, the same function that serves
+the dashboard, so the report and the app never disagree (DR-066,
+DR-067). The transaction list uses the same query as the month list and
+continues on new pages.
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:

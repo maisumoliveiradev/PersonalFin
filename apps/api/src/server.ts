@@ -27,6 +27,7 @@ import { registerMemberRoutes } from './modules/members/member-routes.ts';
 import { registerDashboardPreferenceRoutes } from './modules/preferences/dashboard-preference-routes.ts';
 import { registerRecurrenceRoutes } from './modules/recurrences/recurrence-routes.ts';
 import { registerReminderRoutes } from './modules/reminders/reminder-routes.ts';
+import { registerReportRoutes } from './modules/reports/report-routes.ts';
 import { registerTagRoutes } from './modules/tags/tag-routes.ts';
 import { registerTransactionRoutes } from './modules/transactions/transaction-routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './routes/auth.ts';
@@ -97,6 +98,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerReminderRoutes(authenticated, options.data);
     registerImportRoutes(authenticated, options.data);
     registerExportRoutes(authenticated, options.data);
+    registerReportRoutes(authenticated, options.data);
   });
 
   return server;

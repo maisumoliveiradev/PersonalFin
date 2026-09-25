@@ -34,3 +34,22 @@ export function useExportTransactions(spaceId: string) {
     },
   });
 }
+
+export function useMonthlyReport(spaceId: string) {
+  return useMutation({
+    mutationFn: async (month: string) => {
+      const result = await apiClient.GET('/financial-spaces/{spaceId}/reports/monthly', {
+        params: { path: { spaceId }, query: { month } },
+        parseAs: 'arrayBuffer',
+      });
+      if (!result.response.ok || result.data === undefined) {
+        throw new ApiRequestError(result.response.status, 'REPORT_FAILED');
+      }
+      return {
+        bytes: result.data as ArrayBuffer,
+        fileName: `relatorio-${month}.pdf`,
+        mimeType: 'application/pdf',
+      };
+    },
+  });
+}

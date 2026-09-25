@@ -6,6 +6,19 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Monthly PDF Report (SDD-052)
+
+-   "Relatório do mês (PDF)" on the space screen generates the month's
+    report:
+    - realized and forecast income and expenses;
+    - the realized net;
+    - the projected and observed balance;
+    - expenses by category;
+    - every transaction.
+
+    The figures match the dashboard.
+-   API: `GET .../reports/monthly?month=`. New dependency: `pdfkit`.
+
 ### CSV and Excel Exports (SDD-051)
 
 -   "Exportar CSV" and "Exportar Excel" on the space screen export the
