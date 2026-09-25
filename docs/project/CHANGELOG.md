@@ -6,6 +6,15 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Space Audit History (SDD-038)
+
+-   "Histórico de alterações": members with `view_audit` see who created,
+    changed, or removed data in the space, newest first, with field
+    changes; the history is read-only and paged.
+-   Membership, invitation, permission, and ownership changes are
+    audited (SDD-034 to SDD-037).
+-   `GET .../audit-events`; migration `0021_audit_history_index`.
+
 ### Ownership Transfer (SDD-037)
 
 -   The Owner transfers ownership to a member from "Membros" after

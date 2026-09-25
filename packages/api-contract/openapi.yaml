@@ -1813,6 +1813,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/audit-events:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listAuditEvents
+      summary: Audit history of the space, newest first (requires view_audit)
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: A page of audit events.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditHistory'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     InvoiceMonth:
@@ -2172,6 +2207,82 @@ components:
         - classify
         - manage_members
         - view_audit
+    AuditHistory:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+        - nextCursor
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - id
+              - occurredAt
+              - actorName
+              - entityType
+              - entityId
+              - action
+              - changes
+            properties:
+              id:
+                type: string
+              occurredAt:
+                type: string
+                format: date-time
+              actorName:
+                type: string
+              entityType:
+                type: string
+                enum:
+                  - financial_transaction
+                  - category
+                  - recurrence_series
+                  - card
+                  - card_invoice
+                  - card_invoice_payment
+                  - tag
+                  - financial_space
+                  - financial_space_member
+                  - space_invitation
+              entityId:
+                type: string
+              action:
+                type: string
+                enum:
+                  - create
+                  - update
+                  - delete
+                  - restore
+              changes:
+                type: object
+                description: Field name to its value before and after.
+                additionalProperties:
+                  type: object
+                  additionalProperties: false
+                  required:
+                    - before
+                    - after
+                  properties:
+                    before:
+                      type:
+                        - string
+                        - number
+                        - boolean
+                        - 'null'
+                    after:
+                      type:
+                        - string
+                        - number
+                        - boolean
+                        - 'null'
+        nextCursor:
+          type:
+            - string
+            - 'null'
     Member:
       type: object
       additionalProperties: false

@@ -122,6 +122,7 @@ const ENDPOINTS: Endpoint[] = [
   { method: 'GET', path: '/analytics/comparison?month=2026-10', permission: 'view' },
   { method: 'GET', path: '/analytics/breakdown?fromMonth=2026-10', permission: 'view' },
   { method: 'GET', path: '/members', permission: 'view' },
+  { method: 'GET', path: '/audit-events', permission: 'view_audit' },
   {
     method: 'PATCH',
     path: `/members/${MISSING}`,

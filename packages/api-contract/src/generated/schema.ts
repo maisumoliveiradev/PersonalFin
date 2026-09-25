@@ -899,6 +899,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/audit-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Audit history of the space, newest first (requires view_audit) */
+        get: operations["listAuditEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -980,6 +999,27 @@ export interface components {
         };
         /** @enum {string} */
         SpacePermission: "view" | "record" | "plan" | "classify" | "manage_members" | "view_audit";
+        AuditHistory: {
+            items: {
+                id: string;
+                /** Format: date-time */
+                occurredAt: string;
+                actorName: string;
+                /** @enum {string} */
+                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation";
+                entityId: string;
+                /** @enum {string} */
+                action: "create" | "update" | "delete" | "restore";
+                /** @description Field name to its value before and after. */
+                changes: {
+                    [key: string]: {
+                        before: string | number | boolean | null;
+                        after: string | number | boolean | null;
+                    };
+                };
+            }[];
+            nextCursor: string | null;
+        };
         Member: {
             /** Format: uuid */
             userId: string;
@@ -3541,6 +3581,35 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+        };
+    };
+    listAuditEvents: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of audit events. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditHistory"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
 }
