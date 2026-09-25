@@ -2,10 +2,10 @@
 
 ## Current Version
 
-`v0.8.0`, released on 2026-09-25 (`main`, tag `v0.8.0`). SDD-001 to
-SDD-049 implemented and validated
-(`docs/sdds/v0.8.0/SDD-049-validation-report.md`). Push notifications
-from the v0.8.0 roadmap item are pending an owner decision.
+`v0.9.0`, released on 2026-09-25 (`main`, tag `v0.9.0`). SDD-001 to
+SDD-054 implemented and validated
+(`docs/sdds/v0.9.0/SDD-054-validation-report.md`). Push notifications
+(v0.8.0 roadmap item) are pending an owner decision.
 
 ## Implemented Product Capabilities
 
@@ -197,8 +197,8 @@ from the v0.8.0 roadmap item are pending an owner decision.
 
 ## Active Target
 
-`v0.9.0` --- Import, Export, and Data Portability
-(`docs/sdds/v0.9.0/README.md`, SDD-050 to SDD-054). SDD-050 to SDD-053 implemented.
+`v0.10.0` --- Multi-Currency (`docs/product/ROADMAP.md`). No SDD drafted
+yet.
 
 ## Important Constraint
 
@@ -207,8 +207,8 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Run SDD-054 (v0.9.0 release validation). Owner
-decisions pending: push notifications (hosted push service) and
-invitation email delivery (TD-011). Domain decisions taken under
-delegation await owner review (`docs/sdds/v0.2.0/README.md` to
+Draft the v0.10.0 SDDs (Multi-Currency). Owner decisions pending: FX
+rate provider, push notifications (hosted push service), and invitation
+email delivery (TD-011). Domain decisions taken under delegation await
+owner review (`docs/sdds/v0.2.0/README.md` to
 `docs/sdds/v0.9.0/README.md`, DR-072 to DR-097, ADR-0013 to ADR-0016).
