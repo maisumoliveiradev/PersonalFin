@@ -8,6 +8,16 @@ export const messages = {
   offline: {
     banner: 'Sem conexão. Mostrando os dados salvos neste aparelho.',
   },
+  exports: {
+    title: 'Exportar',
+    hint: 'Exporta os lançamentos do mês com os filtros aplicados. Para uma cópia completa dos seus dados, use o backup.',
+    csvAction: 'Exportar CSV',
+    xlsxAction: 'Exportar Excel',
+    csvLabel: 'Exportar os lançamentos filtrados em CSV',
+    xlsxLabel: 'Exportar os lançamentos filtrados em Excel',
+    done: (fileName: string) => `Arquivo ${fileName} gerado.`,
+    failed: 'Não foi possível gerar o arquivo. Tente novamente.',
+  },
   imports: {
     action: 'Importar planilha',
     title: 'Importar planilha',

@@ -1397,6 +1397,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/exports/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Export the active transactions matching the filters (CSV or Excel)
+         * @description A report, not a backup (DR-097).
+         */
+        get: operations["exportTransactions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -5760,6 +5782,54 @@ export interface operations {
             };
             /** @description VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED. */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    exportTransactions: {
+        parameters: {
+            query: {
+                format: "csv" | "xlsx";
+                /** @description Calendar month (YYYY-MM); not combined with from/to. */
+                month?: string;
+                from?: string;
+                to?: string;
+                type?: components["schemas"]["TransactionType"];
+                status?: components["schemas"]["TransactionStatus"];
+                categoryId?: string;
+                tagId?: string;
+                q?: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file as an attachment. CSV is UTF-8 with BOM, semicolon-separated, with decimal commas; XLSX has date and number cells. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            /** @description EXPORT_TOO_LARGE (more than 50,000 transactions). */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

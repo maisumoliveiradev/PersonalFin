@@ -306,6 +306,21 @@ Confirm → Import:
 - Bodies of up to about 7 MB are accepted on the create route only
   (base64 of 5 MB).
 
+## Exports (SDD-051, DR-097)
+
+`GET .../exports/transactions` (`view`) pages through the same
+repository query as the transaction list. It accepts the list filters,
+or `from`/`to`, and allows at most 50,000 rows.
+- **CSV:** UTF-8 with BOM, `;`, and decimal commas. Amounts are
+  formatted from integer minor units with integer arithmetic.
+- **XLSX:** written with `write-excel-file`. Dates are UTC-midnight
+  serials, so they never shift. Money cells hold `amountMinor / 100`
+  only for display (`#,##0.00`); no calculation uses them.
+
+The client saves the file with `features/files/save-file` (browser
+download on Web, cache file plus share sheet with `expo-sharing` on
+native).
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:
