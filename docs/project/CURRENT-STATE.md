@@ -2,11 +2,9 @@
 
 ## Current Version
 
-`v0.4.0`, released on 2026-09-25 (`main`, tag `v0.4.0`). SDD-001 to
-SDD-028 implemented and validated
-(`docs/sdds/v0.4.0/SDD-028-validation-report.md`). `develop` is building
-v0.5.0: SDD-029 to SDD-032 implemented; SDD-033 (release validation)
-pending.
+`v0.5.0`, released on 2026-09-25 (`main`, tag `v0.5.0`). SDD-001 to
+SDD-033 implemented and validated
+(`docs/sdds/v0.5.0/SDD-033-validation-report.md`).
 
 ## Implemented Product Capabilities
 
@@ -133,7 +131,8 @@ pending.
 
 ## Active Target
 
-`v0.5.0` --- Analytics (`docs/sdds/v0.5.0/`).
+`v0.6.0` --- Collaboration (`docs/product/ROADMAP.md`). No SDD drafted
+yet.
 
 ## Important Constraint
 
@@ -142,7 +141,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.5.0/SDD-033-release-validation.md`. Domain decisions
+Draft the v0.6.0 SDDs (Collaboration) from the roadmap. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, DR-072 to
 DR-078).

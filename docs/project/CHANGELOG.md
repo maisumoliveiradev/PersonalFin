@@ -6,6 +6,11 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.5.0\] --- 2026-09-25
+
+Analytics. Released to `main` and tagged `v0.5.0`; validated in SDD-033
+(`docs/sdds/v0.5.0/SDD-033-validation-report.md`).
+
 ### Dashboard Personalization (SDD-032)
 
 -   "Personalizar resumo": each user picks an experience profile per
