@@ -19,6 +19,15 @@ export interface CardPurchaseReference {
   invoiceSettled: boolean;
 }
 
+export type RateSource = 'manual' | 'provider';
+
+export interface OriginalAmount {
+  currency: CurrencyCode;
+  amountMinor: number;
+  rate: string;
+  rateSource: RateSource;
+}
+
 export interface InstallmentReference {
   purchaseId: string;
   number: number;
@@ -46,6 +55,7 @@ export interface FinancialTransaction {
   cardPurchase: CardPurchaseReference | null;
   installment: InstallmentReference | null;
   tags: CategoryReference[];
+  original: OriginalAmount | null;
 }
 
 export interface NewFinancialTransaction {
@@ -63,6 +73,7 @@ export interface NewFinancialTransaction {
   cardInvoiceId?: string | null;
   installment?: { purchaseId: string; number: number };
   importBatchId?: string | null;
+  original?: OriginalAmount | null;
 }
 
 export interface TransactionFields {
@@ -74,6 +85,10 @@ export interface TransactionFields {
   categoryId: string;
   subcategoryId: string | null;
   cardInvoiceId: string | null;
+  originalCurrency: CurrencyCode | null;
+  originalAmountMinor: number | null;
+  fxRate: string | null;
+  fxRateSource: RateSource | null;
 }
 
 export function transactionFields(transaction: FinancialTransaction): TransactionFields {
@@ -86,5 +101,9 @@ export function transactionFields(transaction: FinancialTransaction): Transactio
     categoryId: transaction.category.id,
     subcategoryId: transaction.subcategory?.id ?? null,
     cardInvoiceId: transaction.cardPurchase?.invoiceId ?? null,
+    originalCurrency: transaction.original?.currency ?? null,
+    originalAmountMinor: transaction.original?.amountMinor ?? null,
+    fxRate: transaction.original?.rate ?? null,
+    fxRateSource: transaction.original?.rateSource ?? null,
   };
 }

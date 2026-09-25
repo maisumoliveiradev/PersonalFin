@@ -20,6 +20,20 @@ minor-unit rules.
 **DR-004** Multi-currency records preserve original amount, original
 currency, and the historical conversion rate applied.
 
+**DR-098** *(SDD-055; decided under delegation.)* A foreign-currency
+transaction keeps its original amount, currency, and applied rate, and
+counts in metrics with its base-currency amount:
+- **Conversion:** original amount × rate, in exact decimal arithmetic,
+  rounded half away from zero to the base currency's minor unit.
+- **Rate choice:** the rate is the one typed by the user, or the latest
+  recorded rate on or before the transaction date. With neither, the
+  transaction is refused.
+- **Stability:** recorded rates are append-only and never change
+  existing transactions.
+- **Editing:** a foreign transaction's amount is changed through its
+  original amount, or by explicitly converting it to the base currency
+  only.
+
 ## Financial Spaces
 
 **DR-005** Every financial record belongs to a Financial Space unless

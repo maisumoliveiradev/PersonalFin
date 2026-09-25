@@ -1,3 +1,4 @@
+import { type CurrencyCode, SUPPORTED_CURRENCIES } from '@personalfin/domain';
 import writeXlsxFile from 'write-excel-file/node';
 
 import type { DataAccess } from '../../database/data-access.ts';
@@ -64,7 +65,19 @@ const HEADER = [
   'Fatura',
   'Parcela',
   'ID',
+  'Moeda original',
+  'Valor original',
+  'Cotação',
 ];
+
+function originalText(amountMinor: number, currency: CurrencyCode): string {
+  const { minorUnits } = SUPPORTED_CURRENCIES[currency];
+  if (minorUnits === 0) {
+    return String(amountMinor);
+  }
+  const digits = String(amountMinor).padStart(minorUnits + 1, '0');
+  return `${digits.slice(0, -minorUnits)},${digits.slice(-minorUnits)}`;
+}
 
 export function decimalText(amountMinor: number): string {
   const sign = amountMinor < 0 ? '-' : '';
@@ -102,6 +115,9 @@ interface ExportRow {
   invoice: string;
   installment: string;
   id: string;
+  originalCurrency: string;
+  originalAmount: string;
+  rate: string;
 }
 
 function toExportRow(transaction: FinancialTransaction): ExportRow {
@@ -123,6 +139,12 @@ function toExportRow(transaction: FinancialTransaction): ExportRow {
         ? ''
         : `${transaction.installment.number}/${transaction.installment.count}`,
     id: transaction.id,
+    originalCurrency: transaction.original?.currency ?? '',
+    originalAmount:
+      transaction.original === null
+        ? ''
+        : originalText(transaction.original.amountMinor, transaction.original.currency),
+    rate: transaction.original?.rate.replace('.', ',') ?? '',
   };
 }
 
@@ -149,6 +171,9 @@ export function transactionsToCsv(transactions: readonly FinancialTransaction[])
         row.invoice,
         row.installment,
         row.id,
+        row.originalCurrency,
+        row.originalAmount,
+        row.rate,
       ]
         .map(csvField)
         .join(';'),
@@ -180,6 +205,9 @@ export async function transactionsToXlsx(
       row.invoice,
       row.installment,
       row.id,
+      row.originalCurrency,
+      row.originalAmount,
+      row.rate,
     ]);
   return writeXlsxFile([header, ...rows], { sheet: 'Lançamentos' }).toBuffer();
 }

@@ -1,6 +1,16 @@
 export const SUPPORTED_CURRENCIES = {
-  BRL: { code: 'BRL', minorUnits: 2, symbol: 'R$' },
+  BRL: { code: 'BRL', minorUnits: 2, symbol: 'R$', name: 'Real' },
+  USD: { code: 'USD', minorUnits: 2, symbol: 'US$', name: 'Dólar americano' },
+  EUR: { code: 'EUR', minorUnits: 2, symbol: '€', name: 'Euro' },
+  GBP: { code: 'GBP', minorUnits: 2, symbol: '£', name: 'Libra esterlina' },
+  ARS: { code: 'ARS', minorUnits: 2, symbol: 'ARS$', name: 'Peso argentino' },
+  CAD: { code: 'CAD', minorUnits: 2, symbol: 'CA$', name: 'Dólar canadense' },
+  CHF: { code: 'CHF', minorUnits: 2, symbol: 'CHF', name: 'Franco suíço' },
+  CLP: { code: 'CLP', minorUnits: 0, symbol: 'CLP$', name: 'Peso chileno' },
+  JPY: { code: 'JPY', minorUnits: 0, symbol: '¥', name: 'Iene' },
 } as const;
+
+export const CURRENCY_CODES = Object.keys(SUPPORTED_CURRENCIES) as CurrencyCode[];
 
 export type CurrencyCode = keyof typeof SUPPORTED_CURRENCIES;
 

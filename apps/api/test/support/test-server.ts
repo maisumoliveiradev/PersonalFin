@@ -15,6 +15,7 @@ import { createInMemoryCategoryRepository } from './in-memory-category-repositor
 import { createInMemoryDashboardPreferenceRepository } from './in-memory-dashboard-preference-repository.ts';
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryDebtRepository } from './in-memory-debt-repository.ts';
+import { createInMemoryExchangeRateRepository } from './in-memory-exchange-rate-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
 import { createInMemoryGoalRepository } from './in-memory-goal-repository.ts';
 import { createInMemoryImportRepository } from './in-memory-import-repository.ts';
@@ -103,6 +104,7 @@ export function createInMemoryRepositories() {
     reminders: createInMemoryReminderRepository(),
     imports: createInMemoryImportRepository(() => transactions.transactions),
     backup: createInMemoryBackupRepository(() => transactions.transactions),
+    exchangeRates: createInMemoryExchangeRateRepository(),
   };
 }
 

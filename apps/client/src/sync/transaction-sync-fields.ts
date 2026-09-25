@@ -35,7 +35,11 @@ export function changesSyncFields(changes: TransactionChanges): SyncFields {
     if (value === undefined) {
       continue;
     }
-    fields[field] = Array.isArray(value) ? joinTagIds(value) : value;
+    if (Array.isArray(value)) {
+      fields[field] = joinTagIds(value);
+    } else if (value === null || typeof value !== 'object') {
+      fields[field] = value;
+    }
   }
   return fields;
 }

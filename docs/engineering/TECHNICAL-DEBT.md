@@ -182,6 +182,23 @@ implemented yet.
 -   **Resolution:** Owner chooses an email provider (and its cost
     limits); then add delivery behind the existing invitation flow.
 
+### TD-013 --- Base currency is fixed to BRL
+
+-   **Status:** Open
+-   **Priority:** Low
+-   **Origin:** SDD-055
+-   **Reason:** FR-081 asks for a configurable base currency. The client
+    and several API modules format and store base amounts as BRL. These
+    include cards, debts, goals, balance snapshots, analytics, and the
+    PDF report. Changing the base currency of a space with history would
+    also need a re-conversion policy.
+-   **Impact:** All metrics are in BRL. Other currencies are supported
+    as original amounts converted to BRL.
+-   **Resolution:** Carry the space base currency through every money
+    display and write path. Allow changing it only for spaces without
+    transactions, or define an explicit re-conversion that keeps
+    originals and rates.
+
 ### TD-012 --- Local offline data is not encrypted by the app
 
 -   **Status:** Open

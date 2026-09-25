@@ -16,6 +16,7 @@ import {
   InvalidCardPurchaseError,
   resolvePurchaseInvoice,
 } from '../cards/card-invoice-management.ts';
+import { type ForeignAmountInput, resolveForeignAmount } from '../exchange-rates/foreign-amount.ts';
 import { assertTagSelection } from '../tags/tag-management.ts';
 import { assertCategorySelection } from './category-selection.ts';
 import type { FinancialTransaction } from './transaction.ts';
@@ -33,6 +34,7 @@ export interface CreateTransactionInput {
   subcategoryId: string | null;
   card?: { cardId: string; invoiceMonth?: Month };
   tagIds?: readonly string[];
+  foreign?: ForeignAmountInput;
 }
 
 const SPACE_CURRENCY: CurrencyCode = DEFAULT_CURRENCY;
@@ -86,12 +88,21 @@ export async function createTransaction(
   input: CreateTransactionInput,
 ): Promise<FinancialTransaction> {
   await assertCategorySelection(data.repositories.categories, input);
-  const { card: cardSelection, tagIds = [], id: requestedId, ...fields } = input;
+  const { card: cardSelection, tagIds = [], id: requestedId, foreign, ...fields } = input;
   if (cardSelection !== undefined && fields.type !== 'expense') {
     throw new InvalidCardPurchaseError('Card purchases must be expenses');
   }
   return data.transaction(async (repositories) => {
     await assertTagSelection(repositories, input.financialSpaceId, tagIds);
+    const converted =
+      foreign === undefined
+        ? null
+        : await resolveForeignAmount(
+            repositories,
+            input.financialSpaceId,
+            foreign,
+            fields.financialDate,
+          );
     let cardFields = {};
     if (cardSelection !== undefined) {
       const card = await repositories.cards.findInSpace(
@@ -113,6 +124,9 @@ export async function createTransaction(
       id: requestedId ?? randomUUID(),
       currency: SPACE_CURRENCY,
       ...fields,
+      ...(converted === null
+        ? {}
+        : { amountMinor: converted.amountMinor, original: converted.original }),
       ...cardFields,
     });
     if (tagIds.length === 0) {

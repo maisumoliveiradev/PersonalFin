@@ -3,11 +3,15 @@ import type {
   Transaction as TransactionResponse,
 } from '@personalfin/api-contract';
 import {
+  CURRENCY_CODES,
+  type CurrencyCode,
+  DEFAULT_CURRENCY,
   DEFAULT_TRANSACTION_STATUS,
   isValidAmountMinor,
   isValidFinancialDate,
   isValidInstallmentCount,
   isValidMonth,
+  isValidRate,
   MAX_AMOUNT_MINOR,
   MAX_INSTALLMENTS,
   MIN_INSTALLMENTS,
@@ -35,8 +39,25 @@ import { deleteTransaction, restoreTransaction } from './transaction-deletion.ts
 import { InvalidCursorError } from './transaction-repository.ts';
 import { TransactionNotFoundError, updateTransaction } from './update-transaction.ts';
 
+const FOREIGN_CURRENCIES = CURRENCY_CODES.filter((code) => code !== DEFAULT_CURRENCY) as [
+  CurrencyCode,
+  ...CurrencyCode[],
+];
+
+const foreignAmountSchema = z.strictObject({
+  currency: z.enum(FOREIGN_CURRENCIES),
+  amountMinor: z
+    .number()
+    .refine(isValidAmountMinor, `must be an integer between 1 and ${MAX_AMOUNT_MINOR}`),
+  rate: z
+    .string()
+    .refine(isValidRate, 'must be a positive decimal with up to 10 decimals')
+    .optional(),
+});
+
 const createTransactionSchema = z.strictObject({
   id: z.uuid().optional(),
+  foreign: foreignAmountSchema.optional(),
   type: z.enum(TRANSACTION_TYPES),
   status: z.enum(TRANSACTION_STATUSES).optional(),
   description: z
@@ -45,7 +66,8 @@ const createTransactionSchema = z.strictObject({
     .pipe(z.string().min(1).max(TRANSACTION_DESCRIPTION_MAX_LENGTH)),
   amountMinor: z
     .number()
-    .refine(isValidAmountMinor, `must be an integer between 1 and ${MAX_AMOUNT_MINOR}`),
+    .refine(isValidAmountMinor, `must be an integer between 1 and ${MAX_AMOUNT_MINOR}`)
+    .optional(),
   financialDate: z.string().refine(isValidFinancialDate, 'must be a calendar date (YYYY-MM-DD)'),
   categoryId: z.uuid(),
   subcategoryId: z.uuid().nullable().optional(),
@@ -75,6 +97,7 @@ function toAuditContext(sync: z.infer<typeof syncContextSchema> | undefined) {
 
 const updateTransactionSchema = z.strictObject({
   version: z.number().int().min(1),
+  foreign: foreignAmountSchema.nullable().optional(),
   sync: syncContextSchema.optional(),
   type: z.enum(TRANSACTION_TYPES).optional(),
   status: z.enum(TRANSACTION_STATUSES).optional(),
@@ -159,6 +182,7 @@ export function toTransactionResponse(transaction: FinancialTransaction): Transa
           },
     installment: transaction.installment,
     tags: transaction.tags,
+    original: transaction.original,
   };
 }
 
@@ -263,10 +287,13 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       if (!isUuid(transactionId)) {
         throw new TransactionNotFoundError();
       }
-      const { version, invoiceMonth, tagIds, sync, ...changes } = parseInput(
+      const { version, invoiceMonth, tagIds, sync, foreign, ...changes } = parseInput(
         updateTransactionSchema,
         request.body,
       );
+      if (foreign != null && changes.amountMinor !== undefined) {
+        throw new ValidationError('amountMinor: send either amountMinor or foreign');
+      }
       const transaction = await updateTransaction(data, {
         financialSpaceId: space.id,
         transactionId,
@@ -275,6 +302,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         changes: withoutUndefined(changes),
         ...(invoiceMonth === undefined ? {} : { invoiceMonth }),
         ...(tagIds === undefined ? {} : { tagIds }),
+        ...(foreign === undefined ? {} : { foreign }),
         ...toAuditContext(sync),
       });
       return toTransactionResponse(transaction);
@@ -332,6 +360,12 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         'record',
       );
       const input = parseInput(createTransactionSchema, request.body);
+      if ((input.amountMinor === undefined) === (input.foreign === undefined)) {
+        throw new ValidationError('amountMinor: send exactly one of amountMinor or foreign');
+      }
+      if (input.foreign !== undefined && input.installments !== undefined) {
+        throw new ValidationError('foreign: not supported on installment purchases');
+      }
       if (input.cardId === undefined && input.invoiceMonth !== undefined) {
         throw new InvalidCardPurchaseError('invoiceMonth requires cardId');
       }
@@ -353,7 +387,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         type: input.type,
         status: input.status ?? DEFAULT_TRANSACTION_STATUS,
         description: input.description,
-        amountMinor: input.amountMinor,
+        amountMinor: input.amountMinor ?? 0,
         financialDate: input.financialDate,
         categoryId: input.categoryId,
         subcategoryId: input.subcategoryId ?? null,
@@ -383,6 +417,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
           ...(input.id === undefined ? {} : { id: input.id }),
           ...(input.tagIds === undefined ? {} : { tagIds: input.tagIds }),
           ...(card === undefined ? {} : { card }),
+          ...(input.foreign === undefined ? {} : { foreign: input.foreign }),
         }));
       }
       reply.status(replayed ? 200 : 201);

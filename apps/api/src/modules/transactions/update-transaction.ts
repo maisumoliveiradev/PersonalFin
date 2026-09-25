@@ -7,6 +7,8 @@ import {
   InvalidCardPurchaseError,
   resolvePurchaseInvoice,
 } from '../cards/card-invoice-management.ts';
+import { ForeignAmountError } from '../exchange-rates/exchange-rate.ts';
+import { type ForeignAmountInput, resolveForeignAmount } from '../exchange-rates/foreign-amount.ts';
 import { assertTagSelection } from '../tags/tag-management.ts';
 import { assertCategorySelection } from './category-selection.ts';
 import {
@@ -20,7 +22,13 @@ export interface UpdateTransactionInput {
   transactionId: string;
   actorUserId: string;
   expectedVersion: number;
-  changes: Partial<Omit<TransactionFields, 'cardInvoiceId'>>;
+  changes: Partial<
+    Omit<
+      TransactionFields,
+      'cardInvoiceId' | 'originalCurrency' | 'originalAmountMinor' | 'fxRate' | 'fxRateSource'
+    >
+  >;
+  foreign?: ForeignAmountInput | null;
   invoiceMonth?: Month;
   tagIds?: readonly string[];
   syncContext?: AuditContext;
@@ -69,6 +77,33 @@ export async function updateTransaction(
 
     const before = transactionFields(current);
     const after: TransactionFields = { ...before, ...input.changes };
+    if (input.foreign === null) {
+      Object.assign(after, {
+        originalCurrency: null,
+        originalAmountMinor: null,
+        fxRate: null,
+        fxRateSource: null,
+      });
+    } else if (input.foreign !== undefined) {
+      const converted = await resolveForeignAmount(
+        repositories,
+        input.financialSpaceId,
+        input.foreign,
+        after.financialDate,
+      );
+      Object.assign(after, {
+        amountMinor: converted.amountMinor,
+        originalCurrency: converted.original.currency,
+        originalAmountMinor: converted.original.amountMinor,
+        fxRate: converted.original.rate,
+        fxRateSource: converted.original.rateSource,
+      });
+    } else if (current.original !== null && after.amountMinor !== before.amountMinor) {
+      throw new ForeignAmountError(
+        'FOREIGN_AMOUNT_REQUIRED',
+        'Change the original amount (foreign) or convert to the base currency (foreign: null)',
+      );
+    }
     if (current.cardPurchase === null) {
       if (input.invoiceMonth !== undefined) {
         throw new InvalidCardPurchaseError('Only card purchases have an invoice');
