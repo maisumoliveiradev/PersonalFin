@@ -2,6 +2,7 @@ import { ApiRequestError } from '../../api/api-client';
 import { messages } from '../../i18n/messages';
 
 const CATEGORY_ERROR_MESSAGES: Record<string, string> = {
+  PERMISSION_DENIED: messages.common.permissionDenied,
   CATEGORY_NAME_TAKEN: messages.categories.errors.nameTaken,
   CATEGORY_IN_USE: messages.categories.errors.inUse,
   CATEGORY_HAS_SUBCATEGORIES: messages.categories.errors.hasSubcategories,

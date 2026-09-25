@@ -85,7 +85,12 @@ export function registerCategoryRoutes(server: FastifyInstance, data: DataAccess
   server.get('/financial-spaces/:spaceId/categories', async (request): Promise<CategoryList> => {
     const user = requireAuthenticatedUser(request);
     const { spaceId } = parseInput(spaceParamsSchema, request.params);
-    const space = await requireAccessibleSpace(data.repositories.financialSpaces, user.id, spaceId);
+    const space = await requireAccessibleSpace(
+      data.repositories.financialSpaces,
+      user.id,
+      spaceId,
+      'view',
+    );
     const categories = await data.repositories.categories.listForSpace(space.id);
     return { items: buildCategoryTree(categories).map(toTreeItem) };
   });
@@ -99,6 +104,7 @@ export function registerCategoryRoutes(server: FastifyInstance, data: DataAccess
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'classify',
       );
       const input = parseInput(createCategorySchema, request.body);
       const category = await createCategory(data, {
@@ -122,6 +128,7 @@ export function registerCategoryRoutes(server: FastifyInstance, data: DataAccess
         data.repositories.financialSpaces,
         user.id,
         params.spaceId,
+        'classify',
       );
       const input = parseInput(updateCategorySchema, request.body);
       const category = await updateCategory(data, {
@@ -143,6 +150,7 @@ export function registerCategoryRoutes(server: FastifyInstance, data: DataAccess
       data.repositories.financialSpaces,
       user.id,
       params.spaceId,
+      'classify',
     );
     const { version } = parseInput(versionQuerySchema, request.query);
     await deleteCategory(data, {

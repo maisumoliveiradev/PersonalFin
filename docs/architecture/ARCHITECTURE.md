@@ -10,7 +10,8 @@ for Web/Android/iOS in a monorepo), ADR-0005 (API shell), ADR-0006
 (quality toolchain and local CI), ADR-0007 (authentication), ADR-0008
 (PostgreSQL and migrations), ADR-0009 (client application
 architecture), ADR-0013 (versioned browser journeys), ADR-0014
-(recurrence materialization), ADR-0010 (Financial Space access model), ADR-0011
+(recurrence materialization), ADR-0015 (shared Financial Space access
+model, superseding ADR-0010), ADR-0011
 (money and financial date formats, shared domain package), ADR-0012
 (audit log and optimistic concurrency).
 
@@ -232,13 +233,16 @@ invalid sessions with `401 UNAUTHENTICATED`. Web clients use an
 `HttpOnly` session cookie; native clients keep the same cookie in
 secure storage.
 
-## Financial Space access (ADR-0010)
+## Financial Space access (ADR-0015)
 
-Every Financial Space has exactly one Owner (`owner_user_id`). In v0.1
-only the Owner can access a space. Space-scoped endpoints resolve the
-space through `requireAccessibleSpace`, which returns
+Every Financial Space has exactly one Owner (`owner_user_id`); other
+people access it through active `financial_space_member` rows with a
+permission set (`view`, `record`, `plan`, `classify`, `manage_members`,
+`view_audit`). Space-scoped endpoints resolve the space through
+`requireAccessibleSpace(userId, spaceId, permission)`, which returns
 `404 FINANCIAL_SPACE_NOT_FOUND` for missing and inaccessible spaces
-alike.
+alike and `403 PERMISSION_DENIED` for members without the permission.
+ADR-0010 (owner-only access) is superseded.
 
 ## Security boundaries
 

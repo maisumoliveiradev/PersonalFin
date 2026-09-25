@@ -5,7 +5,10 @@ export type AuditEntityType =
   | 'card'
   | 'card_invoice'
   | 'card_invoice_payment'
-  | 'tag';
+  | 'tag'
+  | 'financial_space'
+  | 'financial_space_member'
+  | 'space_invitation';
 export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
 
 export type AuditValue = string | number | boolean | null;

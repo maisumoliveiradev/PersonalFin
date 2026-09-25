@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted (2026-09-23, SDD-003)
+Superseded by ADR-0015 (2026-09-25, SDD-034). Originally accepted
+(2026-09-23, SDD-003).
 
 ## Context
 

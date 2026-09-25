@@ -39,14 +39,24 @@ export function registerTagRoutes(server: FastifyInstance, data: DataAccess): vo
   server.get('/financial-spaces/:spaceId/tags', async (request): Promise<TagList> => {
     const user = requireAuthenticatedUser(request);
     const { spaceId } = parseInput(spaceParamsSchema, request.params);
-    const space = await requireAccessibleSpace(data.repositories.financialSpaces, user.id, spaceId);
+    const space = await requireAccessibleSpace(
+      data.repositories.financialSpaces,
+      user.id,
+      spaceId,
+      'view',
+    );
     return { items: (await data.repositories.tags.listForSpace(space.id)).map(toResponse) };
   });
 
   server.post('/financial-spaces/:spaceId/tags', async (request, reply): Promise<TagResponse> => {
     const user = requireAuthenticatedUser(request);
     const { spaceId } = parseInput(spaceParamsSchema, request.params);
-    const space = await requireAccessibleSpace(data.repositories.financialSpaces, user.id, spaceId);
+    const space = await requireAccessibleSpace(
+      data.repositories.financialSpaces,
+      user.id,
+      spaceId,
+      'classify',
+    );
     const { name } = parseInput(createSchema, request.body);
     const tag = await createTag(data, { financialSpaceId: space.id, actorUserId: user.id, name });
     reply.status(201);
@@ -60,6 +70,7 @@ export function registerTagRoutes(server: FastifyInstance, data: DataAccess): vo
       data.repositories.financialSpaces,
       user.id,
       params.spaceId,
+      'classify',
     );
     const input = parseInput(updateSchema, request.body);
     const tag = await updateTag(data, {
@@ -80,6 +91,7 @@ export function registerTagRoutes(server: FastifyInstance, data: DataAccess): vo
       data.repositories.financialSpaces,
       user.id,
       params.spaceId,
+      'classify',
     );
     const { version } = parseInput(versionQuerySchema, request.query);
     await deleteTag(data, {

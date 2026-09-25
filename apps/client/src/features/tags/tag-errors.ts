@@ -2,6 +2,7 @@ import { ApiRequestError } from '../../api/api-client';
 import { messages } from '../../i18n/messages';
 
 const TAG_ERROR_MESSAGES: Record<string, string> = {
+  PERMISSION_DENIED: messages.common.permissionDenied,
   TAG_NAME_TAKEN: messages.tags.errors.nameTaken,
   TAG_IN_USE: messages.tags.errors.inUse,
   VERSION_CONFLICT: messages.tags.errors.conflict,

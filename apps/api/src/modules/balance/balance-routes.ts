@@ -81,6 +81,7 @@ export function registerBalanceRoutes(server: FastifyInstance, data: DataAccess)
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const { limit } = parseInput(listQuerySchema, request.query);
       const snapshots = await data.repositories.balanceSnapshots.listForSpace(space.id, limit + 1);
@@ -98,6 +99,7 @@ export function registerBalanceRoutes(server: FastifyInstance, data: DataAccess)
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const setting = await data.repositories.balanceReminders.find(user.id, space.id);
       return setting === null
@@ -115,6 +117,7 @@ export function registerBalanceRoutes(server: FastifyInstance, data: DataAccess)
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const setting = parseInput(reminderSchema, request.body);
       await data.repositories.balanceReminders.save(user.id, space.id, setting);
@@ -131,6 +134,7 @@ export function registerBalanceRoutes(server: FastifyInstance, data: DataAccess)
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'record',
       );
       const input = parseInput(recordSnapshotSchema, request.body);
       const snapshot = await data.repositories.balanceSnapshots.record({

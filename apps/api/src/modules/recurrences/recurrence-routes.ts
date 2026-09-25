@@ -123,6 +123,7 @@ export function registerRecurrenceRoutes(server: FastifyInstance, data: DataAcce
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const series = await data.repositories.recurrences.listForSpace(space.id);
       return { items: series.map(toResponse) };
@@ -138,6 +139,7 @@ export function registerRecurrenceRoutes(server: FastifyInstance, data: DataAcce
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'plan',
       );
       const input = parseInput(createRecurrenceSchema, request.body);
       const { series, occurrencesCreated } = await createRecurrenceSeries(data, {
@@ -168,6 +170,7 @@ export function registerRecurrenceRoutes(server: FastifyInstance, data: DataAcce
         data.repositories.financialSpaces,
         user.id,
         params.spaceId,
+        'plan',
       );
       const { version, fromOccurrenceDate, ...changes } = parseInput(
         updateSeriesSchema,
@@ -196,6 +199,7 @@ export function registerRecurrenceRoutes(server: FastifyInstance, data: DataAcce
         data.repositories.financialSpaces,
         user.id,
         params.spaceId,
+        'plan',
       );
       const { version, endDate } = parseInput(endSeriesSchema, request.body);
       const result = await endSeries(data, {
@@ -218,6 +222,7 @@ export function registerRecurrenceRoutes(server: FastifyInstance, data: DataAcce
         data.repositories.financialSpaces,
         user.id,
         spaceId,
+        'view',
       );
       const { throughMonth } = parseInput(materializeSchema, request.body);
       const occurrencesCreated = await materializeSpace(
