@@ -32,7 +32,7 @@ apps/
     src/http/        Authentication hook, input validation, error contract
     src/modules/     Domain modules (financial-spaces/, categories/,
                      transactions/, audit/, balance/, dashboard/,
-                     recurrences/, cards/, tags/):
+                     recurrences/, cards/, tags/, analytics/):
                      domain types, use cases, repository ports,
                      PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)

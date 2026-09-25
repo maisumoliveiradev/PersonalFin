@@ -400,6 +400,18 @@ export const messages = {
       unexpected: 'Não foi possível salvar o cartão. Tente novamente.',
     },
   },
+  analytics: {
+    action: 'Análises',
+    title: 'Análises',
+    comparisonTitle: 'Comparação',
+    versus: (month: string, change: string) => `vs. ${month}: ${change}`,
+    evolutionTitle: 'Evolução (12 meses)',
+    evolutionRow: (income: string, expenses: string, net: string) =>
+      `Receitas ${income} · Despesas ${expenses} · Resultado ${net}`,
+    definitionsHint:
+      'Valores realizados consideram lançamentos pagos/recebidos; compras no cartão contam no mês da fatura.',
+    loadError: 'Não foi possível carregar as análises.',
+  },
   tags: {
     action: 'Tags',
     title: 'Tags',

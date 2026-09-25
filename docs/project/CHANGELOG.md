@@ -6,6 +6,15 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Evolution and Comparisons (SDD-030)
+
+-   "Análises" screen: the selected month against the previous month and
+    the same month of the previous year (difference and percentage), and
+    the twelve-month evolution of realized income, expenses, and net with
+    proportional bars.
+-   Metric catalog: M-009 (evolution) and M-010 (comparison).
+-   `GET .../analytics/evolution` and `GET .../analytics/comparison`.
+
 ### Tags (SDD-029)
 
 -   "Tags" screen per space: create, rename, archive/reactivate, and

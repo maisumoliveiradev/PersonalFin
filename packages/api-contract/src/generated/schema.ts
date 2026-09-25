@@ -654,6 +654,44 @@ export interface paths {
         patch: operations["updateTag"];
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/analytics/evolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Month-by-month realized metrics and observed balance (M-009) */
+        get: operations["getEvolution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/analytics/comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** Compare a month with the previous month and the same month a year earlier (M-010) */
+        get: operations["getComparison"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -867,6 +905,49 @@ export interface components {
             tags: components["schemas"]["CategoryReference"][];
             /** @description Installment number and count of an installment purchase; null otherwise. */
             installment: components["schemas"]["Installment"] | null;
+        };
+        Change: {
+            /** @description current - base, in minor units. */
+            difference: number;
+            /** @description Percentage change in tenths of a percent (123 = +12.3%), rounded half away from zero; null when the base is zero. */
+            percentChangeTenths: number | null;
+        };
+        MetricSet: {
+            realizedIncome: number;
+            realizedExpenses: number;
+            realizedNet: number;
+            forecastIncome: number;
+            forecastExpenses: number;
+        };
+        MetricChanges: {
+            realizedIncome: components["schemas"]["Change"];
+            realizedExpenses: components["schemas"]["Change"];
+            realizedNet: components["schemas"]["Change"];
+            forecastIncome: components["schemas"]["Change"];
+            forecastExpenses: components["schemas"]["Change"];
+        };
+        ComparisonPeriod: {
+            month: string;
+            values: components["schemas"]["MetricSet"];
+            changes: components["schemas"]["MetricChanges"];
+        };
+        Comparison: {
+            month: string;
+            current: components["schemas"]["MetricSet"];
+            previousMonth: components["schemas"]["ComparisonPeriod"];
+            previousYear: components["schemas"]["ComparisonPeriod"];
+        };
+        Evolution: {
+            items: {
+                month: string;
+                realizedIncome: number;
+                realizedExpenses: number;
+                realizedNet: number;
+                observedBalance: {
+                    amountMinor: number;
+                    observedOn: components["schemas"]["FinancialDate"];
+                } | null;
+            }[];
         };
         Tag: {
             /** Format: uuid */
@@ -2555,6 +2636,61 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["TagNotFound"];
             409: components["responses"]["TagConflict"];
+        };
+    };
+    getEvolution: {
+        parameters: {
+            query: {
+                fromMonth: string;
+                months?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One entry per month, oldest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Evolution"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getComparison: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The comparison. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Comparison"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
         };
     };
 }
