@@ -96,6 +96,10 @@ SDD-039 implemented and validated
     onboarding recommendation or section reordering.
 -   **Tags (SDD-029):** per-space tags (DR-083) on transactions, shown in
     the list and usable as a filter. There is no tag analytics yet.
+-   **Minimum client version (SDD-040):** clients send
+    `X-Client-Version`; with `MIN_CLIENT_VERSION` configured the API
+    answers 426 to older clients, which show an update screen
+    (ADR-0016).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -119,7 +123,7 @@ SDD-039 implemented and validated
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
     -   `packages/domain` --- shared money, financial date, transaction,
-        month, balance-reminder, business-day, card, comparison, and dashboard-preference rules (ADR-0011;
+        month, balance-reminder, business-day, card, comparison, dashboard-preference, and client-version rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
@@ -138,8 +142,8 @@ SDD-039 implemented and validated
 
 ## Active Target
 
-`v0.7.0` --- Mobile Resilience (`docs/product/ROADMAP.md`). No SDD
-drafted yet.
+`v0.7.0` --- Mobile Resilience (`docs/sdds/v0.7.0/README.md`, SDD-040
+to SDD-044). SDD-040 implemented.
 
 ## Important Constraint
 
@@ -148,8 +152,8 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Owner decision pending on invitation email delivery (TD-011). Then draft
-the v0.7.0 SDDs (Mobile Resilience). Domain decisions
+Implement SDD-041 (local persistence). Owner decision pending on
+invitation email delivery (TD-011). Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, DR-072 to
-DR-078).
+`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, `docs/sdds/v0.7.0/README.md`, DR-072 to
+DR-091, ADR-0013 to ADR-0016).

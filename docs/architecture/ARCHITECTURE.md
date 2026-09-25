@@ -13,7 +13,8 @@ architecture), ADR-0013 (versioned browser journeys), ADR-0014
 (recurrence materialization), ADR-0015 (shared Financial Space access
 model, superseding ADR-0010), ADR-0011
 (money and financial date formats, shared domain package), ADR-0012
-(audit log and optimistic concurrency).
+(audit log and optimistic concurrency), ADR-0016 (offline persistence,
+synchronization, and minimum client version).
 
 ## Repository structure
 
@@ -232,6 +233,16 @@ scope that resolves the session server-side and rejects missing or
 invalid sessions with `401 UNAUTHENTICATED`. Web clients use an
 `HttpOnly` session cookie; native clients keep the same cookie in
 secure storage.
+
+## Minimum client version (ADR-0016, SDD-040)
+
+Clients send `X-Client-Version` (the app version from `app.json`). When
+`MIN_CLIENT_VERSION` is set, an API `onRequest` hook answers
+`426 CLIENT_UPGRADE_REQUIRED` to older, missing, or invalid versions on
+every route except `/health` and `/api/auth/*`; the client then replaces
+its navigation with an update-required screen. Unset means no check.
+Raise the minimum only when an API change can no longer stay backward
+compatible with installed clients.
 
 ## Financial Space access (ADR-0015)
 

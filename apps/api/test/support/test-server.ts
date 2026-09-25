@@ -1,3 +1,5 @@
+import type { ClientVersion } from '@personalfin/domain';
+
 import type { AuthenticatedUser, SessionResolver } from '../../src/auth/authenticated-user.ts';
 import type { DataAccess } from '../../src/database/data-access.ts';
 import type { AuthHandler } from '../../src/routes/auth.ts';
@@ -105,6 +107,7 @@ export function buildTestServer(
     sessions?: Record<string, AuthenticatedUser>;
     authHandler?: AuthHandler;
     repositories?: InMemoryRepositories;
+    minClientVersion?: ClientVersion;
   } = {},
 ) {
   return buildServer({
@@ -114,5 +117,6 @@ export function buildTestServer(
     sessionResolver: createFakeSessionResolver(overrides.sessions ?? {}),
     authHandler: overrides.authHandler ?? unusedAuthHandler,
     data: createInMemoryDataAccess(overrides.repositories ?? createInMemoryRepositories()),
+    minClientVersion: overrides.minClientVersion ?? null,
   });
 }

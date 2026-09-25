@@ -34,3 +34,19 @@ See `v0.2.0/README.md` (SDD-008 to SDD-016).
 ## v0.3.0 sequence
 
 See `v0.3.0/README.md` (SDD-017 to SDD-022).
+
+## v0.4.0 sequence
+
+See `v0.4.0/README.md` (SDD-023 to SDD-028).
+
+## v0.5.0 sequence
+
+See `v0.5.0/README.md` (SDD-029 to SDD-033).
+
+## v0.6.0 sequence
+
+See `v0.6.0/README.md` (SDD-034 to SDD-039).
+
+## v0.7.0 sequence
+
+See `v0.7.0/README.md` (SDD-040 to SDD-044).

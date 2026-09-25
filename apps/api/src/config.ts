@@ -1,3 +1,5 @@
+import { type ClientVersion, parseClientVersion } from '@personalfin/domain';
+
 export const APP_ENVIRONMENTS = ['development', 'staging', 'production'] as const;
 export const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 
@@ -10,6 +12,7 @@ export interface ApiConfig {
   port: number;
   logLevel: LogLevel;
   databaseUrl: string;
+  minClientVersion: ClientVersion | null;
   auth: AuthConfig;
 }
 
@@ -82,6 +85,18 @@ function readUrl(env: Environment, name: string, protocols: readonly string[]): 
   return value;
 }
 
+function readMinClientVersion(env: Environment): ClientVersion | null {
+  const value = env.MIN_CLIENT_VERSION;
+  if (value === undefined || value.trim() === '') {
+    return null;
+  }
+  const version = parseClientVersion(value);
+  if (version === null) {
+    throw new ConfigError('MIN_CLIENT_VERSION must be a version such as 0.7.0');
+  }
+  return version;
+}
+
 function readAuthSecret(env: Environment): string {
   const secret = readRequired(env, 'BETTER_AUTH_SECRET');
   if (secret.length < MIN_AUTH_SECRET_LENGTH) {
@@ -112,6 +127,7 @@ export function loadConfig(env: Environment): ApiConfig {
     port: readPort(env),
     logLevel: readLogLevel(env),
     databaseUrl: readUrl(env, 'DATABASE_URL', ['postgres:', 'postgresql:']),
+    minClientVersion: readMinClientVersion(env),
     auth: {
       secret: readAuthSecret(env),
       baseUrl: readUrl(env, 'BETTER_AUTH_URL', ['http:', 'https:']),

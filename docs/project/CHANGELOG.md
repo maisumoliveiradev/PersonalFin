@@ -6,6 +6,15 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Minimum Supported Client Version (SDD-040)
+
+-   Clients send their version (`X-Client-Version`). When the operator
+    sets `MIN_CLIENT_VERSION`, older or unversioned clients receive
+    `426 CLIENT_UPGRADE_REQUIRED` and the app shows "Atualize o
+    PersonalFin". Nothing is blocked by default.
+-   ADR-0016 (offline persistence and synchronization) and the v0.7.0
+    SDDs (SDD-040 to SDD-044); DR-088 to DR-091.
+
 ## \[0.6.0\] --- 2026-09-25
 
 Collaboration. Released to `main` and tagged `v0.6.0`; validated in

@@ -2,7 +2,10 @@ import type { paths } from '@personalfin/api-contract';
 import createClient, { type Middleware } from 'openapi-fetch';
 
 import { getSessionCookie } from '../auth/auth-client';
-import { apiUrl } from '../config';
+import { apiUrl, clientVersion } from '../config';
+import { markUpgradeRequired } from './upgrade-required';
+
+const UPGRADE_REQUIRED_STATUS = 426;
 
 const attachSessionCookie: Middleware = {
   async onRequest({ request }) {
@@ -14,8 +17,21 @@ const attachSessionCookie: Middleware = {
   },
 };
 
+const clientVersionHeader: Middleware = {
+  onRequest({ request }) {
+    request.headers.set('x-client-version', clientVersion);
+    return request;
+  },
+  onResponse({ response }) {
+    if (response.status === UPGRADE_REQUIRED_STATUS) {
+      markUpgradeRequired();
+    }
+    return response;
+  },
+};
+
 export const apiClient = createClient<paths>({ baseUrl: apiUrl, credentials: 'include' });
-apiClient.use(attachSessionCookie);
+apiClient.use(attachSessionCookie, clientVersionHeader);
 
 export class ApiRequestError extends Error {
   override name = 'ApiRequestError';
