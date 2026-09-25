@@ -164,3 +164,46 @@ describe('member management', () => {
     expect(response.statusCode).toBe(403);
   });
 });
+
+describe('ownership transfer', () => {
+  it('makes the member the Owner and the previous Owner an administrator', async () => {
+    const { spaceId, list } = await setUp();
+
+    const response = await server.inject({
+      method: 'POST',
+      url: `/financial-spaces/${spaceId}/ownership-transfer`,
+      headers: asAna,
+      payload: { newOwnerUserId: bruno.id },
+    });
+    const brunoView = (
+      await server.inject({ method: 'GET', url: `/financial-spaces/${spaceId}`, headers: asBruno })
+    ).json();
+    const members = await list(asBruno);
+
+    expect(response.statusCode).toBe(204);
+    expect(brunoView).toMatchObject({ role: 'owner' });
+    expect(
+      members.map((member: { userId: string; role: string }) => [member.userId, member.role]),
+    ).toEqual([
+      [bruno.id, 'owner'],
+      [ana.id, 'member'],
+    ]);
+    expect(members[1].permissions).toHaveLength(6);
+  });
+
+  it('lets only the Owner transfer, and only to an active member', async () => {
+    const { spaceId } = await setUp();
+    const transfer = (headers: { cookie: string }, newOwnerUserId: string) =>
+      server.inject({
+        method: 'POST',
+        url: `/financial-spaces/${spaceId}/ownership-transfer`,
+        headers,
+        payload: { newOwnerUserId },
+      });
+
+    expect((await transfer(asBruno, bruno.id)).statusCode).toBe(403);
+    expect((await transfer(asAna, '00000000-0000-4000-8000-000000000000')).json().error.code).toBe(
+      'MEMBER_NOT_FOUND',
+    );
+  });
+});

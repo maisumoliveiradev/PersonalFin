@@ -84,7 +84,7 @@ export default function MembersScreen() {
   return (
     <Screen>
       <Title>{messages.members.title}</Title>
-      <MemberList spaceId={spaceId} canManage={canManage} />
+      <MemberList spaceId={spaceId} canManage={canManage} isOwner={space.data?.role === 'owner'} />
       {canManage && (
         <>
           <SectionTitle>{messages.members.inviteTitle}</SectionTitle>

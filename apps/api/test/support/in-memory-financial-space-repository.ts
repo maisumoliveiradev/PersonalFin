@@ -60,5 +60,15 @@ export function createInMemoryFinancialSpaceRepository(): FinancialSpaceReposito
       const space = spaces.find((candidate) => candidate.id === spaceId);
       return space === undefined ? null : accessible(userId, space);
     },
+    async transferOwnership(spaceId, fromUserId, toUserId) {
+      const space = spaces.find(
+        (candidate) => candidate.id === spaceId && candidate.ownerUserId === fromUserId,
+      );
+      if (space === undefined) {
+        return false;
+      }
+      space.ownerUserId = toUserId;
+      return true;
+    },
   };
 }
