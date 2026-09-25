@@ -6,6 +6,11 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.12.0\] --- 2026-09-25
+
+Platform Administration. Released to `main` and tagged `v0.12.0`;
+validated in SDD-061 (`docs/sdds/v0.12.0/SDD-061-validation-report.md`).
+
 ### Authorized Support Access (SDD-060)
 
 -   In "Membros", the Owner can authorize a named platform administrator

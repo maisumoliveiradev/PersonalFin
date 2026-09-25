@@ -2,11 +2,13 @@
 
 ## Current Version
 
-`v0.11.0`, released on 2026-09-25 (`main`, tag `v0.11.0`). SDD-001 to
-SDD-058 implemented and validated
-(`docs/sdds/v0.11.0/SDD-058-validation-report.md`). Pending owner
-decisions: push notifications (v0.8.0), automatic exchange rates
-(v0.10.0), OCR/AI extraction (v0.11.0), invitation email (TD-011).
+`v0.12.0`, released on 2026-09-25 (`main`, tag `v0.12.0`). SDD-001 to
+SDD-061 implemented and validated
+(`docs/sdds/v0.12.0/SDD-061-validation-report.md`). All roadmap versions
+up to v0.12.0 are delivered, except the items that need owner decisions
+on external services: push notifications (v0.8.0), automatic exchange
+rates (v0.10.0), OCR/AI extraction (v0.11.0), and invitation email
+(TD-011).
 
 ## Implemented Product Capabilities
 
@@ -213,8 +215,10 @@ decisions: push notifications (v0.8.0), automatic exchange rates
 
 ## Active Target
 
-`v0.12.0` --- Platform Administration (`docs/sdds/v0.12.0/README.md`).
-SDD-059 and SDD-060 implemented.
+None planned. The next steps are the owner decisions listed above, the
+"Later evolution" items in `docs/product/ROADMAP.md` (Google and Apple
+sign-in, MFA, custom metrics, OFX, and others), and a production
+deployment, which needs hosting choices.
 
 ## Important Constraint
 
@@ -223,8 +227,13 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Run SDD-061 (v0.12.0 release validation). Owner decisions pending: OCR/AI
-provider, FX rate provider, push notifications (hosted push service), and invitation
-email delivery (TD-011). Domain decisions taken under delegation await
-owner review (`docs/sdds/v0.2.0/README.md` to
-`docs/sdds/v0.12.0/README.md`, DR-072 to DR-101, ADR-0013 to ADR-0018).
+Owner review of the decisions taken under delegation
+(`docs/sdds/v0.2.0/README.md` to `docs/sdds/v0.12.0/README.md`, DR-072 to
+DR-101, ADR-0013 to ADR-0018). Then owner choices on:
+- the push service;
+- the exchange-rate provider;
+- the OCR/AI provider;
+- the email provider;
+- hosting.
+
+Each unblocks a pending item.
