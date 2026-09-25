@@ -2,9 +2,9 @@
 
 ## Current Version
 
-`v0.6.0`, released on 2026-09-25 (`main`, tag `v0.6.0`). SDD-001 to
-SDD-039 implemented and validated
-(`docs/sdds/v0.6.0/SDD-039-validation-report.md`).
+`v0.7.0`, released on 2026-09-25 (`main`, tag `v0.7.0`). SDD-001 to
+SDD-044 implemented and validated
+(`docs/sdds/v0.7.0/SDD-044-validation-report.md`).
 
 ## Implemented Product Capabilities
 
@@ -168,8 +168,8 @@ SDD-039 implemented and validated
 
 ## Active Target
 
-`v0.7.0` --- Mobile Resilience (`docs/sdds/v0.7.0/README.md`, SDD-040
-to SDD-044). SDD-040 to SDD-043 implemented.
+`v0.8.0` --- Debts, Goals, and Reminders (`docs/product/ROADMAP.md`). No
+SDD drafted yet.
 
 ## Important Constraint
 
@@ -178,8 +178,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Run SDD-044 (v0.7.0 release validation). Owner decision pending on
-invitation email delivery (TD-011). Domain decisions
-taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, `docs/sdds/v0.7.0/README.md`, DR-072 to
-DR-091, ADR-0013 to ADR-0016).
+Draft the v0.8.0 SDDs (Debts, Goals, and Reminders). Owner decision
+pending on invitation email delivery (TD-011). Domain decisions taken
+under delegation await owner review (`docs/sdds/v0.2.0/README.md` to
+`docs/sdds/v0.7.0/README.md`, DR-072 to DR-091, ADR-0013 to ADR-0016).
