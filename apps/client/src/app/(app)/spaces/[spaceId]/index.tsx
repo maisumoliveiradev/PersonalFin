@@ -11,6 +11,7 @@ import { BalanceUpdatePrompt } from '../../../../features/balance/BalanceUpdateP
 import { MonthlyDashboard } from '../../../../features/dashboard/MonthlyDashboard';
 import { ProjectionSeries } from '../../../../features/dashboard/ProjectionSeries';
 import { can, roleLabel } from '../../../../features/financial-spaces/permissions';
+import { RemindersPanel } from '../../../../features/reminders/RemindersPanel';
 import { PendingChanges } from '../../../../features/sync/PendingChanges';
 import { SyncStatus } from '../../../../features/sync/SyncStatus';
 import { MonthNavigator } from '../../../../features/transactions/MonthNavigator';
@@ -95,6 +96,7 @@ export default function FinancialSpaceHomeScreen() {
       {saved === 'queued-update' && <StatusMessage>{messages.sync.queued.update}</StatusMessage>}
       {saved === 'queued-delete' && <StatusMessage>{messages.sync.queued.delete}</StatusMessage>}
       <SyncStatus spaceId={space.data.id} />
+      <RemindersPanel spaceId={space.data.id} />
       {saved === 'recurrence' && (
         <StatusMessage>{messages.recurrences.created(Number(params.count ?? 0))}</StatusMessage>
       )}

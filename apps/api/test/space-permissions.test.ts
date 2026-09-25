@@ -158,6 +158,20 @@ const ENDPOINTS: Endpoint[] = [
   { method: 'GET', path: `/goals/${MISSING}`, permission: 'view' },
   { method: 'PATCH', path: `/goals/${MISSING}`, permission: 'plan', payload: { version: 1 } },
   { method: 'POST', path: `/goals/${MISSING}/progress`, permission: 'plan', payload: {} },
+  { method: 'GET', path: '/reminders?today=2026-10-01', permission: 'view' },
+  {
+    method: 'POST',
+    path: '/reminders/dismissals',
+    permission: 'view',
+    payload: { key: 'transaction:x', stage: 'before-0' },
+  },
+  { method: 'GET', path: '/reminder-settings', permission: 'view' },
+  {
+    method: 'PUT',
+    path: '/reminder-settings',
+    permission: 'view',
+    payload: { offsets: [0], kinds: ['transactions'] },
+  },
 ];
 
 async function shareWith(permissions: SpacePermission[]): Promise<string> {
@@ -207,7 +221,8 @@ describe('space permissions', () => {
       const response = await call(spaceId, endpoint);
 
       expect(response.statusCode).not.toBe(403);
-      expect(response.json()?.error?.code).not.toBe('FINANCIAL_SPACE_NOT_FOUND');
+      const body = response.body === '' ? null : response.json();
+      expect(body?.error?.code).not.toBe('FINANCIAL_SPACE_NOT_FOUND');
     },
   );
 

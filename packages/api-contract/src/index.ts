@@ -81,3 +81,7 @@ export type GoalList = components['schemas']['GoalList'];
 export type CreateGoalRequest = components['schemas']['CreateGoalRequest'];
 export type UpdateGoalRequest = components['schemas']['UpdateGoalRequest'];
 export type GoalProgressRequest = components['schemas']['GoalProgressRequest'];
+export type Reminder = components['schemas']['Reminder'];
+export type ReminderList = components['schemas']['ReminderList'];
+export type ReminderSettings = components['schemas']['ReminderSettings'];
+export type ReminderStage = components['schemas']['ReminderStage'];

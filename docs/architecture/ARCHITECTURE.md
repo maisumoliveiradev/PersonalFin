@@ -265,6 +265,24 @@ space goals are recorded in `audit_event`, because that table is scoped
 to a space. Goals are never read by the dashboard or projection
 (DR-050).
 
+## In-app reminders (SDD-048, DR-095)
+
+`modules/reminders` computes reminders on request for the caller's local
+`today` (`GET .../reminders?today=`). It reuses existing sources:
+- pending non-card transactions (`transactions.list`);
+- open invoices (`cardInvoices.listOpenDue`);
+- debt summaries (`summarizeDebt`);
+- the current month's projection (`getProjection`).
+
+The domain function `reminderStage` maps days-until-due and the user's
+offsets to a stage. The API then drops stages the user dismissed
+(`reminder_dismissal`). Settings live in `reminder_setting` (defaults
+when absent). Nothing is stored per reminder, so reminders always
+reflect current data.
+
+Push delivery is not implemented: it needs the owner to authorize a
+hosted push service. It will reuse this computation.
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:

@@ -8,6 +8,50 @@ export const messages = {
   offline: {
     banner: 'Sem conexão. Mostrando os dados salvos neste aparelho.',
   },
+  reminders: {
+    title: 'Lembretes',
+    settingsAction: 'Configurar lembretes',
+    settingsTitle: 'Configurar lembretes',
+    settingsHint:
+      'Os lembretes aparecem aqui no app. Cada pessoa escolhe os seus; nada muda para os outros membros.',
+    offsetsLabel: 'Quando lembrar',
+    offsets: {
+      '0': 'No dia',
+      '1': '1 dia antes',
+      '3': '3 dias antes',
+      '7': '7 dias antes',
+    } as Record<string, string>,
+    kindsLabel: 'Sobre o quê',
+    kinds: {
+      transactions: 'Receitas e despesas pendentes',
+      invoices: 'Faturas de cartão',
+      debts: 'Parcelas de dívidas',
+      projection: 'Saldo projetado negativo no mês',
+    } as Record<string, string>,
+    saveAction: 'Salvar lembretes',
+    saved: 'Lembretes salvos.',
+    loadError: 'Não foi possível carregar os lembretes.',
+    saveError: 'Não foi possível salvar. Tente novamente.',
+    dismissLabel: 'Dispensar',
+    dismissAction: (text: string) => `Dispensar lembrete: ${text}`,
+    due: (days: number) => {
+      if (days < -1) {
+        return `venceu há ${-days} dias`;
+      }
+      if (days === -1) {
+        return 'venceu ontem';
+      }
+      if (days === 0) {
+        return 'vence hoje';
+      }
+      return days === 1 ? 'vence amanhã' : `vence em ${days} dias`;
+    },
+    transaction: (type: string, description: string, amount: string, due: string) =>
+      `${type} ${description}: ${amount}, ${due}`,
+    invoice: (card: string, amount: string, due: string) => `Fatura ${card}: ${amount}, ${due}`,
+    debt: (name: string, amount: string, due: string) => `Parcela de ${name}: ${amount}, ${due}`,
+    projection: (amount: string) => `O saldo projetado para o fim do mês está negativo: ${amount}`,
+  },
   goals: {
     spaceAction: 'Metas',
     globalAction: 'Minhas metas',
