@@ -2,9 +2,10 @@
 
 ## Current Version
 
-`v0.7.0`, released on 2026-09-25 (`main`, tag `v0.7.0`). SDD-001 to
-SDD-044 implemented and validated
-(`docs/sdds/v0.7.0/SDD-044-validation-report.md`).
+`v0.8.0`, released on 2026-09-25 (`main`, tag `v0.8.0`). SDD-001 to
+SDD-049 implemented and validated
+(`docs/sdds/v0.8.0/SDD-049-validation-report.md`). Push notifications
+from the v0.8.0 roadmap item are pending an owner decision.
 
 ## Implemented Product Capabilities
 
@@ -120,6 +121,20 @@ SDD-044 implemented and validated
     delete-versus-edit conflicts wait for the user's choice in "Não
     sincronizado" (DR-089, DR-090). Resolutions are audited in
     `audit_event.context` and shown in the audit history.
+-   **Debts (SDD-045):** per-space debts and loans with payments,
+    outstanding balance, installments, next due date, and progress
+    (DR-092). They are separate from transactions, and there is no
+    interest model. Prepayments can be simulated (reduce the term or
+    reduce the installment) and confirmed (SDD-046, DR-093).
+-   **Goals (SDD-047):** space goals (visible to members; changing them
+    needs `plan`) and global goals (owner only). The accumulated amount is
+    updated manually with an append-only history. Goals never affect
+    projections (DR-094).
+-   **In-app reminders (SDD-048):** personal reminders on the space
+    screen for pending transactions, invoices, debt installments, and a
+    negative monthly projection. They use configurable offsets and can
+    be dismissed per stage (DR-095). There are no push or email
+    notifications (pending owner decision).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -146,13 +161,15 @@ SDD-044 implemented and validated
         month, balance-reminder, business-day, card, comparison, dashboard-preference, and client-version rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
-    checksum verification (ADR-0008), `0001` to `0022`. Tables: Better
+    checksum verification (ADR-0008), `0001` to `0025`. Tables: Better
     Auth `user`, `session`, `account`, `verification`; `financial_space`,
     `financial_space_member`, `space_invitation`, `category`,
     `financial_transaction`, `transaction_tag`, `tag`, `audit_event`,
     `balance_snapshot`, `balance_reminder_setting`, `recurrence_series`,
     `card`, `card_limit_change`, `card_invoice`, `card_invoice_payment`,
-    `card_installment_purchase`, `dashboard_preference`; view
+    `card_installment_purchase`, `dashboard_preference`, `debt`,
+    `debt_payment`, `goal`, `goal_progress`, `reminder_setting`,
+    `reminder_dismissal`; view
     `card_invoice_balance`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
@@ -168,8 +185,8 @@ SDD-044 implemented and validated
 
 ## Active Target
 
-`v0.8.0` --- Debts, Goals, and Reminders (`docs/product/ROADMAP.md`). No
-SDD drafted yet.
+`v0.9.0` --- Import, Export, and Data Portability
+(`docs/product/ROADMAP.md`). No SDD drafted yet.
 
 ## Important Constraint
 
@@ -178,7 +195,8 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.8.0 SDDs (Debts, Goals, and Reminders). Owner decision
-pending on invitation email delivery (TD-011). Domain decisions taken
-under delegation await owner review (`docs/sdds/v0.2.0/README.md` to
-`docs/sdds/v0.7.0/README.md`, DR-072 to DR-091, ADR-0013 to ADR-0016).
+Draft the v0.9.0 SDDs (Import, Export, and Data Portability). Owner
+decisions pending: push notifications (hosted push service) and
+invitation email delivery (TD-011). Domain decisions taken under
+delegation await owner review (`docs/sdds/v0.2.0/README.md` to
+`docs/sdds/v0.8.0/README.md`, DR-072 to DR-095, ADR-0013 to ADR-0016).

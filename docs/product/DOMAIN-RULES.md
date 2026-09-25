@@ -283,6 +283,23 @@ confirmed.
 
 **DR-047** Simulation must not mutate real debt or transaction data.
 
+**DR-092** *(SDD-045; decided under delegation.)* A debt belongs to a
+space and has a name, original amount, planned installment count,
+current installment amount, and first due date. Payments (installment or
+prepayment) are recorded on the debt and never exceed the outstanding
+balance; the outstanding balance is the original amount minus active
+payments, and paid installments are the recorded installment payments.
+Interest is not modeled. Debt payments do not create transactions and
+transactions do not pay debts; cash outflows are recorded as
+transactions.
+
+**DR-093** *(SDD-046; decided under delegation.)* A prepayment
+simulation either keeps the installment amount and reduces the number of
+remaining installments (the last one absorbs the difference) or keeps
+the number of remaining installments and reduces the installment (the
+last one absorbs the cents). Confirmation records a prepayment and the
+new plan atomically.
+
 ## Goals
 
 **DR-048** Goals may be global or Financial-Space scoped.
@@ -291,6 +308,29 @@ confirmed.
 
 **DR-050** Goal accumulated value does not automatically reduce
 projected available balance.
+
+**DR-094** *(SDD-047; decided under delegation.)* A goal has a name,
+target, accumulated amount, and optional target date. Space goals are
+visible to members and changed with `plan`; global goals are visible
+only to their owner. Each accumulated-amount update is kept in an
+append-only progress history.
+
+## Reminders
+
+**DR-095** *(SDD-048; decided under delegation.)* In-app reminders are
+personal per user and space:
+- **Offsets:** chosen from on the day, 1, 3, and 7 days before. The
+  default is on the day and 3 days before.
+- **Kinds:** pending income and expenses, open card invoices, debt
+  installments, and a negative projected month-end balance for the
+  current month.
+- **Stages:** a reminder appears at the largest chosen offset that
+  covers the days left and moves to smaller offsets as the due date
+  approaches. Past-due pending items are reminded as overdue (up to 90
+  days back).
+- **Dismissal:** dismissing hides the reminder until its next stage.
+
+Reminders never change financial data.
 
 ## Dates and time
 

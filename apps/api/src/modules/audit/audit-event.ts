@@ -10,7 +10,10 @@ export type AuditEntityType =
   | 'tag'
   | 'financial_space'
   | 'financial_space_member'
-  | 'space_invitation';
+  | 'space_invitation'
+  | 'debt'
+  | 'debt_payment'
+  | 'goal';
 export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
 
 export interface AuditContext {

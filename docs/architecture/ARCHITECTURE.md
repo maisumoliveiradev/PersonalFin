@@ -234,6 +234,55 @@ invalid sessions with `401 UNAUTHENTICATED`. Web clients use an
 `HttpOnly` session cookie; native clients keep the same cookie in
 secure storage.
 
+## Debts (SDD-045, DR-092)
+
+`modules/debts` stores `debt` (the plan) and `debt_payment` (soft
+delete). The summary (outstanding balance, paid and remaining
+installments, next due date, progress) is computed by
+`summarizeDebt` in `packages/domain` from the plan and the active
+payments, so the API and any client share one definition. Debts do not
+create or read transactions.
+
+Prepayment simulation (SDD-046, DR-093) is the pure `simulatePrepayment`:
+it returns the new plan and the summary that plan would produce.
+`POST .../simulations` only returns it. `POST .../prepayments` recomputes
+it in the same database transaction (debt row locked, version checked),
+records the prepayment, and stores the plan. What is confirmed is
+therefore exactly what was simulated.
+
+## Goals (SDD-047, DR-094)
+
+`modules/goals` serves the same handlers under two scopes:
+- `/goals` for global goals, which belong only to the caller;
+- `/financial-spaces/{id}/goals` for space goals, where reading needs
+  `view` and changing needs `plan`.
+
+A scope resolver turns the request into
+`{ kind: 'global', ownerUserId }` or `{ kind: 'space', financialSpaceId }`,
+and every repository query is filtered by it. Accumulated-amount updates
+are appended to `goal_progress`, which has an append-only trigger. Only
+space goals are recorded in `audit_event`, because that table is scoped
+to a space. Goals are never read by the dashboard or projection
+(DR-050).
+
+## In-app reminders (SDD-048, DR-095)
+
+`modules/reminders` computes reminders on request for the caller's local
+`today` (`GET .../reminders?today=`). It reuses existing sources:
+- pending non-card transactions (`transactions.list`);
+- open invoices (`cardInvoices.listOpenDue`);
+- debt summaries (`summarizeDebt`);
+- the current month's projection (`getProjection`).
+
+The domain function `reminderStage` maps days-until-due and the user's
+offsets to a stage. The API then drops stages the user dismissed
+(`reminder_dismissal`). Settings live in `reminder_setting` (defaults
+when absent). Nothing is stored per reminder, so reminders always
+reflect current data.
+
+Push delivery is not implemented: it needs the owner to authorize a
+hosted push service. It will reuse this computation.
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:

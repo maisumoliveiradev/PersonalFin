@@ -50,3 +50,7 @@ See `v0.6.0/README.md` (SDD-034 to SDD-039).
 ## v0.7.0 sequence
 
 See `v0.7.0/README.md` (SDD-040 to SDD-044).
+
+## v0.8.0 sequence
+
+See `v0.8.0/README.md` (SDD-045 to SDD-049).

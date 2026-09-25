@@ -16,14 +16,20 @@ import type { CategoryRepository } from '../modules/categories/category-reposito
 import { createPostgresCategoryRepository } from '../modules/categories/postgres-category-repository.ts';
 import type { DashboardRepository } from '../modules/dashboard/dashboard-repository.ts';
 import { createPostgresDashboardRepository } from '../modules/dashboard/postgres-dashboard-repository.ts';
+import type { DebtRepository } from '../modules/debts/debt-repository.ts';
+import { createPostgresDebtRepository } from '../modules/debts/postgres-debt-repository.ts';
 import type { FinancialSpaceRepository } from '../modules/financial-spaces/financial-space-repository.ts';
 import { createPostgresFinancialSpaceRepository } from '../modules/financial-spaces/postgres-financial-space-repository.ts';
+import type { GoalRepository } from '../modules/goals/goal.ts';
+import { createPostgresGoalRepository } from '../modules/goals/postgres-goal-repository.ts';
 import type { MemberRepository } from '../modules/members/member-repository.ts';
 import { createPostgresMemberRepository } from '../modules/members/postgres-member-repository.ts';
 import type { DashboardPreferenceRepository } from '../modules/preferences/dashboard-preference-repository.ts';
 import { createPostgresDashboardPreferenceRepository } from '../modules/preferences/postgres-dashboard-preference-repository.ts';
 import { createPostgresRecurrenceRepository } from '../modules/recurrences/postgres-recurrence-repository.ts';
 import type { RecurrenceRepository } from '../modules/recurrences/recurrence-repository.ts';
+import { createPostgresReminderRepository } from '../modules/reminders/postgres-reminder-repository.ts';
+import type { ReminderRepository } from '../modules/reminders/reminder-repository.ts';
 import { createPostgresTagRepository } from '../modules/tags/postgres-tag-repository.ts';
 import type { TagRepository } from '../modules/tags/tag-repository.ts';
 import { createPostgresTransactionRepository } from '../modules/transactions/postgres-transaction-repository.ts';
@@ -46,6 +52,9 @@ export interface Repositories {
   analytics: AnalyticsRepository;
   dashboardPreferences: DashboardPreferenceRepository;
   members: MemberRepository;
+  debts: DebtRepository;
+  goals: GoalRepository;
+  reminders: ReminderRepository;
 }
 
 export interface DataAccess {
@@ -70,6 +79,9 @@ function createPostgresRepositories(db: Queryable): Repositories {
     analytics: createPostgresAnalyticsRepository(db),
     dashboardPreferences: createPostgresDashboardPreferenceRepository(db),
     members: createPostgresMemberRepository(db),
+    debts: createPostgresDebtRepository(db),
+    goals: createPostgresGoalRepository(db),
+    reminders: createPostgresReminderRepository(db),
   };
 }
 

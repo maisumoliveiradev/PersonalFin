@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: PersonalFin Application API
-  version: 0.7.0
+  version: 0.8.0
   description: >
     Application API contract. Authentication endpoints (sign-up, sign-in,
     sign-out, session) are served by Better Auth under /api/auth and are
@@ -2000,8 +2000,717 @@ paths:
           $ref: '#/components/responses/PermissionDenied'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/debts:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listDebts
+      summary: List the debts of the space with their summaries
+      responses:
+        '200':
+          description: Debts in creation order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createDebt
+      summary: Register a debt or loan (audited)
+      description: >
+        Debts are tracked by value and progress without interest (DR-045, DR-092); they do not create transactions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDebtRequest'
+      responses:
+        '201':
+          description: The created debt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '422':
+          description: >
+            INVALID_DEBT_PLAN (installment larger than the original amount).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/debts/{debtId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/DebtId'
+    get:
+      operationId: getDebt
+      summary: Get a debt with its payments
+      responses:
+        '200':
+          description: The debt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: updateDebt
+      summary: Edit or archive a debt (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDebtRequest'
+      responses:
+        '200':
+          description: The updated debt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >
+            INVALID_DEBT_PLAN (installment above the original amount, or fewer installments than already paid).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/debts/{debtId}/payments:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/DebtId'
+    post:
+      operationId: recordDebtPayment
+      summary: Record a debt payment (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DebtPaymentRequest'
+      responses:
+        '201':
+          description: The debt with the new payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >
+            DEBT_OVERPAYMENT (larger than the outstanding balance).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/debts/{debtId}/payments/{paymentId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/DebtId'
+      - name: paymentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: removeDebtPayment
+      summary: Remove a debt payment (soft delete, audited)
+      responses:
+        '200':
+          description: The debt without the payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/debts/{debtId}/simulations:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/DebtId'
+    post:
+      operationId: simulateDebtPrepayment
+      summary: Simulate a prepayment without changing any data
+      description: >
+        Stateless: nothing is stored (DR-046, DR-047).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrepaymentSimulationRequest'
+      responses:
+        '200':
+          description: The current and simulated states and the resulting plan (DR-093).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrepaymentSimulation'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >
+            DEBT_OVERPAYMENT (larger than the outstanding balance).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/debts/{debtId}/prepayments:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/DebtId'
+    post:
+      operationId: confirmDebtPrepayment
+      summary: Confirm a prepayment and apply the simulated plan (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPrepaymentRequest'
+      responses:
+        '201':
+          description: The debt with the prepayment and the new plan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >
+            DEBT_OVERPAYMENT (larger than the outstanding balance).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /goals:
+    get:
+      operationId: listGoals
+      summary: List the callers global goals
+      responses:
+        '200':
+          description: Goals in creation order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+    post:
+      operationId: createGoal
+      summary: Create a global goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGoalRequest'
+      responses:
+        '201':
+          description: The created goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+  /goals/{goalId}:
+    parameters:
+      - $ref: '#/components/parameters/GoalId'
+    get:
+      operationId: getGoal
+      summary: Get a goal with its progress history
+      responses:
+        '200':
+          description: The goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: updateGoal
+      summary: Edit or archive a goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGoalRequest'
+      responses:
+        '200':
+          description: The updated goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /goals/{goalId}/progress:
+    parameters:
+      - $ref: '#/components/parameters/GoalId'
+    post:
+      operationId: recordGoalProgress
+      summary: Set the accumulated amount (kept in the progress history)
+      description: >
+        Goals are manually maintained and never change projections (DR-049, DR-050).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalProgressRequest'
+      responses:
+        '200':
+          description: The goal with the new progress.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/goals:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listSpaceGoals
+      summary: List the space goals
+      responses:
+        '200':
+          description: Goals in creation order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createSpaceGoal
+      summary: Create a space goal (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGoalRequest'
+      responses:
+        '201':
+          description: The created goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/goals/{goalId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/GoalId'
+    get:
+      operationId: getSpaceGoal
+      summary: Get a goal with its progress history
+      responses:
+        '200':
+          description: The goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: updateSpaceGoal
+      summary: Edit or archive a goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGoalRequest'
+      responses:
+        '200':
+          description: The updated goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/goals/{goalId}/progress:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/GoalId'
+    post:
+      operationId: recordSpaceGoalProgress
+      summary: Set the accumulated amount (kept in the progress history)
+      description: >
+        Goals are manually maintained and never change projections (DR-049, DR-050).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalProgressRequest'
+      responses:
+        '200':
+          description: The goal with the new progress.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/reminders:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listReminders
+      summary: Current in-app reminders of the caller for a date
+      description: >
+        Personal: pending transactions, open card invoices, debt installments, and a negative projected month-end balance, filtered by the caller's reminder settings and dismissals.
+      parameters:
+        - name: today
+          in: query
+          required: true
+          description: The caller's local calendar date.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Overdue reminders first, then by due date (DR-095).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/reminders/dismissals:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    post:
+      operationId: dismissReminder
+      summary: Dismiss a reminder until its next stage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderDismissalRequest'
+      responses:
+        '204':
+          description: Dismissed.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/reminder-settings:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getReminderSettings
+      summary: The caller's reminder settings for the space (defaults when never saved)
+      responses:
+        '200':
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderSettings'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    put:
+      operationId: saveReminderSettings
+      summary: Save the caller's reminder settings for the space
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderSettings'
+      responses:
+        '200':
+          description: The saved settings (deduplicated and ordered).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderSettings'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
+    GoalId:
+      name: goalId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DebtId:
+      name: debtId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     InvoiceMonth:
       name: month
       in: path
@@ -2165,6 +2874,436 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    ReminderStage:
+      type: string
+      enum: [overdue, before-0, before-1, before-3, before-7]
+    ReminderSettings:
+      type: object
+      additionalProperties: false
+      required: [offsets, kinds]
+      properties:
+        offsets:
+          type: array
+          maxItems: 4
+          description: Days before the due date to remind (0 = on the day).
+          items:
+            type: integer
+            enum: [0, 1, 3, 7]
+        kinds:
+          type: array
+          items:
+            type: string
+            enum: [transactions, invoices, debts, projection]
+    ReminderDismissalRequest:
+      type: object
+      additionalProperties: false
+      required: [key, stage]
+      properties:
+        key:
+          type: string
+          minLength: 1
+          maxLength: 200
+        stage:
+          $ref: '#/components/schemas/ReminderStage'
+    Reminder:
+      type: object
+      additionalProperties: false
+      required: [key, kind, stage, dueDate, daysUntilDue, description, amountMinor, transactionType]
+      properties:
+        key:
+          type: string
+        kind:
+          type: string
+          enum: [transactions, invoices, debts, projection]
+        stage:
+          $ref: '#/components/schemas/ReminderStage'
+        dueDate:
+          type: string
+          format: date
+        daysUntilDue:
+          type: integer
+        description:
+          type: string
+          description: Transaction description, card name, debt name, or the month (YYYY-MM) for projection.
+        amountMinor:
+          type: integer
+          description: Amount due; the projected balance (negative) for projection reminders.
+        transactionType:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/TransactionType'
+    ReminderList:
+      type: object
+      additionalProperties: false
+      required: [today, items]
+      properties:
+        today:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reminder'
+    GoalSummary:
+      type: object
+      additionalProperties: false
+      required: [remainingMinor, progressTenths, reached]
+      properties:
+        remainingMinor:
+          type: integer
+        progressTenths:
+          type: integer
+          description: Accumulated share of the target in tenths of a percent, rounded down and capped at 1000.
+        reached:
+          type: boolean
+    Goal:
+      type: object
+      additionalProperties: false
+      required: [id, scope, name, targetAmountMinor, accumulatedMinor, currency, targetDate, archived, version, summary]
+      properties:
+        id:
+          type: string
+          format: uuid
+        scope:
+          type: string
+          enum: [global, space]
+        name:
+          type: string
+        targetAmountMinor:
+          type: integer
+        accumulatedMinor:
+          type: integer
+        currency:
+          type: string
+        targetDate:
+          type: [string, 'null']
+          format: date
+        archived:
+          type: boolean
+        version:
+          type: integer
+        summary:
+          $ref: '#/components/schemas/GoalSummary'
+    GoalDetail:
+      type: object
+      additionalProperties: false
+      required: [id, scope, name, targetAmountMinor, accumulatedMinor, currency, targetDate, archived, version, summary, progress]
+      properties:
+        id:
+          type: string
+          format: uuid
+        scope:
+          type: string
+          enum: [global, space]
+        name:
+          type: string
+        targetAmountMinor:
+          type: integer
+        accumulatedMinor:
+          type: integer
+        currency:
+          type: string
+        targetDate:
+          type: [string, 'null']
+          format: date
+        archived:
+          type: boolean
+        version:
+          type: integer
+        summary:
+          $ref: '#/components/schemas/GoalSummary'
+        progress:
+          type: array
+          description: Accumulated-amount updates, newest first.
+          items:
+            type: object
+            additionalProperties: false
+            required: [accumulatedMinor, recordedAt]
+            properties:
+              accumulatedMinor:
+                type: integer
+              recordedAt:
+                type: string
+                format: date-time
+    GoalList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Goal'
+    CreateGoalRequest:
+      type: object
+      additionalProperties: false
+      required: [name, targetAmountMinor]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        targetAmountMinor:
+          type: integer
+          minimum: 1
+        targetDate:
+          type: [string, 'null']
+          format: date
+    UpdateGoalRequest:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        targetAmountMinor:
+          type: integer
+          minimum: 1
+        targetDate:
+          type: [string, 'null']
+          format: date
+        archived:
+          type: boolean
+    GoalProgressRequest:
+      type: object
+      additionalProperties: false
+      required: [version, accumulatedMinor]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        accumulatedMinor:
+          type: integer
+          minimum: 0
+    PrepaymentMode:
+      type: string
+      enum: [reduce_term, reduce_installment]
+      description: reduce_term keeps the installment and lowers the count; reduce_installment keeps the count and lowers the installment.
+    PrepaymentSimulationRequest:
+      type: object
+      additionalProperties: false
+      required: [amountMinor, mode]
+      properties:
+        amountMinor:
+          type: integer
+          minimum: 1
+        mode:
+          $ref: '#/components/schemas/PrepaymentMode'
+    ConfirmPrepaymentRequest:
+      type: object
+      additionalProperties: false
+      required: [version, amountMinor, mode, paidOn]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        amountMinor:
+          type: integer
+          minimum: 1
+        mode:
+          $ref: '#/components/schemas/PrepaymentMode'
+        paidOn:
+          type: string
+          format: date
+    PrepaymentSimulation:
+      type: object
+      additionalProperties: false
+      required: [mode, amountMinor, plan, before, after]
+      properties:
+        mode:
+          $ref: '#/components/schemas/PrepaymentMode'
+        amountMinor:
+          type: integer
+        plan:
+          type: object
+          additionalProperties: false
+          required: [installmentCount, installmentAmountMinor]
+          properties:
+            installmentCount:
+              type: integer
+            installmentAmountMinor:
+              type: integer
+        before:
+          $ref: '#/components/schemas/DebtSummary'
+        after:
+          $ref: '#/components/schemas/DebtSummary'
+    DebtSummary:
+      type: object
+      additionalProperties: false
+      description: Derived from the plan and the active payments (DR-092).
+      required: [paidMinor, outstandingMinor, paidInstallments, remainingInstallments, lastInstallmentMinor, nextDueDate, progressTenths, settled]
+      properties:
+        paidMinor:
+          type: integer
+        outstandingMinor:
+          type: integer
+        paidInstallments:
+          type: integer
+        remainingInstallments:
+          type: integer
+        lastInstallmentMinor:
+          type: [integer, 'null']
+        nextDueDate:
+          type: [string, 'null']
+          format: date
+        progressTenths:
+          type: integer
+          description: Paid share of the original amount in tenths of a percent, rounded down.
+        settled:
+          type: boolean
+    Debt:
+      type: object
+      additionalProperties: false
+      required: [id, name, originalAmountMinor, currency, installmentCount, installmentAmountMinor, firstDueDate, archived, version, summary]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        originalAmountMinor:
+          type: integer
+        currency:
+          type: string
+        installmentCount:
+          type: integer
+        installmentAmountMinor:
+          type: integer
+        firstDueDate:
+          type: string
+          format: date
+        archived:
+          type: boolean
+        version:
+          type: integer
+        summary:
+          $ref: '#/components/schemas/DebtSummary'
+    DebtPayment:
+      type: object
+      additionalProperties: false
+      required: [id, kind, amountMinor, paidOn, recordedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [installment, prepayment]
+        amountMinor:
+          type: integer
+        paidOn:
+          type: string
+          format: date
+        recordedAt:
+          type: string
+          format: date-time
+    DebtDetail:
+      type: object
+      additionalProperties: false
+      required: [id, name, originalAmountMinor, currency, installmentCount, installmentAmountMinor, firstDueDate, archived, version, summary, payments]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        originalAmountMinor:
+          type: integer
+        currency:
+          type: string
+        installmentCount:
+          type: integer
+        installmentAmountMinor:
+          type: integer
+        firstDueDate:
+          type: string
+          format: date
+        archived:
+          type: boolean
+        version:
+          type: integer
+        summary:
+          $ref: '#/components/schemas/DebtSummary'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DebtPayment'
+    DebtList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Debt'
+    CreateDebtRequest:
+      type: object
+      additionalProperties: false
+      required: [name, originalAmountMinor, installmentCount, firstDueDate]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        originalAmountMinor:
+          type: integer
+          minimum: 1
+        installmentCount:
+          type: integer
+          minimum: 1
+          maximum: 600
+        installmentAmountMinor:
+          type: integer
+          minimum: 1
+          description: Defaults to the original amount divided by the installment count, rounded down.
+        firstDueDate:
+          type: string
+          format: date
+    UpdateDebtRequest:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        installmentCount:
+          type: integer
+          minimum: 1
+          maximum: 600
+        installmentAmountMinor:
+          type: integer
+          minimum: 1
+        firstDueDate:
+          type: string
+          format: date
+        archived:
+          type: boolean
+    DebtPaymentRequest:
+      type: object
+      additionalProperties: false
+      required: [amountMinor, paidOn]
+      properties:
+        kind:
+          type: string
+          enum: [installment, prepayment]
+          default: installment
+        amountMinor:
+          type: integer
+          minimum: 1
+        paidOn:
+          type: string
+          format: date
     CardDay:
       type: integer
       minimum: 1
@@ -2431,6 +3570,9 @@ components:
                   - financial_space
                   - financial_space_member
                   - space_invitation
+                  - debt
+                  - debt_payment
+                  - goal
               entityId:
                 type: string
               action:

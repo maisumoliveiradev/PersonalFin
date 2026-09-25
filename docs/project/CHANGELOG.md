@@ -6,6 +6,64 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.8.0\] --- 2026-09-25
+
+Debts, Goals, and Reminders. Released to `main` and tagged `v0.8.0`;
+validated in SDD-049 (`docs/sdds/v0.8.0/SDD-049-validation-report.md`).
+Push notifications are pending an owner decision.
+
+### In-App Reminders (SDD-048)
+
+-   A "Lembretes" section on the space screen covers:
+    - pending income and expenses;
+    - card invoices;
+    - debt installments due soon or overdue;
+    - a negative projected balance for the month.
+
+    Each reminder can be dismissed and comes back at its next offset.
+-   "Configurar lembretes" is personal. You choose when to be reminded
+    (on the day, 1, 3, or 7 days before; default on the day and 3 days
+    before) and about what (DR-095).
+-   API: `.../reminders`, `.../reminders/dismissals`,
+    `.../reminder-settings`; migration `0025_reminders`.
+-   Push notifications are not included and need an owner decision.
+
+### Financial Goals (SDD-047)
+
+-   "Metas" per space (shared with members) and "Minhas metas" (global,
+    visible only to you).
+-   Each goal has a name, a target, and an optional target date.
+-   The accumulated amount is updated manually and every update is kept
+    in the history. Progress and the remaining amount are shown, and a
+    goal is marked "Meta atingida" once reached.
+-   Goals never change balances, the dashboard, or projections (DR-050,
+    DR-094). Space goal changes are audited.
+-   API: `/goals` and `/financial-spaces/{id}/goals`; migration
+    `0024_goals`.
+
+### Early-Amortization Simulation (SDD-046)
+
+-   "Simular amortização" on a debt compares today with the result of a
+    prepayment. You can reduce the term (same installment) or reduce the
+    installment (same number of installments, and the last one absorbs
+    the cents).
+-   Simulating never changes data. "Confirmar amortização" records the
+    prepayment and applies the simulated plan in one audited change
+    (DR-046, DR-047, DR-093).
+-   API: `POST .../debts/{id}/simulations` and `.../prepayments`.
+
+### Debts and Loans (SDD-045)
+
+-   "Dívidas" per space: name, original amount, installments, installment
+    amount (default: original ÷ installments), and first due date.
+-   Each debt shows its outstanding balance, paid and remaining
+    installments, last installment, next due date, and progress.
+-   Payments are recorded and removed with an audit trail, and never
+    exceed the outstanding balance. Debts do not create transactions
+    (DR-092).
+-   API: `/financial-spaces/{id}/debts` and payments; migration
+    `0023_debts`.
+
 ## \[0.7.0\] --- 2026-09-25
 
 Mobile Resilience. Released to `main` and tagged `v0.7.0`; validated in

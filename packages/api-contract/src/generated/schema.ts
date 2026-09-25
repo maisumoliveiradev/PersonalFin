@@ -918,10 +918,526 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/debts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the debts of the space with their summaries */
+        get: operations["listDebts"];
+        put?: never;
+        /**
+         * Register a debt or loan (audited)
+         * @description Debts are tracked by value and progress without interest (DR-045, DR-092); they do not create transactions.
+         */
+        post: operations["createDebt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/debts/{debtId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        /** Get a debt with its payments */
+        get: operations["getDebt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit or archive a debt (audited) */
+        patch: operations["updateDebt"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/debts/{debtId}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a debt payment (audited) */
+        post: operations["recordDebtPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/debts/{debtId}/payments/{paymentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a debt payment (soft delete, audited) */
+        delete: operations["removeDebtPayment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/debts/{debtId}/simulations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Simulate a prepayment without changing any data
+         * @description Stateless: nothing is stored (DR-046, DR-047).
+         */
+        post: operations["simulateDebtPrepayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/debts/{debtId}/prepayments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm a prepayment and apply the simulated plan (audited) */
+        post: operations["confirmDebtPrepayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the callers global goals */
+        get: operations["listGoals"];
+        put?: never;
+        /** Create a global goal */
+        post: operations["createGoal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/goals/{goalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        /** Get a goal with its progress history */
+        get: operations["getGoal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit or archive a goal */
+        patch: operations["updateGoal"];
+        trace?: never;
+    };
+    "/goals/{goalId}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set the accumulated amount (kept in the progress history)
+         * @description Goals are manually maintained and never change projections (DR-049, DR-050).
+         */
+        post: operations["recordGoalProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the space goals */
+        get: operations["listSpaceGoals"];
+        put?: never;
+        /** Create a space goal (audited) */
+        post: operations["createSpaceGoal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/goals/{goalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        /** Get a goal with its progress history */
+        get: operations["getSpaceGoal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit or archive a goal */
+        patch: operations["updateSpaceGoal"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/goals/{goalId}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set the accumulated amount (kept in the progress history)
+         * @description Goals are manually maintained and never change projections (DR-049, DR-050).
+         */
+        post: operations["recordSpaceGoalProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Current in-app reminders of the caller for a date
+         * @description Personal: pending transactions, open card invoices, debt installments, and a negative projected month-end balance, filtered by the caller's reminder settings and dismissals.
+         */
+        get: operations["listReminders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/reminders/dismissals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss a reminder until its next stage */
+        post: operations["dismissReminder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/reminder-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** The caller's reminder settings for the space (defaults when never saved) */
+        get: operations["getReminderSettings"];
+        /** Save the caller's reminder settings for the space */
+        put: operations["saveReminderSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        ReminderStage: "overdue" | "before-0" | "before-1" | "before-3" | "before-7";
+        ReminderSettings: {
+            /** @description Days before the due date to remind (0 = on the day). */
+            offsets: (0 | 1 | 3 | 7)[];
+            kinds: ("transactions" | "invoices" | "debts" | "projection")[];
+        };
+        ReminderDismissalRequest: {
+            key: string;
+            stage: components["schemas"]["ReminderStage"];
+        };
+        Reminder: {
+            key: string;
+            /** @enum {string} */
+            kind: "transactions" | "invoices" | "debts" | "projection";
+            stage: components["schemas"]["ReminderStage"];
+            /** Format: date */
+            dueDate: string;
+            daysUntilDue: number;
+            /** @description Transaction description, card name, debt name, or the month (YYYY-MM) for projection. */
+            description: string;
+            /** @description Amount due; the projected balance (negative) for projection reminders. */
+            amountMinor: number;
+            transactionType: null | components["schemas"]["TransactionType"];
+        };
+        ReminderList: {
+            /** Format: date */
+            today: string;
+            items: components["schemas"]["Reminder"][];
+        };
+        GoalSummary: {
+            remainingMinor: number;
+            /** @description Accumulated share of the target in tenths of a percent, rounded down and capped at 1000. */
+            progressTenths: number;
+            reached: boolean;
+        };
+        Goal: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            scope: "global" | "space";
+            name: string;
+            targetAmountMinor: number;
+            accumulatedMinor: number;
+            currency: string;
+            /** Format: date */
+            targetDate: string | null;
+            archived: boolean;
+            version: number;
+            summary: components["schemas"]["GoalSummary"];
+        };
+        GoalDetail: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            scope: "global" | "space";
+            name: string;
+            targetAmountMinor: number;
+            accumulatedMinor: number;
+            currency: string;
+            /** Format: date */
+            targetDate: string | null;
+            archived: boolean;
+            version: number;
+            summary: components["schemas"]["GoalSummary"];
+            /** @description Accumulated-amount updates, newest first. */
+            progress: {
+                accumulatedMinor: number;
+                /** Format: date-time */
+                recordedAt: string;
+            }[];
+        };
+        GoalList: {
+            items: components["schemas"]["Goal"][];
+        };
+        CreateGoalRequest: {
+            name: string;
+            targetAmountMinor: number;
+            /** Format: date */
+            targetDate?: string | null;
+        };
+        UpdateGoalRequest: {
+            version: number;
+            name?: string;
+            targetAmountMinor?: number;
+            /** Format: date */
+            targetDate?: string | null;
+            archived?: boolean;
+        };
+        GoalProgressRequest: {
+            version: number;
+            accumulatedMinor: number;
+        };
+        /**
+         * @description reduce_term keeps the installment and lowers the count; reduce_installment keeps the count and lowers the installment.
+         * @enum {string}
+         */
+        PrepaymentMode: "reduce_term" | "reduce_installment";
+        PrepaymentSimulationRequest: {
+            amountMinor: number;
+            mode: components["schemas"]["PrepaymentMode"];
+        };
+        ConfirmPrepaymentRequest: {
+            version: number;
+            amountMinor: number;
+            mode: components["schemas"]["PrepaymentMode"];
+            /** Format: date */
+            paidOn: string;
+        };
+        PrepaymentSimulation: {
+            mode: components["schemas"]["PrepaymentMode"];
+            amountMinor: number;
+            plan: {
+                installmentCount: number;
+                installmentAmountMinor: number;
+            };
+            before: components["schemas"]["DebtSummary"];
+            after: components["schemas"]["DebtSummary"];
+        };
+        /** @description Derived from the plan and the active payments (DR-092). */
+        DebtSummary: {
+            paidMinor: number;
+            outstandingMinor: number;
+            paidInstallments: number;
+            remainingInstallments: number;
+            lastInstallmentMinor: number | null;
+            /** Format: date */
+            nextDueDate: string | null;
+            /** @description Paid share of the original amount in tenths of a percent, rounded down. */
+            progressTenths: number;
+            settled: boolean;
+        };
+        Debt: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            originalAmountMinor: number;
+            currency: string;
+            installmentCount: number;
+            installmentAmountMinor: number;
+            /** Format: date */
+            firstDueDate: string;
+            archived: boolean;
+            version: number;
+            summary: components["schemas"]["DebtSummary"];
+        };
+        DebtPayment: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "installment" | "prepayment";
+            amountMinor: number;
+            /** Format: date */
+            paidOn: string;
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        DebtDetail: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            originalAmountMinor: number;
+            currency: string;
+            installmentCount: number;
+            installmentAmountMinor: number;
+            /** Format: date */
+            firstDueDate: string;
+            archived: boolean;
+            version: number;
+            summary: components["schemas"]["DebtSummary"];
+            payments: components["schemas"]["DebtPayment"][];
+        };
+        DebtList: {
+            items: components["schemas"]["Debt"][];
+        };
+        CreateDebtRequest: {
+            name: string;
+            originalAmountMinor: number;
+            installmentCount: number;
+            /** @description Defaults to the original amount divided by the installment count, rounded down. */
+            installmentAmountMinor?: number;
+            /** Format: date */
+            firstDueDate: string;
+        };
+        UpdateDebtRequest: {
+            version: number;
+            name?: string;
+            installmentCount?: number;
+            installmentAmountMinor?: number;
+            /** Format: date */
+            firstDueDate?: string;
+            archived?: boolean;
+        };
+        DebtPaymentRequest: {
+            /**
+             * @default installment
+             * @enum {string}
+             */
+            kind: "installment" | "prepayment";
+            amountMinor: number;
+            /** Format: date */
+            paidOn: string;
+        };
         /** @description Day of the month; months without it use their last day. */
         CardDay: number;
         CardName: string;
@@ -1013,7 +1529,7 @@ export interface components {
                 occurredAt: string;
                 actorName: string;
                 /** @enum {string} */
-                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation";
+                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation" | "debt" | "debt_payment" | "goal";
                 entityId: string;
                 /** @enum {string} */
                 action: "create" | "update" | "delete" | "restore";
@@ -1762,6 +2278,8 @@ export interface components {
         };
     };
     parameters: {
+        GoalId: string;
+        DebtId: string;
         InvoiceMonth: string;
         CardId: string;
         SeriesId: string;
@@ -3716,6 +4234,839 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditHistory"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listDebts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Debts in creation order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    createDebt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDebtRequest"];
+            };
+        };
+        responses: {
+            /** @description The created debt. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            /** @description INVALID_DEBT_PLAN (installment larger than the original amount). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getDebt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The debt. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    updateDebt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDebtRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated debt. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INVALID_DEBT_PLAN (installment above the original amount, or fewer installments than already paid). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    recordDebtPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebtPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description The debt with the new payment. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DEBT_OVERPAYMENT (larger than the outstanding balance). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    removeDebtPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The debt without the payment. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    simulateDebtPrepayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrepaymentSimulationRequest"];
+            };
+        };
+        responses: {
+            /** @description The current and simulated states and the resulting plan (DR-093). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrepaymentSimulation"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DEBT_OVERPAYMENT (larger than the outstanding balance). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    confirmDebtPrepayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPrepaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description The debt with the prepayment and the new plan. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DEBT_OVERPAYMENT (larger than the outstanding balance). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listGoals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Goals in creation order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    createGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description The created goal. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The goal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    updateGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated goal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    recordGoalProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description The goal with the new progress. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listSpaceGoals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Goals in creation order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    createSpaceGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description The created goal. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getSpaceGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The goal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    updateSpaceGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated goal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    recordSpaceGoalProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                goalId: components["parameters"]["GoalId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalProgressRequest"];
+            };
+        };
+        responses: {
+            /** @description The goal with the new progress. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listReminders: {
+        parameters: {
+            query: {
+                /** @description The caller's local calendar date. */
+                today: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Overdue reminders first, then by due date (DR-095). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderList"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    dismissReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReminderDismissalRequest"];
+            };
+        };
+        responses: {
+            /** @description Dismissed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getReminderSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderSettings"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    saveReminderSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReminderSettings"];
+            };
+        };
+        responses: {
+            /** @description The saved settings (deduplicated and ordered). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderSettings"];
                 };
             };
             400: components["responses"]["ValidationFailed"];
