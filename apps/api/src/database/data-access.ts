@@ -40,6 +40,8 @@ import { createPostgresRecurrenceRepository } from '../modules/recurrences/postg
 import type { RecurrenceRepository } from '../modules/recurrences/recurrence-repository.ts';
 import { createPostgresReminderRepository } from '../modules/reminders/postgres-reminder-repository.ts';
 import type { ReminderRepository } from '../modules/reminders/reminder-repository.ts';
+import { createPostgresSupportGrantRepository } from '../modules/support/postgres-support-grant-repository.ts';
+import type { SupportGrantRepository } from '../modules/support/support-grant.ts';
 import { createPostgresTagRepository } from '../modules/tags/postgres-tag-repository.ts';
 import type { TagRepository } from '../modules/tags/tag-repository.ts';
 import { createPostgresTransactionRepository } from '../modules/transactions/postgres-transaction-repository.ts';
@@ -70,6 +72,7 @@ export interface Repositories {
   exchangeRates: ExchangeRateRepository;
   attachments: AttachmentRepository;
   platformAdmins: PlatformAdminRepository;
+  supportGrants: SupportGrantRepository;
 }
 
 export interface DataAccess {
@@ -102,6 +105,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     exchangeRates: createPostgresExchangeRateRepository(db),
     attachments: createPostgresAttachmentRepository(db),
     platformAdmins: createPostgresPlatformAdminRepository(db),
+    supportGrants: createPostgresSupportGrantRepository(db),
   };
 }
 

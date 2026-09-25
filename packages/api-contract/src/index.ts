@@ -100,3 +100,5 @@ export type ForeignCurrencyCode = components['schemas']['ForeignCurrencyCode'];
 export type Attachment = components['schemas']['Attachment'];
 export type AttachmentList = components['schemas']['AttachmentList'];
 export type PlatformOverview = components['schemas']['PlatformOverview'];
+export type SupportGrant = components['schemas']['SupportGrant'];
+export type SupportGrantList = components['schemas']['SupportGrantList'];

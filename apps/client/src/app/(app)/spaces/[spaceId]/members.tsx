@@ -15,6 +15,7 @@ import {
 } from '../../../../api/members';
 import { can } from '../../../../features/financial-spaces/permissions';
 import { MemberList } from '../../../../features/members/MemberList';
+import { SupportAccessSection } from '../../../../features/support/SupportAccessSection';
 import { messages } from '../../../../i18n/messages';
 import { BodyText } from '../../../../ui/BodyText';
 import { Button } from '../../../../ui/Button';
@@ -136,6 +137,7 @@ export default function MembersScreen() {
           ))}
         </>
       )}
+      {space.data?.role === 'owner' && <SupportAccessSection spaceId={spaceId} />}
       {space.data?.role === 'member' && (
         <LeaveSection spaceId={spaceId} onLeft={() => router.replace('/')} />
       )}

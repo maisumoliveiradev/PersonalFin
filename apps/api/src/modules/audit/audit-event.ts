@@ -15,8 +15,9 @@ export type AuditEntityType =
   | 'debt_payment'
   | 'goal'
   | 'import_batch'
-  | 'attachment';
-export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
+  | 'attachment'
+  | 'support_grant';
+export type AuditAction = 'create' | 'update' | 'delete' | 'restore' | 'access';
 
 export interface AuditContext {
   source: 'offline_sync';

@@ -1581,10 +1581,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/support-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the space's support grants (Owner only) */
+        get: operations["listSupportGrants"];
+        put?: never;
+        /**
+         * Authorize a platform administrator to view the space (Owner only, audited)
+         * @description Read-only, with a reason, expiring in 1 to 7 days; every access is recorded in the space audit history (FR-016, DR-101).
+         */
+        post: operations["createSupportGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/support-grants/{grantId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                grantId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke a support grant immediately (Owner only, audited) */
+        post: operations["revokeSupportGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/support-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active support grants given to the calling administrator */
+        get: operations["listMySupportGrants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SupportGrant: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            spaceId: string;
+            spaceName: string;
+            adminName: string;
+            adminEmail: string;
+            reason: string;
+            /** @enum {string} */
+            scope: "view";
+            /** @enum {string} */
+            status: "active" | "expired" | "revoked";
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            revokedAt: string | null;
+            /** Format: date-time */
+            lastAccessAt: string | null;
+            accessCount: number;
+        };
+        SupportGrantList: {
+            items: components["schemas"]["SupportGrant"][];
+        };
+        CreateSupportGrantRequest: {
+            /** Format: email */
+            adminEmail: string;
+            reason: string;
+            days: number;
+        };
         PlatformOverview: {
             users: {
                 total: number;
@@ -2127,10 +2219,10 @@ export interface components {
             /** @enum {string} */
             lifecycleState: "active";
             /**
-             * @description The requesting user's role in the space.
+             * @description The requesting user's role in the space; support is read-only access through an Owner's support grant (ADR-0018).
              * @enum {string}
              */
-            role: "owner" | "member";
+            role: "owner" | "member" | "support";
             /** @description The requesting user's permissions (ADR-0015). The Owner has all of them. */
             permissions: components["schemas"]["SpacePermission"][];
             /** Format: date-time */
@@ -2152,10 +2244,10 @@ export interface components {
                 occurredAt: string;
                 actorName: string;
                 /** @enum {string} */
-                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation" | "debt" | "debt_payment" | "goal" | "import_batch" | "attachment";
+                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation" | "debt" | "debt_payment" | "goal" | "import_batch" | "attachment" | "support_grant";
                 entityId: string;
                 /** @enum {string} */
-                action: "create" | "update" | "delete" | "restore";
+                action: "create" | "update" | "delete" | "restore" | "access";
                 /** @description Field name to its value before and after. */
                 changes: {
                     [key: string]: {
@@ -6454,6 +6546,154 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlatformOverview"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            /** @description PLATFORM_ADMIN_REQUIRED. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listSupportGrants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Newest first, with access counts. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportGrantList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description FINANCIAL_SPACE_NOT_FOUND or SUPPORT_GRANT_NOT_FOUND. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    createSupportGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSupportGrantRequest"];
+            };
+        };
+        responses: {
+            /** @description The grant. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportGrant"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description FINANCIAL_SPACE_NOT_FOUND or SUPPORT_GRANT_NOT_FOUND. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description SUPPORT_ADMIN_NOT_FOUND (no platform administrator uses this email). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    revokeSupportGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                grantId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The revoked grant. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportGrant"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description FINANCIAL_SPACE_NOT_FOUND or SUPPORT_GRANT_NOT_FOUND. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listMySupportGrants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active grants. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupportGrantList"];
                 };
             };
             401: components["responses"]["Unauthenticated"];
