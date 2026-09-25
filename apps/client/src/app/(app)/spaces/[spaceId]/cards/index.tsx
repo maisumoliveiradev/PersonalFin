@@ -1,8 +1,8 @@
 import { financialDateFromLocalClock } from '@personalfin/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { useCards } from '../../../../../api/cards';
-import { currentLimitLabel } from '../../../../../features/cards/card-form';
+import { useCardLimits, useCards } from '../../../../../api/cards';
+import { currentLimitLabel, usageLabel } from '../../../../../features/cards/card-form';
 import { messages } from '../../../../../i18n/messages';
 import { BodyText } from '../../../../../ui/BodyText';
 import { Button } from '../../../../../ui/Button';
@@ -15,13 +15,13 @@ import { Title } from '../../../../../ui/Title';
 export default function CardsScreen() {
   const router = useRouter();
   const { spaceId } = useLocalSearchParams<{ spaceId: string }>();
+  const today = financialDateFromLocalClock(new Date());
   const cards = useCards(spaceId);
+  const limits = useCardLimits(spaceId, today);
 
   if (cards.isPending) {
     return <LoadingScreen />;
   }
-
-  const today = financialDateFromLocalClock(new Date());
 
   return (
     <Screen>
@@ -39,6 +39,7 @@ export default function CardsScreen() {
               card.archived ? messages.cards.archivedTag : null,
               messages.cards.days(card.closingDay, card.dueDay),
               messages.cards.currentLimit(currentLimitLabel(card, today)),
+              ...(limits.data ?? []).filter((usage) => usage.cardId === card.id).map(usageLabel),
             ]
               .filter((part): part is string => part !== null)
               .join(' — ')}

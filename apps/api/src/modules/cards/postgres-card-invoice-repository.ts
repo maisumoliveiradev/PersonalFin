@@ -188,5 +188,16 @@ export function createPostgresCardInvoiceRepository(db: Queryable): CardInvoiceR
       const [row] = rows;
       return row === undefined ? null : toPayment(row);
     },
+
+    async listForCard(financialSpaceId, cardId, range) {
+      const { rows } = await db.query<CardInvoiceRow>(
+        `SELECT ${INVOICE_COLUMNS} FROM ${INVOICE_FROM}
+         WHERE i.financial_space_id = $1 AND i.card_id = $2
+           AND i.reference_month >= $3::date AND i.reference_month < $4::date
+         ORDER BY i.reference_month`,
+        [financialSpaceId, cardId, range.start, range.endExclusive],
+      );
+      return rows.map(toInvoice);
+    },
   };
 }

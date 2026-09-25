@@ -22,6 +22,7 @@ export function createInMemoryCardInvoiceRepository(
     endExclusive: string,
   ): { openInvoices: number; invoicePayments: number };
   hasPayment(invoiceId: string): boolean;
+  balance(invoiceId: string): number;
 } {
   const invoices: StoredInvoice[] = [];
   const payments: StoredPayment[] = [];
@@ -52,6 +53,26 @@ export function createInMemoryCardInvoiceRepository(
   return {
     invoices,
     payments,
+    async listForCard(financialSpaceId, cardId, range) {
+      return invoices
+        .filter(
+          (invoice) =>
+            invoice.financialSpaceId === financialSpaceId &&
+            invoice.cardId === cardId &&
+            `${invoice.referenceMonth}-01` >= range.start &&
+            `${invoice.referenceMonth}-01` < range.endExclusive,
+        )
+        .map(withTotal)
+        .sort((left, right) => left.referenceMonth.localeCompare(right.referenceMonth));
+    },
+    balance(invoiceId) {
+      const invoice = invoices.find((candidate) => candidate.id === invoiceId);
+      if (invoice === undefined) {
+        return 0;
+      }
+      const current = withTotal(invoice);
+      return current.totalMinor - current.paidMinor;
+    },
     hasPayment(invoiceId) {
       return payments.some(
         (payment) => payment.invoiceId === invoiceId && payment.deletedAt === null,

@@ -40,7 +40,16 @@ const unusedAuthHandler: AuthHandler = async () => new Response(null, { status: 
 
 export function createInMemoryRepositories() {
   const categories = createInMemoryCategoryRepository(() => transactions.transactions);
-  const cards = createInMemoryCardRepository();
+  const cards = createInMemoryCardRepository((financialSpaceId) => {
+    const used = new Map<string, number>();
+    for (const invoice of cardInvoices.invoices) {
+      if (invoice.financialSpaceId === financialSpaceId) {
+        const balance = cardInvoices.balance(invoice.id);
+        used.set(invoice.cardId, (used.get(invoice.cardId) ?? 0) + balance);
+      }
+    }
+    return used;
+  });
   const cardInvoices = createInMemoryCardInvoiceRepository(
     cards.cards,
     () => transactions.transactions,

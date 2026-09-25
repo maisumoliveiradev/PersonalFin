@@ -571,6 +571,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/card-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Known used and available limit of every card on a date
+         * @description usedMinor is the unpaid part of all invoices of the card (every non-deleted purchase, including future installments, minus payments). availableMinor = current limit on the date - usedMinor; it may be negative and is null when no limit is effective yet.
+         */
+        get: operations["getCardLimits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        /** Invoice totals of a card for consecutive months */
+        get: operations["listCardInvoices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -814,6 +856,28 @@ export interface components {
             version: number | null;
             purchases: components["schemas"]["Transaction"][];
             hasMore: boolean;
+        };
+        CardLimits: {
+            on: components["schemas"]["FinancialDate"];
+            items: {
+                /** Format: uuid */
+                cardId: string;
+                currentLimitMinor: number | null;
+                usedMinor: number;
+                availableMinor: number | null;
+            }[];
+        };
+        CardInvoiceSummaryList: {
+            items: {
+                referenceMonth: string;
+                closingDate: components["schemas"]["FinancialDate"];
+                dueDate: components["schemas"]["FinancialDate"];
+                totalMinor: number;
+                paidMinor: number;
+                outstandingMinor: number;
+                /** @enum {string} */
+                state: "empty" | "open" | "partially_paid" | "paid";
+            }[];
         };
         InvoicePayment: {
             /** Format: uuid */
@@ -2241,6 +2305,62 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+        };
+    };
+    getCardLimits: {
+        parameters: {
+            query: {
+                on: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One entry per card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardLimits"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    listCardInvoices: {
+        parameters: {
+            query: {
+                fromMonth: string;
+                months?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One entry per month, including months without purchases. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardInvoiceSummaryList"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
         };
     };
 }

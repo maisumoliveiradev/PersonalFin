@@ -171,5 +171,24 @@ export function createPostgresCardRepository(db: Queryable): CardRepository {
       );
       return rows.map(toLimitChange);
     },
+
+    async usedByCard(financialSpaceId) {
+      const { rows } = await db.query<{ card_id: string; used_minor: string }>(
+        `SELECT i.card_id, SUM(b.total_minor - b.paid_minor) AS used_minor
+         FROM card_invoice i JOIN card_invoice_balance b ON b.invoice_id = i.id
+         WHERE i.financial_space_id = $1
+         GROUP BY i.card_id`,
+        [financialSpaceId],
+      );
+      return new Map(
+        rows.map((row) => {
+          const used = Number(row.used_minor);
+          if (!Number.isSafeInteger(used)) {
+            throw new RangeError('Card usage exceeds the safe integer range');
+          }
+          return [row.card_id, used];
+        }),
+      );
+    },
   };
 }

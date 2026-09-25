@@ -21,4 +21,5 @@ export interface CardRepository {
   update(update: CardUpdate): Promise<Card | null>;
   recordLimitChange(change: NewCardLimitChange): Promise<CardLimitChange>;
   listLimitChanges(financialSpaceId: string, cardId?: string): Promise<CardLimitChange[]>;
+  usedByCard(financialSpaceId: string): Promise<Map<string, number>>;
 }

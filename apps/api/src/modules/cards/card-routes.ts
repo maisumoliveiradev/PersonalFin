@@ -1,10 +1,12 @@
 import type {
   CardLimitChange as CardLimitChangeResponse,
+  CardLimits,
   CardList,
   Card as CardResponse,
 } from '@personalfin/api-contract';
 import {
   CARD_NAME_MAX_LENGTH,
+  currentCardLimit,
   isValidAmountMinor,
   isValidCardDay,
   isValidFinancialDate,
@@ -53,6 +55,8 @@ const updateCardSchema = z.strictObject({
   dueDay: cardDaySchema.optional(),
   archived: z.boolean().optional(),
 });
+
+const onQuerySchema = z.object({ on: dateSchema });
 
 const limitChangeSchema = z.strictObject({
   amountMinor: limitSchema,
@@ -179,4 +183,34 @@ export function registerCardRoutes(server: FastifyInstance, data: DataAccess): v
       return toCardResponse(card, limits);
     },
   );
+
+  server.get('/financial-spaces/:spaceId/card-limits', async (request): Promise<CardLimits> => {
+    const user = requireAuthenticatedUser(request);
+    const { spaceId } = parseInput(spaceParamsSchema, request.params);
+    const space = await requireAccessibleSpace(data.repositories.financialSpaces, user.id, spaceId);
+    const { on } = parseInput(onQuerySchema, request.query);
+    const [cards, limits, used] = await Promise.all([
+      data.repositories.cards.listForSpace(space.id),
+      data.repositories.cards.listLimitChanges(space.id),
+      data.repositories.cards.usedByCard(space.id),
+    ]);
+    return {
+      on,
+      items: cards.map((card) => {
+        const current = currentCardLimit(
+          limits
+            .filter((change) => change.cardId === card.id)
+            .map((change) => ({ ...change, recordedAt: change.recordedAt.toISOString() })),
+          on,
+        );
+        const usedMinor = used.get(card.id) ?? 0;
+        return {
+          cardId: card.id,
+          currentLimitMinor: current?.amountMinor ?? null,
+          usedMinor,
+          availableMinor: current === null ? null : current.amountMinor - usedMinor,
+        };
+      }),
+    };
+  });
 }

@@ -26,7 +26,13 @@ export function useCards(spaceId: string) {
 
 function useInvalidateCards(spaceId: string) {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: cardKeys.forSpace(spaceId) });
+  return () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: cardKeys.forSpace(spaceId) }),
+      queryClient.invalidateQueries({
+        queryKey: ['financial-spaces', spaceId, 'transactions', 'card-limits'],
+      }),
+    ]);
 }
 
 export function useCreateCard(spaceId: string) {
@@ -151,5 +157,42 @@ export function useRemoveInvoicePayment(spaceId: string, cardId: string, month: 
       ),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ['financial-spaces', spaceId, 'transactions'] }),
+  });
+}
+
+export function useCardLimits(spaceId: string, on: string) {
+  return useQuery({
+    queryKey: ['financial-spaces', spaceId, 'transactions', 'card-limits', on] as const,
+    queryFn: async () =>
+      expectData(
+        await apiClient.GET('/financial-spaces/{spaceId}/card-limits', {
+          params: { path: { spaceId }, query: { on } },
+        }),
+      ).items,
+  });
+}
+
+export function useCardInvoiceSummaries(
+  spaceId: string,
+  cardId: string,
+  fromMonth: string,
+  months: number,
+) {
+  return useQuery({
+    queryKey: [
+      'financial-spaces',
+      spaceId,
+      'transactions',
+      'card-invoice-summaries',
+      cardId,
+      fromMonth,
+      months,
+    ] as const,
+    queryFn: async () =>
+      expectData(
+        await apiClient.GET('/financial-spaces/{spaceId}/cards/{cardId}/invoices', {
+          params: { path: { spaceId, cardId }, query: { fromMonth, months } },
+        }),
+      ).items,
   });
 }

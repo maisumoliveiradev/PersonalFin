@@ -216,6 +216,12 @@ audited). An invoice is paid when its payments cover its total; its
 purchases then count as Realized. Cancelling installments keeps those in
 invoices that already have a payment.
 
+**DR-082** *(SDD-027; decided under delegation.)* The known used limit
+of a card is the unpaid part of all its invoices: every non-deleted
+purchase, including future installments, minus payments. The available
+limit on a date is the limit effective on that date minus the used
+limit; it may be negative and is unknown when no limit is effective.
+
 **DR-040** Interest/fees may be represented as separate expenses rather
 than inferred automatically.
 

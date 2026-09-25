@@ -57,7 +57,7 @@ export default function CardInvoiceScreen() {
       {invoice.isError && <FormError message={messages.cards.loadError} />}
       {invoice.isSuccess && (
         <InvoiceDetails
-          key={`${month}-${invoice.data.version ?? 0}-${invoice.data.paidMinor}`}
+          key={`${month}-${invoice.data.version ?? 0}`}
           spaceId={spaceId}
           month={month}
           invoice={invoice.data}
@@ -155,6 +155,10 @@ function money(amountMinor: number): string {
   return formatMoney({ amountMinor, currency: 'BRL' }, 'pt-BR');
 }
 
+function amountInput(outstandingMinor: number): string {
+  return outstandingMinor > 0 ? money(outstandingMinor).replace(/^R\$\u00a0/, '') : '';
+}
+
 function PaymentSection({
   spaceId,
   month,
@@ -166,9 +170,7 @@ function PaymentSection({
 }) {
   const pay = usePayInvoice(spaceId, invoice.cardId, month);
   const remove = useRemoveInvoicePayment(spaceId, invoice.cardId, month);
-  const [amount, setAmount] = useState(() =>
-    invoice.outstandingMinor > 0 ? money(invoice.outstandingMinor).replace(/^R\$\u00a0/, '') : '',
-  );
+  const [amount, setAmount] = useState(() => amountInput(invoice.outstandingMinor));
   const [paidOn, setPaidOn] = useState(() =>
     formatDisplayDate(financialDateFromLocalClock(new Date()), 'pt-BR'),
   );
@@ -186,7 +188,10 @@ function PaymentSection({
       return;
     }
     setValidationError(null);
-    pay.mutate({ amountMinor: parsed.amountMinor, paidOn: date });
+    pay.mutate(
+      { amountMinor: parsed.amountMinor, paidOn: date },
+      { onSuccess: (updated) => setAmount(amountInput(updated.outstandingMinor)) },
+    );
   }
 
   const failure = pay.error ?? remove.error;
@@ -199,6 +204,7 @@ function PaymentSection({
 
   return (
     <>
+      {pay.isSuccess && <StatusMessage>{messages.cards.paid}</StatusMessage>}
       {invoice.payments.length > 0 && <SectionTitle>{messages.cards.paymentsTitle}</SectionTitle>}
       {invoice.payments.map((payment) => {
         const amountLabel = money(payment.amountMinor);
@@ -217,7 +223,6 @@ function PaymentSection({
         <>
           <SectionTitle>{messages.cards.payTitle}</SectionTitle>
           <BodyText muted>{messages.cards.payHint}</BodyText>
-          {pay.isSuccess && <StatusMessage>{messages.cards.paid}</StatusMessage>}
           <TextField
             label={messages.cards.paymentAmountLabel}
             value={amount}
