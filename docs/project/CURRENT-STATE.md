@@ -22,8 +22,7 @@ v0.6.0: SDD-034 implemented.
 -   **Financial Spaces (SDD-003):** an authenticated user creates spaces
     by name, becomes their single Owner, and lists, selects, and enters
     them. The Owner and members can access a space (ADR-0015). Spaces are always
-    Active; there is no rename, archive, deletion, sharing, or
-    invitation. The selected space is carried in the URL
+    Active; there is no rename, archive, or deletion. The selected space is carried in the URL
     (`/spaces/{spaceId}`), not persisted as a preference.
 
 -   **Categories (SDD-004, SDD-011):** each new space receives the default
