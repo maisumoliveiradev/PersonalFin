@@ -103,9 +103,10 @@ describe('amount and currency validation', () => {
     expect(isValidAmountMinor(amountMinor)).toBe(expected);
   });
 
-  it('supports BRL only until multi-currency is introduced', () => {
+  it('supports the catalog currencies only', () => {
     expect(isSupportedCurrency('BRL')).toBe(true);
-    expect(isSupportedCurrency('USD')).toBe(false);
+    expect(isSupportedCurrency('USD')).toBe(true);
+    expect(isSupportedCurrency('XYZ')).toBe(false);
     expect(isSupportedCurrency('toString')).toBe(false);
   });
 });

@@ -4,9 +4,10 @@ import type {
   TransactionStatus,
   TransactionType,
 } from '@personalfin/domain';
-
+import { normalizeRate } from '@personalfin/domain';
 import type { Queryable } from '../../database/pool.ts';
-import type { FinancialTransaction } from './transaction.ts';
+
+import type { FinancialTransaction, RateSource } from './transaction.ts';
 import {
   InvalidCursorError,
   type TransactionListQuery,
@@ -42,6 +43,10 @@ interface TransactionRow {
   installment_number: number | null;
   installment_count: number | null;
   tags: { id: string; name: string }[];
+  original_amount_minor: string | null;
+  original_currency: CurrencyCode | null;
+  fx_rate: string | null;
+  fx_rate_source: RateSource | null;
 }
 
 interface CursorKeys {
@@ -57,7 +62,8 @@ const COLUMNS = `t.id, t.financial_space_id, t.type, t.status, t.description, t.
          t.version, t.deleted_at, t.recurrence_series_id, t.occurrence_date,
          t.individually_modified, t.card_invoice_id, ci.card_id, cd.name AS card_name,
          ci.reference_month AS invoice_month, t.installment_purchase_id, t.installment_number,
-         ip.installment_count,
+         ip.installment_count, t.original_amount_minor, t.original_currency, t.fx_rate::text AS fx_rate,
+         t.fx_rate_source,
          COALESCE(cb.total_minor > 0 AND cb.paid_minor >= cb.total_minor, false) AS invoice_settled,
          COALESCE((
            SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name) ORDER BY lower(tg.name))
@@ -135,6 +141,18 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
             count: row.installment_count,
           },
     tags: row.tags,
+    original:
+      row.original_amount_minor === null ||
+      row.original_currency === null ||
+      row.fx_rate === null ||
+      row.fx_rate_source === null
+        ? null
+        : {
+            currency: row.original_currency,
+            amountMinor: parseAmountMinor(row.original_amount_minor),
+            rate: normalizeRate(row.fx_rate),
+            rateSource: row.fx_rate_source,
+          },
   };
 }
 
@@ -185,8 +203,10 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
         `INSERT INTO financial_transaction (
            id, financial_space_id, type, status, description, amount_minor, currency,
            financial_date, category_id, subcategory_id, created_by_user_id, card_invoice_id,
-           installment_purchase_id, installment_number, import_batch_id
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+           installment_purchase_id, installment_number, import_batch_id,
+           original_amount_minor, original_currency, fx_rate, fx_rate_source
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
+           $16, $17, $18, $19)`,
         [
           transaction.id,
           transaction.financialSpaceId,
@@ -203,6 +223,10 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
           transaction.installment?.purchaseId ?? null,
           transaction.installment?.number ?? null,
           transaction.importBatchId ?? null,
+          transaction.original == null ? null : String(transaction.original.amountMinor),
+          transaction.original?.currency ?? null,
+          transaction.original?.rate ?? null,
+          transaction.original?.rateSource ?? null,
         ],
       );
       const created = await findInSpace(transaction.financialSpaceId, transaction.id);
@@ -231,6 +255,7 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
            type = $4, status = $5, description = $6, amount_minor = $7, financial_date = $8,
            category_id = $9, subcategory_id = $10, updated_by_user_id = $11,
            card_invoice_id = $12,
+           original_amount_minor = $13, original_currency = $14, fx_rate = $15, fx_rate_source = $16,
            individually_modified = individually_modified OR recurrence_series_id IS NOT NULL,
            version = version + 1, updated_at = now()
          WHERE financial_space_id = $1 AND id = $2 AND version = $3 AND deleted_at IS NULL`,
@@ -247,6 +272,10 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
           fields.subcategoryId,
           updatedByUserId,
           fields.cardInvoiceId,
+          fields.originalAmountMinor === null ? null : String(fields.originalAmountMinor),
+          fields.originalCurrency,
+          fields.fxRate,
+          fields.fxRateSource,
         ],
       );
       if (result.rowCount !== 1) {

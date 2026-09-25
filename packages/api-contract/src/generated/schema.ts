@@ -1461,10 +1461,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/exchange-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the manual exchange rates of the space (newest first) */
+        get: operations["listExchangeRates"];
+        put?: never;
+        /** Record a manual exchange rate (append-only) */
+        post: operations["recordExchangeRate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/exchange-rates/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** The rate that applies on a date (latest on or before it) */
+        get: operations["getLatestExchangeRate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        CurrencyCode: "BRL" | "USD" | "EUR" | "GBP" | "ARS" | "CAD" | "CHF" | "CLP" | "JPY";
+        /** @enum {string} */
+        ForeignCurrencyCode: "USD" | "EUR" | "GBP" | "ARS" | "CAD" | "CHF" | "CLP" | "JPY";
+        /** @description Base-currency units per one unit of the foreign currency, as a decimal string (never a float). */
+        ExchangeRateValue: string;
+        OriginalAmount: {
+            currency: components["schemas"]["CurrencyCode"];
+            /** @description In the original currency's minor units. */
+            amountMinor: number;
+            rate: components["schemas"]["ExchangeRateValue"];
+            /** @enum {string} */
+            rateSource: "manual" | "provider";
+        };
+        /** @description Amount in a foreign currency. The API converts it to the base currency with the given rate, or with the latest recorded rate on or before the financial date (422 EXCHANGE_RATE_REQUIRED when none), rounding half away from zero. Not allowed with installments. */
+        ForeignAmount: {
+            currency: components["schemas"]["ForeignCurrencyCode"];
+            amountMinor: number;
+            rate?: components["schemas"]["ExchangeRateValue"];
+        };
+        ExchangeRate: {
+            /** Format: uuid */
+            id: string;
+            currency: components["schemas"]["CurrencyCode"];
+            baseCurrency: components["schemas"]["CurrencyCode"];
+            /** Format: date */
+            rateDate: string;
+            rate: components["schemas"]["ExchangeRateValue"];
+            /** @enum {string} */
+            source: "manual" | "provider";
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        ExchangeRateList: {
+            baseCurrency: components["schemas"]["CurrencyCode"];
+            items: components["schemas"]["ExchangeRate"][];
+        };
+        LatestExchangeRate: {
+            rate: null | components["schemas"]["ExchangeRate"];
+        };
+        RecordExchangeRateRequest: {
+            currency: components["schemas"]["ForeignCurrencyCode"];
+            /** Format: date */
+            rateDate: string;
+            rate: components["schemas"]["ExchangeRateValue"];
+        };
         PortableBackup: {
             /** @enum {string} */
             format: "personalfin-backup";
@@ -2059,6 +2144,7 @@ export interface components {
             name: string;
         };
         CreateTransactionRequest: {
+            foreign?: components["schemas"]["ForeignAmount"];
             /**
              * Format: uuid
              * @description Optional client-generated id (UUID) so a request can be retried safely, for example after an offline period. Not allowed with installments.
@@ -2069,7 +2155,7 @@ export interface components {
             status?: components["schemas"]["TransactionStatus"];
             /** @description Trimmed, internal whitespace collapsed; 1 to 140 characters. */
             description: string;
-            amountMinor: components["schemas"]["AmountMinor"];
+            amountMinor?: components["schemas"]["AmountMinor"];
             financialDate: components["schemas"]["FinancialDate"];
             /**
              * Format: uuid
@@ -2094,6 +2180,8 @@ export interface components {
             installments?: number;
         };
         Transaction: {
+            /** @description Original amount, currency, and applied exchange rate when the transaction was recorded in a foreign currency; amountMinor is then the converted base-currency amount (DR-004, DR-098). */
+            original: null | components["schemas"]["OriginalAmount"];
             /** Format: uuid */
             id: string;
             type: components["schemas"]["TransactionType"];
@@ -2337,6 +2425,8 @@ export interface components {
             baseVersion: number;
         };
         UpdateTransactionRequest: {
+            /** @description A foreign amount to convert, or null to keep only the base amount. */
+            foreign?: null | components["schemas"]["ForeignAmount"];
             version: number;
             /** @description The version the client edited. */
             sync?: components["schemas"]["SyncContext"];
@@ -2562,7 +2652,7 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description CATEGORY_NOT_AVAILABLE (category not usable for the type), TAG_NOT_AVAILABLE (tag missing or archived), CARD_NOT_AVAILABLE (missing or archived card), or INVALID_CARD_PURCHASE (income, status sent, invoice out of range, or invoice change on a non-card transaction). */
+        /** @description EXCHANGE_RATE_REQUIRED, EXCHANGE_RATE_INVALID, FOREIGN_AMOUNT_REQUIRED (changing the base amount of a foreign transaction without foreign), CONVERTED_AMOUNT_ZERO or CONVERTED_AMOUNT_TOO_LARGE, CATEGORY_NOT_AVAILABLE (category not usable for the type), TAG_NOT_AVAILABLE (tag missing or archived), CARD_NOT_AVAILABLE (missing or archived card), or INVALID_CARD_PURCHASE (income, status sent, invoice out of range, or invoice change on a non-card transaction). */
         TransactionRejected: {
             headers: {
                 [name: string]: unknown;
@@ -5962,6 +6052,96 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listExchangeRates: {
+        parameters: {
+            query?: {
+                currency?: components["schemas"]["ForeignCurrencyCode"];
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The rates. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExchangeRateList"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    recordExchangeRate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordExchangeRateRequest"];
+            };
+        };
+        responses: {
+            /** @description The recorded rate. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExchangeRate"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getLatestExchangeRate: {
+        parameters: {
+            query: {
+                currency: components["schemas"]["ForeignCurrencyCode"];
+                on: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The rate or null. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LatestExchangeRate"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
             426: components["responses"]["ClientUpgradeRequired"];
         };
     };

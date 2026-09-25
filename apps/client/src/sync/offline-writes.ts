@@ -34,7 +34,7 @@ export function queueCreate(
     summary: {
       type: request.type,
       description: request.description,
-      amountMinor: request.amountMinor,
+      amountMinor: request.amountMinor ?? request.foreign?.amountMinor ?? 0,
       financialDate: request.financialDate,
     },
   });

@@ -20,6 +20,8 @@ import type { DashboardRepository } from '../modules/dashboard/dashboard-reposit
 import { createPostgresDashboardRepository } from '../modules/dashboard/postgres-dashboard-repository.ts';
 import type { DebtRepository } from '../modules/debts/debt-repository.ts';
 import { createPostgresDebtRepository } from '../modules/debts/postgres-debt-repository.ts';
+import type { ExchangeRateRepository } from '../modules/exchange-rates/exchange-rate.ts';
+import { createPostgresExchangeRateRepository } from '../modules/exchange-rates/postgres-exchange-rate-repository.ts';
 import type { FinancialSpaceRepository } from '../modules/financial-spaces/financial-space-repository.ts';
 import { createPostgresFinancialSpaceRepository } from '../modules/financial-spaces/postgres-financial-space-repository.ts';
 import type { GoalRepository } from '../modules/goals/goal.ts';
@@ -61,6 +63,7 @@ export interface Repositories {
   reminders: ReminderRepository;
   imports: ImportRepository;
   backup: BackupRepository;
+  exchangeRates: ExchangeRateRepository;
 }
 
 export interface DataAccess {
@@ -90,6 +93,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     reminders: createPostgresReminderRepository(db),
     imports: createPostgresImportRepository(db),
     backup: createPostgresBackupRepository(db),
+    exchangeRates: createPostgresExchangeRateRepository(db),
   };
 }
 

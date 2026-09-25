@@ -69,6 +69,10 @@ export default function NewTransactionScreen() {
       setOfflineError(messages.sync.offlineFormHint);
       return;
     }
+    if (isOffline() && request.foreign !== undefined) {
+      setOfflineError(messages.currencies.offline);
+      return;
+    }
     if (recurrence === null && request.installments === undefined) {
       const withId = { ...request, id: randomUUID() };
       if (isOffline()) {
@@ -95,7 +99,7 @@ export default function NewTransactionScreen() {
       const { series, occurrencesCreated } = await createRecurrence.mutateAsync({
         type: request.type,
         description: request.description,
-        amountMinor: request.amountMinor,
+        amountMinor: request.amountMinor ?? 0,
         categoryId: request.categoryId,
         subcategoryId: request.subcategoryId ?? null,
         frequency: recurrence.frequency,

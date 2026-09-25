@@ -1,13 +1,21 @@
-import type { CreateTransactionRequest, Transaction } from '@personalfin/api-contract';
+import type {
+  CreateTransactionRequest,
+  ForeignCurrencyCode,
+  Transaction,
+} from '@personalfin/api-contract';
 import {
   type AmountParseError,
+  type CurrencyCode,
+  DEFAULT_CURRENCY,
   formatDisplayDate,
-  formatMoney,
+  formatRate,
   isValidInstallmentCount,
   type Month,
   normalizeTransactionDescription,
   parseAmountInput,
   parseDisplayDate,
+  parseRateInput,
+  SUPPORTED_CURRENCIES,
   TRANSACTION_DESCRIPTION_MAX_LENGTH,
   type TransactionStatus,
   type TransactionType,
@@ -27,6 +35,8 @@ export interface TransactionFormValues {
   invoiceMonth: Month | null;
   installments: string;
   tagIds: string[];
+  currency: CurrencyCode;
+  rate: string;
 }
 
 export type TransactionFormResult =
@@ -49,9 +59,18 @@ export function toCreateTransactionRequest(values: TransactionFormValues): Trans
   if (description.length > TRANSACTION_DESCRIPTION_MAX_LENGTH) {
     return { ok: false, error: messages.transactions.errors.descriptionTooLong };
   }
-  const amount = parseAmountInput(values.amount, 'BRL', 'pt-BR');
+  const amount = parseAmountInput(values.amount, values.currency, 'pt-BR');
   if (!amount.ok) {
     return { ok: false, error: AMOUNT_ERRORS[amount.error] };
+  }
+  const foreign = values.currency !== DEFAULT_CURRENCY;
+  let rate: string | undefined;
+  if (foreign && values.rate.trim() !== '') {
+    const parsedRate = parseRateInput(values.rate, ',');
+    if (!parsedRate.ok) {
+      return { ok: false, error: messages.currencies.errors.rateInvalid };
+    }
+    rate = parsedRate.rate;
   }
   const financialDate = parseDisplayDate(values.date, 'pt-BR');
   if (financialDate === null) {
@@ -66,7 +85,15 @@ export function toCreateTransactionRequest(values: TransactionFormValues): Trans
   const request: CreateTransactionRequest = {
     type: values.type,
     description,
-    amountMinor: amount.amountMinor,
+    ...(foreign
+      ? {
+          foreign: {
+            currency: values.currency as ForeignCurrencyCode,
+            amountMinor: amount.amountMinor,
+            ...(rate === undefined ? {} : { rate }),
+          },
+        }
+      : { amountMinor: amount.amountMinor }),
     financialDate,
     categoryId: values.categoryId,
     subcategoryId: values.subcategoryId,
@@ -78,6 +105,9 @@ export function toCreateTransactionRequest(values: TransactionFormValues): Trans
   const installments = parseInstallments(values.installments);
   if (installments === null || amount.amountMinor < installments) {
     return { ok: false, error: messages.cards.errors.installmentsInvalid };
+  }
+  if (foreign && installments > 1) {
+    return { ok: false, error: messages.currencies.errors.noInstallments };
   }
   if (installments > 1 && values.tagIds.length > 0) {
     return { ok: false, error: messages.cards.errors.installmentTags };
@@ -105,11 +135,19 @@ function parseInstallments(value: string): number | null {
   return count === 1 || isValidInstallmentCount(count) ? count : null;
 }
 
+export function amountText(amountMinor: number, currency: CurrencyCode): string {
+  const { minorUnits } = SUPPORTED_CURRENCIES[currency];
+  const digits = String(amountMinor).padStart(minorUnits + 1, '0');
+  const integer = digits.slice(0, digits.length - minorUnits).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return minorUnits === 0 ? integer : `${integer},${digits.slice(digits.length - minorUnits)}`;
+}
+
 export function transactionToFormValues(transaction: Transaction): TransactionFormValues {
-  const amount = formatMoney(
-    { amountMinor: transaction.amountMinor, currency: 'BRL' },
-    'pt-BR',
-  ).replace(/^R\$\u00a0/, '');
+  const original = transaction.original;
+  const amount =
+    original === null
+      ? amountText(transaction.amountMinor, DEFAULT_CURRENCY)
+      : amountText(original.amountMinor, original.currency as CurrencyCode);
   return {
     type: transaction.type,
     description: transaction.description,
@@ -122,5 +160,7 @@ export function transactionToFormValues(transaction: Transaction): TransactionFo
     invoiceMonth: transaction.cardPurchase?.invoiceMonth ?? null,
     installments: '1',
     tagIds: transaction.tags.map((tag) => tag.id),
+    currency: (original?.currency ?? DEFAULT_CURRENCY) as CurrencyCode,
+    rate: original === null ? '' : formatRate(original.rate, ','),
   };
 }

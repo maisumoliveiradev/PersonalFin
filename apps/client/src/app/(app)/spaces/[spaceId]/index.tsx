@@ -188,6 +188,13 @@ export default function FinancialSpaceHomeScreen() {
         />
       )}
       <Button
+        label={messages.currencies.ratesAction}
+        variant="link"
+        onPress={() =>
+          router.push({ pathname: '/spaces/[spaceId]/exchange-rates', params: { spaceId } })
+        }
+      />
+      <Button
         label={messages.cards.action}
         variant="link"
         onPress={() => router.push({ pathname: '/spaces/[spaceId]/cards', params: { spaceId } })}
