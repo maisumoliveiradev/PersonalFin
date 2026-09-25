@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useFinancialSpaces } from '../../api/financial-spaces';
 import { useCurrentUser } from '../../api/use-current-user';
 import { SignOutButton } from '../../features/auth/SignOutButton';
+import { BackupButton } from '../../features/exports/BackupButton';
 import { CreateFinancialSpaceForm } from '../../features/financial-spaces/CreateFinancialSpaceForm';
 import { roleLabel } from '../../features/financial-spaces/permissions';
 import { messages } from '../../i18n/messages';
@@ -77,6 +78,7 @@ export default function FinancialSpacesScreen() {
         variant="link"
         onPress={() => router.push('/goals')}
       />
+      <BackupButton />
       {signOutButton}
     </Screen>
   );

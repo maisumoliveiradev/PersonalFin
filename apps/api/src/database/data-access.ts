@@ -2,6 +2,8 @@ import type { AnalyticsRepository } from '../modules/analytics/analytics-reposit
 import { createPostgresAnalyticsRepository } from '../modules/analytics/postgres-analytics-repository.ts';
 import type { AuditRepository } from '../modules/audit/audit-repository.ts';
 import { createPostgresAuditRepository } from '../modules/audit/postgres-audit-repository.ts';
+import type { BackupRepository } from '../modules/backup/backup.ts';
+import { createPostgresBackupRepository } from '../modules/backup/postgres-backup-repository.ts';
 import type { BalanceReminderRepository } from '../modules/balance/balance-reminder-repository.ts';
 import type { BalanceSnapshotRepository } from '../modules/balance/balance-snapshot-repository.ts';
 import { createPostgresBalanceReminderRepository } from '../modules/balance/postgres-balance-reminder-repository.ts';
@@ -58,6 +60,7 @@ export interface Repositories {
   goals: GoalRepository;
   reminders: ReminderRepository;
   imports: ImportRepository;
+  backup: BackupRepository;
 }
 
 export interface DataAccess {
@@ -86,6 +89,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     goals: createPostgresGoalRepository(db),
     reminders: createPostgresReminderRepository(db),
     imports: createPostgresImportRepository(db),
+    backup: createPostgresBackupRepository(db),
   };
 }
 

@@ -6,6 +6,7 @@ import type { AuthHandler } from '../../src/routes/auth.ts';
 import { buildServer } from '../../src/server.ts';
 import { createInMemoryAnalyticsRepository } from './in-memory-analytics-repository.ts';
 import { createInMemoryAuditRepository } from './in-memory-audit-repository.ts';
+import { createInMemoryBackupRepository } from './in-memory-backup-repository.ts';
 import { createInMemoryBalanceReminderRepository } from './in-memory-balance-reminder-repository.ts';
 import { createInMemoryBalanceSnapshotRepository } from './in-memory-balance-snapshot-repository.ts';
 import { createInMemoryCardInvoiceRepository } from './in-memory-card-invoice-repository.ts';
@@ -101,6 +102,7 @@ export function createInMemoryRepositories() {
     goals: createInMemoryGoalRepository(),
     reminders: createInMemoryReminderRepository(),
     imports: createInMemoryImportRepository(() => transactions.transactions),
+    backup: createInMemoryBackupRepository(() => transactions.transactions),
   };
 }
 
