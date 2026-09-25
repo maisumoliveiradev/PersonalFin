@@ -8,6 +8,7 @@ import { authClient } from '../../auth/auth-client';
 import { CreateFinancialSpaceForm } from '../../features/financial-spaces/CreateFinancialSpaceForm';
 import { roleLabel } from '../../features/financial-spaces/permissions';
 import { messages } from '../../i18n/messages';
+import { clearQueryCache } from '../../local/query-persistence';
 import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
 import { FormError } from '../../ui/FormError';
@@ -26,8 +27,13 @@ export default function FinancialSpacesScreen() {
   }
 
   async function handleSignOut(): Promise<void> {
+    const userId = currentUser.data?.id;
     await authClient.signOut();
-    queryClient.clear();
+    if (userId === undefined) {
+      queryClient.clear();
+      return;
+    }
+    await clearQueryCache(queryClient, userId);
   }
 
   if (spaces.isPending || currentUser.isPending) {

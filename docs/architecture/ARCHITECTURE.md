@@ -234,6 +234,28 @@ invalid sessions with `401 UNAUTHENTICATED`. Web clients use an
 `HttpOnly` session cookie; native clients keep the same cookie in
 secure storage.
 
+## Offline reading (ADR-0016, SDD-041)
+
+-   `apps/client/src/local`:
+    -   `local-document.ts` keeps every stored document in a
+        `{ schemaVersion, data }` envelope. It applies ordered migrations
+        on read and does not read documents written by a newer schema.
+    -   `local-store.ts` persists documents in AsyncStorage (Web:
+        `localStorage`) under `personalfin:{schema}:{userId}`.
+-   The TanStack Query cache is restored before signed-in screens render
+    (`LocalPersistenceGate`) and saved at most once per second.
+    -   Only successful queries are saved. Invitation lookups are never
+        saved.
+    -   The saved cache is discarded when the app version changes, after
+        7 days, and at sign-out.
+-   Connectivity comes from `expo-network` and drives TanStack Query's
+    `onlineManager`, so queries pause offline.
+    -   A request that fails at the network level also marks the app
+        offline until `/health` answers again.
+    -   Mutations use `networkMode: 'always'`, so they fail fast instead
+        of hanging.
+-   A global banner tells the user they are seeing saved data.
+
 ## Minimum client version (ADR-0016, SDD-040)
 
 Clients send `X-Client-Version` (the app version from `app.json`). When

@@ -3,6 +3,7 @@ import createClient, { type Middleware } from 'openapi-fetch';
 
 import { getSessionCookie } from '../auth/auth-client';
 import { apiUrl, clientVersion } from '../config';
+import { reportRequestFailure, reportRequestSuccess } from '../local/connectivity';
 import { markUpgradeRequired } from './upgrade-required';
 
 const UPGRADE_REQUIRED_STATUS = 426;
@@ -30,7 +31,24 @@ const clientVersionHeader: Middleware = {
   },
 };
 
-export const apiClient = createClient<paths>({ baseUrl: apiUrl, credentials: 'include' });
+async function trackedFetch(request: Request): Promise<Response> {
+  try {
+    const response = await fetch(request);
+    reportRequestSuccess();
+    return response;
+  } catch (error) {
+    if (!(error instanceof Error && error.name === 'AbortError')) {
+      reportRequestFailure();
+    }
+    throw error;
+  }
+}
+
+export const apiClient = createClient<paths>({
+  baseUrl: apiUrl,
+  credentials: 'include',
+  fetch: trackedFetch,
+});
 apiClient.use(attachSessionCookie, clientVersionHeader);
 
 export class ApiRequestError extends Error {

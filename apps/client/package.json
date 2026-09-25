@@ -6,6 +6,8 @@
     "@better-auth/expo": "1.7.5",
     "@expo/metro-runtime": "~57.0.16",
     "@personalfin/api-contract": "*",
+    "@personalfin/domain": "*",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@tanstack/react-query": "5.103.2",
     "better-auth": "1.7.5",
     "expo": "~57.0.24",
@@ -22,8 +24,7 @@
     "react-native": "0.86.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
-    "react-native-web": "^0.21.2",
-    "@personalfin/domain": "*"
+    "react-native-web": "^0.21.2"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
@@ -34,7 +35,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "private": true
 }

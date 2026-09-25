@@ -5,6 +5,9 @@ export const messages = {
     retry: 'Tentar novamente',
     permissionDenied: 'Você não tem permissão para esta ação neste espaço.',
   },
+  offline: {
+    banner: 'Sem conexão. Mostrando os dados salvos neste aparelho.',
+  },
   upgrade: {
     title: 'Atualize o PersonalFin',
     body: 'Esta versão do aplicativo não é mais compatível com o servidor. Atualize o aplicativo (ou recarregue a página, na Web) para continuar.',

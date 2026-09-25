@@ -100,6 +100,12 @@ SDD-039 implemented and validated
     `X-Client-Version`; with `MIN_CLIENT_VERSION` configured the API
     answers 426 to older clients, which show an update screen
     (ADR-0016).
+-   **Offline reading (SDD-041):** screens already loaded keep working
+    without a connection or when the API is unreachable, with a banner.
+    The query cache is persisted per user in a versioned local store
+    (ADR-0016). It is cleared at sign-out and expires after 7 days or on
+    an app version change. The Web app cannot be opened offline (no
+    service worker). No offline writes yet.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -138,12 +144,13 @@ SDD-039 implemented and validated
 ## Not Yet Present
 
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
--   Client (React Native) test runner.
+-   React Native component test runner (the client has Vitest unit tests
+    for pure modules only).
 
 ## Active Target
 
 `v0.7.0` --- Mobile Resilience (`docs/sdds/v0.7.0/README.md`, SDD-040
-to SDD-044). SDD-040 implemented.
+to SDD-044). SDD-040 and SDD-041 implemented.
 
 ## Important Constraint
 
@@ -152,7 +159,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Implement SDD-041 (local persistence). Owner decision pending on
+Implement SDD-042 (offline transaction changes). Owner decision pending on
 invitation email delivery (TD-011). Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, `docs/sdds/v0.7.0/README.md`, DR-072 to
