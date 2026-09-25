@@ -1001,6 +1001,13 @@ export interface components {
         SpacePermission: "view" | "record" | "plan" | "classify" | "manage_members" | "view_audit";
         AuditHistory: {
             items: {
+                /** @description How the change reached the server when it resolved an offline synchronization conflict (ADR-0016); null otherwise. */
+                context: null | {
+                    /** @enum {string} */
+                    source: "offline_sync";
+                    resolution: components["schemas"]["SyncResolution"];
+                    baseVersion: number;
+                };
                 id: string;
                 /** Format: date-time */
                 occurredAt: string;
@@ -1397,10 +1404,23 @@ export interface components {
         };
         VersionRequest: {
             version: number;
+            sync?: components["schemas"]["SyncContext"];
+        };
+        /**
+         * @description auto_merged (independent fields merged), chose_fields (the user chose per field), restored (restored to apply an offline edit), or deleted_anyway (deleted after a concurrent edit). DR-089, DR-090.
+         * @enum {string}
+         */
+        SyncResolution: "auto_merged" | "chose_fields" | "restored" | "deleted_anyway";
+        /** @description Sent when a write resolves an offline synchronization conflict; it is recorded in the audit event (ADR-0016). */
+        SyncContext: {
+            resolution: components["schemas"]["SyncResolution"];
+            /** @description The version the offline change was based on. */
+            baseVersion: number;
         };
         UpdateTransactionRequest: {
-            /** @description The version the client edited. */
             version: number;
+            /** @description The version the client edited. */
+            sync?: components["schemas"]["SyncContext"];
             type?: components["schemas"]["TransactionType"];
             status?: components["schemas"]["TransactionStatus"];
             description?: string;
@@ -2124,6 +2144,9 @@ export interface operations {
         parameters: {
             query: {
                 version: number;
+                /** @description Sync context of a deletion that resolves a conflict (with syncBaseVersion). */
+                syncResolution?: components["schemas"]["SyncResolution"];
+                syncBaseVersion?: number;
             };
             header?: never;
             path: {

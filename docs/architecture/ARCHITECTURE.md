@@ -283,6 +283,24 @@ secure storage.
     confirmation. A transaction with a queued change cannot be changed
     again until the change is synchronized (DR-088).
 
+## Sync conflicts (ADR-0016, SDD-043)
+
+-   A `409` on a queued edit or delete makes the client fetch the current
+    transaction and classify the conflict with the domain functions
+    `reconcileEdit` and `serverChanges`:
+    -   Local changes the server already has are dropped. Changes to
+        fields the server did not touch are re-sent against the current
+        version with `sync.resolution = auto_merged` (DR-089).
+    -   A field changed on both sides, an edit of a deleted transaction,
+        or a deletion of an edited transaction is stored in the outbox
+        entry as `conflict` (outbox schema v2, migrated from v1). The
+        "Não sincronizado" list asks the user to decide (DR-090).
+-   Writes that resolve a conflict carry a sync context:
+    -   PATCH and restore: `sync` in the body.
+    -   DELETE: `syncResolution` and `syncBaseVersion` in the query.
+-   The API stores that context in `audit_event.context` (migration
+    `0022`). The audit history returns it and the audit screen shows it.
+
 ## Minimum client version (ADR-0016, SDD-040)
 
 Clients send `X-Client-Version` (the app version from `app.json`). When

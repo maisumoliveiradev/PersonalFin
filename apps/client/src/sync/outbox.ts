@@ -1,5 +1,5 @@
 import type { CreateTransactionRequest, TransactionType } from '@personalfin/api-contract';
-import type { SyncFields } from '@personalfin/domain';
+import type { FieldConflict, SyncFields } from '@personalfin/domain';
 
 import type { LocalSchema } from '../local/local-document';
 import type { TransactionChanges } from './transaction-sync-fields';
@@ -18,6 +18,11 @@ export type OutboxOperation =
 
 export type OutboxEntryState = 'pending' | 'error' | 'conflict';
 
+export type ConflictDetail =
+  | { kind: 'fields'; serverVersion: number; conflicts: FieldConflict[]; independent: string[] }
+  | { kind: 'edit-deleted'; serverVersion: number }
+  | { kind: 'delete-edited'; serverVersion: number; changes: FieldConflict[] };
+
 export interface OutboxEntry {
   id: string;
   spaceId: string;
@@ -27,6 +32,7 @@ export interface OutboxEntry {
   queuedAt: string;
   state: OutboxEntryState;
   errorCode: string | null;
+  conflict: ConflictDetail | null;
 }
 
 export interface Outbox {
@@ -53,14 +59,21 @@ function isEntry(value: unknown): value is OutboxEntry {
     typeof entry.operation === 'object' &&
     entry.operation !== null &&
     OPERATION_KINDS.has(entry.operation.kind) &&
-    ENTRY_STATES.has(entry.state ?? '')
+    ENTRY_STATES.has(entry.state ?? '') &&
+    (entry.conflict === null ||
+      (typeof entry.conflict === 'object' && entry.conflict !== undefined))
   );
+}
+
+function addConflictField(data: unknown): unknown {
+  const { entries } = data as { entries: Record<string, unknown>[] };
+  return { entries: entries.map((entry) => ({ ...entry, conflict: null })) };
 }
 
 export const outboxSchema: LocalSchema<Outbox> = {
   name: 'outbox',
-  version: 1,
-  migrations: {},
+  version: 2,
+  migrations: { 1: addConflictField },
   isValid: (data): data is Outbox =>
     typeof data === 'object' &&
     data !== null &&
@@ -90,7 +103,7 @@ export function removeEntry(outbox: Outbox, entryId: string): Outbox {
 export function updateEntry(
   outbox: Outbox,
   entryId: string,
-  change: Partial<Pick<OutboxEntry, 'state' | 'errorCode' | 'operation'>>,
+  change: Partial<Pick<OutboxEntry, 'state' | 'errorCode' | 'operation' | 'conflict'>>,
 ): Outbox {
   return {
     entries: outbox.entries.map((entry) =>

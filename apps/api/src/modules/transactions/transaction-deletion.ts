@@ -1,5 +1,6 @@
 import type { DataAccess } from '../../database/data-access.ts';
 import { AppError } from '../../http/errors.ts';
+import type { AuditContext } from '../audit/audit-event.ts';
 import type { FinancialTransaction } from './transaction.ts';
 import { TransactionNotFoundError, VersionConflictError } from './update-transaction.ts';
 
@@ -8,6 +9,7 @@ export interface TransactionDeletionInput {
   transactionId: string;
   actorUserId: string;
   expectedVersion: number;
+  syncContext?: AuditContext;
 }
 
 export class TransactionDeletionStateError extends AppError {
@@ -63,6 +65,7 @@ async function changeDeletion(
           after: changed.deletedAt?.toISOString() ?? null,
         },
       },
+      context: input.syncContext ?? null,
     });
     return changed;
   });

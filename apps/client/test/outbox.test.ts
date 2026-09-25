@@ -1,6 +1,7 @@
 import type { Transaction } from '@personalfin/api-contract';
 import { describe, expect, it } from 'vitest';
 
+import { decodeDocument } from '../src/local/local-document';
 import {
   addEntry,
   classifyResponse,
@@ -47,6 +48,7 @@ function entry(id: string, transactionId: string, state: OutboxEntry['state'] = 
     queuedAt: '2026-09-25T10:00:00.000Z',
     state,
     errorCode: null,
+    conflict: null,
   } satisfies OutboxEntry;
 }
 
@@ -67,6 +69,16 @@ describe('outbox', () => {
     outbox = updateEntry(outbox, 'e1', { state: 'error', errorCode: 'CATEGORY_NOT_AVAILABLE' });
     expect(nextPendingEntry(outbox, new Set())?.id).toBe('e2');
     expect(removeEntry(outbox, 'e2').entries.map((item) => item.id)).toEqual(['e1']);
+  });
+
+  it('migrates version 1 outboxes by adding an empty conflict', () => {
+    const { conflict: _conflict, ...v1Entry } = entry('e1', 't1');
+    const raw = JSON.stringify({ schemaVersion: 1, data: { entries: [v1Entry] } });
+    expect(decodeDocument(outboxSchema, raw)).toEqual({
+      status: 'ready',
+      data: { entries: [entry('e1', 't1')] },
+      migrated: true,
+    });
   });
 
   it('validates stored outboxes', () => {

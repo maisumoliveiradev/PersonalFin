@@ -9,6 +9,7 @@ import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
 import { SectionTitle } from '../../ui/SectionTitle';
 import { fontSize, radius, spacing, usePalette } from '../../ui/theme';
+import { ConflictResolver } from './ConflictResolver';
 
 function describeError(entry: OutboxEntry): string | null {
   if (entry.state !== 'error') {
@@ -17,9 +18,37 @@ function describeError(entry: OutboxEntry): string | null {
   return (entry.errorCode && messages.sync.errors[entry.errorCode]) || messages.sync.unknownError;
 }
 
+function DiscardEntry({ entry }: { entry: OutboxEntry }) {
+  const [confirming, setConfirming] = useState(false);
+  if (!confirming) {
+    return (
+      <Button
+        label={messages.sync.discardLabel}
+        accessibilityLabel={messages.sync.discardAction(entry.summary.description)}
+        variant="link"
+        onPress={() => setConfirming(true)}
+      />
+    );
+  }
+  return (
+    <>
+      <BodyText>{messages.sync.discardConfirmation}</BodyText>
+      <Button
+        label={messages.sync.confirmDiscardAction}
+        variant="danger"
+        onPress={() => void discardEntry(entry.id)}
+      />
+      <Button
+        label={messages.sync.keepAction}
+        variant="link"
+        onPress={() => setConfirming(false)}
+      />
+    </>
+  );
+}
+
 function PendingChange({ entry }: { entry: OutboxEntry }) {
   const palette = usePalette();
-  const [confirming, setConfirming] = useState(false);
   const { summary } = entry;
   const amount = formatMoney({ amountMinor: summary.amountMinor, currency: 'BRL' }, 'pt-BR');
   const date = formatDisplayDate(summary.financialDate, 'pt-BR');
@@ -50,27 +79,10 @@ function PendingChange({ entry }: { entry: OutboxEntry }) {
           onPress={() => void retryEntry(entry.id)}
         />
       )}
-      {confirming ? (
-        <>
-          <BodyText>{messages.sync.discardConfirmation}</BodyText>
-          <Button
-            label={messages.sync.confirmDiscardAction}
-            variant="danger"
-            onPress={() => void discardEntry(entry.id)}
-          />
-          <Button
-            label={messages.sync.keepAction}
-            variant="link"
-            onPress={() => setConfirming(false)}
-          />
-        </>
+      {entry.state === 'conflict' && entry.conflict !== null ? (
+        <ConflictResolver entry={entry} conflict={entry.conflict} />
       ) : (
-        <Button
-          label={messages.sync.discardLabel}
-          accessibilityLabel={messages.sync.discardAction(summary.description)}
-          variant="link"
-          onPress={() => setConfirming(true)}
-        />
+        <DiscardEntry entry={entry} />
       )}
     </View>
   );

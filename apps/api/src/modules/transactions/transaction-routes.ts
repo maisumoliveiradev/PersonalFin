@@ -13,6 +13,7 @@ import {
   MIN_INSTALLMENTS,
   monthRange,
   normalizeTransactionDescription,
+  SYNC_RESOLUTIONS,
   TRANSACTION_DESCRIPTION_MAX_LENGTH,
   TRANSACTION_STATUSES,
   TRANSACTION_TYPES,
@@ -63,8 +64,18 @@ const createTransactionSchema = z.strictObject({
 const spaceParamsSchema = z.object({ spaceId: z.string() });
 const transactionParamsSchema = z.object({ spaceId: z.string(), transactionId: z.string() });
 
+const syncContextSchema = z.strictObject({
+  resolution: z.enum(SYNC_RESOLUTIONS),
+  baseVersion: z.number().int().min(1),
+});
+
+function toAuditContext(sync: z.infer<typeof syncContextSchema> | undefined) {
+  return sync === undefined ? {} : { syncContext: { source: 'offline_sync' as const, ...sync } };
+}
+
 const updateTransactionSchema = z.strictObject({
   version: z.number().int().min(1),
+  sync: syncContextSchema.optional(),
   type: z.enum(TRANSACTION_TYPES).optional(),
   status: z.enum(TRANSACTION_STATUSES).optional(),
   description: z
@@ -89,8 +100,20 @@ const updateTransactionSchema = z.strictObject({
 export const DEFAULT_TRANSACTION_LIST_LIMIT = 100;
 export const MAX_TRANSACTION_LIST_LIMIT = 200;
 
-const versionQuerySchema = z.object({ version: z.coerce.number().int().min(1) });
-const versionBodySchema = z.strictObject({ version: z.number().int().min(1) });
+const versionQuerySchema = z
+  .object({
+    version: z.coerce.number().int().min(1),
+    syncResolution: z.enum(SYNC_RESOLUTIONS).optional(),
+    syncBaseVersion: z.coerce.number().int().min(1).optional(),
+  })
+  .refine(
+    (query) => (query.syncResolution === undefined) === (query.syncBaseVersion === undefined),
+    'syncResolution and syncBaseVersion go together',
+  );
+const versionBodySchema = z.strictObject({
+  version: z.number().int().min(1),
+  sync: syncContextSchema.optional(),
+});
 
 const listTransactionsQuerySchema = z.object({
   state: z.enum(['active', 'deleted']).default('active'),
@@ -181,12 +204,20 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       if (!isUuid(transactionId)) {
         throw new TransactionNotFoundError();
       }
-      const { version } = parseInput(versionQuerySchema, request.query);
+      const { version, syncResolution, syncBaseVersion } = parseInput(
+        versionQuerySchema,
+        request.query,
+      );
       const transaction = await deleteTransaction(data, {
         financialSpaceId: space.id,
         transactionId,
         actorUserId: user.id,
         expectedVersion: version,
+        ...toAuditContext(
+          syncResolution === undefined || syncBaseVersion === undefined
+            ? undefined
+            : { resolution: syncResolution, baseVersion: syncBaseVersion },
+        ),
       });
       return toTransactionResponse(transaction);
     },
@@ -206,12 +237,13 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       if (!isUuid(transactionId)) {
         throw new TransactionNotFoundError();
       }
-      const { version } = parseInput(versionBodySchema, request.body);
+      const { version, sync } = parseInput(versionBodySchema, request.body);
       const transaction = await restoreTransaction(data, {
         financialSpaceId: space.id,
         transactionId,
         actorUserId: user.id,
         expectedVersion: version,
+        ...toAuditContext(sync),
       });
       return toTransactionResponse(transaction);
     },
@@ -231,7 +263,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       if (!isUuid(transactionId)) {
         throw new TransactionNotFoundError();
       }
-      const { version, invoiceMonth, tagIds, ...changes } = parseInput(
+      const { version, invoiceMonth, tagIds, sync, ...changes } = parseInput(
         updateTransactionSchema,
         request.body,
       );
@@ -243,6 +275,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         changes: withoutUndefined(changes),
         ...(invoiceMonth === undefined ? {} : { invoiceMonth }),
         ...(tagIds === undefined ? {} : { tagIds }),
+        ...toAuditContext(sync),
       });
       return toTransactionResponse(transaction);
     },

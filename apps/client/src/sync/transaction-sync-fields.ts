@@ -5,7 +5,7 @@ import type {
 } from '@personalfin/api-contract';
 import { changedFields, type SyncFields } from '@personalfin/domain';
 
-export type TransactionChanges = Omit<UpdateTransactionRequest, 'version'>;
+export type TransactionChanges = Omit<UpdateTransactionRequest, 'version' | 'sync'>;
 
 function joinTagIds(tagIds: readonly string[]): string {
   return [...tagIds].sort().join(',');
