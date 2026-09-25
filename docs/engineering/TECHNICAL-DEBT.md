@@ -165,3 +165,19 @@ implemented yet.
     shown.
 -   **Resolution:** Expose the resolved default invoice (for example a
     query endpoint) and use it in the form.
+
+### TD-011 --- Invitations are shared as links, not sent by email
+
+-   **Status:** Open
+-   **Priority:** Medium
+-   **Origin:** SDD-035
+-   **Reason:** FR-007 asks for email invitations, but sending email
+    needs an external provider with credentials and possible costs. The
+    project avoids paid or notifying hosted services unless the owner
+    chooses one, so the invitation link is shown once to the inviter,
+    who shares it.
+-   **Impact:** The inviter must copy and send the link; there is no
+    automatic delivery or reminder. The link grants nothing without the
+    invited email's account.
+-   **Resolution:** Owner chooses an email provider (and its cost
+    limits); then add delivery behind the existing invitation flow.

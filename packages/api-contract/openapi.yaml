@@ -1474,6 +1474,183 @@ paths:
           $ref: '#/components/responses/PermissionDenied'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/invitations:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listInvitations
+      summary: Invitations of the space, newest first (requires manage_members)
+      responses:
+        '200':
+          description: Invitations with their status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createInvitation
+      summary: Invite a person by email with a preset or a permission set
+      description: >
+        Returns a single-use token once; only its hash is stored. The link
+        expires after 7 days. Email delivery is not implemented yet
+        (TD-011): the inviter shares the link. Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 254
+                preset:
+                  type: string
+                  enum:
+                    - viewer
+                    - contributor
+                    - administrator
+                permissions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SpacePermission'
+      responses:
+        '201':
+          description: The invitation and its token (shown only now).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedInvitation'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '409':
+          description: ALREADY_MEMBER or INVITATION_PENDING.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/invitations/{invitationId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: cancelInvitation
+      summary: Cancel a pending invitation
+      responses:
+        '204':
+          description: Cancelled.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: FINANCIAL_SPACE_NOT_FOUND or INVITATION_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '410':
+          description: INVITATION_NOT_AVAILABLE (already accepted or cancelled).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /invitations/{token}:
+    parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: previewInvitation
+      summary: What an invitation link grants (any signed-in user holding the token)
+      responses:
+        '200':
+          description: The invitation preview.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationPreview'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: INVITATION_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /invitations/{token}/accept:
+    parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: acceptInvitation
+      summary: Accept an invitation with the signed-in account of the invited email
+      responses:
+        '200':
+          description: The joined space.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - spaceId
+                properties:
+                  spaceId:
+                    type: string
+                    format: uuid
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: INVITATION_EMAIL_MISMATCH.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: INVITATION_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: ALREADY_MEMBER.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '410':
+          description: INVITATION_NOT_AVAILABLE (expired, cancelled, or used).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     InvoiceMonth:
@@ -1833,6 +2010,86 @@ components:
         - classify
         - manage_members
         - view_audit
+    InvitationStatus:
+      type: string
+      enum:
+        - pending
+        - accepted
+        - cancelled
+        - expired
+    Invitation:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - email
+        - permissions
+        - status
+        - createdAt
+        - expiresAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpacePermission'
+        status:
+          $ref: '#/components/schemas/InvitationStatus'
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+    InvitationList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invitation'
+    CreatedInvitation:
+      type: object
+      additionalProperties: false
+      required:
+        - invitation
+        - token
+      properties:
+        invitation:
+          $ref: '#/components/schemas/Invitation'
+        token:
+          type: string
+          description: Single-use secret for the invitation link; never returned again.
+    InvitationPreview:
+      type: object
+      additionalProperties: false
+      required:
+        - spaceName
+        - email
+        - permissions
+        - status
+        - expiresAt
+      properties:
+        spaceName:
+          type: string
+        email:
+          type: string
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpacePermission'
+        status:
+          $ref: '#/components/schemas/InvitationStatus'
+        expiresAt:
+          type: string
+          format: date-time
     FinancialSpaceList:
       type: object
       additionalProperties: false

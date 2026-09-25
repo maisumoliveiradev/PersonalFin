@@ -67,6 +67,14 @@ installment cancellation), `plan` (recurrences, cards, invoice dates),
 record), Administrator (all). Personal settings need only `view`. The
 Owner holds every permission (ADR-0015).
 
+**DR-086** *(SDD-035; decided under delegation.)* An invitation names
+one email address and a permission set, is valid for 7 days, and is
+used through a single-use secret link whose token is stored only as a
+hash. Only a signed-in account with the invited email can accept it;
+accepting creates one membership. Invitations can be cancelled; people
+who already have access cannot be invited, and one email has at most one
+pending invitation per space. Email delivery is pending (TD-011).
+
 **DR-014** Split transactions are outside the initial model.
 
 **DR-015** A transaction uses one primary financial calendar date. The

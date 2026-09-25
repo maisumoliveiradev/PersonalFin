@@ -8,9 +8,13 @@ import {
 import type { FinancialSpaceRepository } from '../../src/modules/financial-spaces/financial-space-repository.ts';
 
 export interface InMemoryMember {
+  id?: string;
   financialSpaceId: string;
   userId: string;
   permissions: SpacePermission[];
+  addedAt?: Date;
+  removedAt?: Date | null;
+  version?: number;
 }
 
 export function createInMemoryFinancialSpaceRepository(): FinancialSpaceRepository & {
@@ -25,7 +29,10 @@ export function createInMemoryFinancialSpaceRepository(): FinancialSpaceReposito
       return { ...space, access: OWNER_ACCESS };
     }
     const member = members.find(
-      (candidate) => candidate.financialSpaceId === space.id && candidate.userId === userId,
+      (candidate) =>
+        candidate.financialSpaceId === space.id &&
+        candidate.userId === userId &&
+        (candidate.removedAt ?? null) === null,
     );
     return member === undefined
       ? null

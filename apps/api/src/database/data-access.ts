@@ -18,6 +18,8 @@ import type { DashboardRepository } from '../modules/dashboard/dashboard-reposit
 import { createPostgresDashboardRepository } from '../modules/dashboard/postgres-dashboard-repository.ts';
 import type { FinancialSpaceRepository } from '../modules/financial-spaces/financial-space-repository.ts';
 import { createPostgresFinancialSpaceRepository } from '../modules/financial-spaces/postgres-financial-space-repository.ts';
+import type { MemberRepository } from '../modules/members/member-repository.ts';
+import { createPostgresMemberRepository } from '../modules/members/postgres-member-repository.ts';
 import type { DashboardPreferenceRepository } from '../modules/preferences/dashboard-preference-repository.ts';
 import { createPostgresDashboardPreferenceRepository } from '../modules/preferences/postgres-dashboard-preference-repository.ts';
 import { createPostgresRecurrenceRepository } from '../modules/recurrences/postgres-recurrence-repository.ts';
@@ -43,6 +45,7 @@ export interface Repositories {
   tags: TagRepository;
   analytics: AnalyticsRepository;
   dashboardPreferences: DashboardPreferenceRepository;
+  members: MemberRepository;
 }
 
 export interface DataAccess {
@@ -66,6 +69,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     tags: createPostgresTagRepository(db),
     analytics: createPostgresAnalyticsRepository(db),
     dashboardPreferences: createPostgresDashboardPreferenceRepository(db),
+    members: createPostgresMemberRepository(db),
   };
 }
 
