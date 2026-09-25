@@ -15,4 +15,19 @@ export interface MemberRepository {
   cancelInvitation(invitationId: string, actorUserId: string): Promise<boolean>;
   markInvitationAccepted(invitationId: string, userId: string): Promise<boolean>;
   spaceName(financialSpaceId: string): Promise<string | null>;
+  ownerOf(
+    financialSpaceId: string,
+  ): Promise<{ userId: string; name: string; email: string } | null>;
+  updatePermissions(update: {
+    financialSpaceId: string;
+    userId: string;
+    expectedVersion: number;
+    permissions: readonly string[];
+  }): Promise<boolean>;
+  remove(removal: {
+    financialSpaceId: string;
+    userId: string;
+    expectedVersion: number;
+    actorUserId: string;
+  }): Promise<boolean>;
 }

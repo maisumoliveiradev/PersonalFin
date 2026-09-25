@@ -6,6 +6,16 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Member Management (SDD-036)
+
+-   "Membros" lists the Owner and members for everyone in the space;
+    managers change a member's permissions (checkboxes) and remove
+    members; members can leave. Records they created stay in the space
+    (DR-007, DR-008); the Owner cannot leave or be removed (DR-009).
+-   Changes are version-checked and audited.
+-   `GET .../members`, `PATCH`/`DELETE .../members/{userId}`,
+    `POST .../leave`.
+
 ### Invitations (SDD-035)
 
 -   "Membros" screen: invite a person by email as Visualizador,

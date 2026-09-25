@@ -179,15 +179,11 @@ export default function FinancialSpaceHomeScreen() {
           router.push({ pathname: '/spaces/[spaceId]/recurrences', params: { spaceId } })
         }
       />
-      {can(space.data, 'manage_members') && (
-        <Button
-          label={messages.members.action}
-          variant="link"
-          onPress={() =>
-            router.push({ pathname: '/spaces/[spaceId]/members', params: { spaceId } })
-          }
-        />
-      )}
+      <Button
+        label={messages.members.action}
+        variant="link"
+        onPress={() => router.push({ pathname: '/spaces/[spaceId]/members', params: { spaceId } })}
+      />
       <Button
         label={messages.preferences.action}
         variant="link"

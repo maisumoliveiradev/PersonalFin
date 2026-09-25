@@ -67,3 +67,70 @@ export function useAcceptInvitation(token: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['financial-spaces'] }),
   });
 }
+
+const memberKey = (spaceId: string) => ['financial-spaces', spaceId, 'members'] as const;
+
+export function useMembers(spaceId: string) {
+  return useQuery({
+    queryKey: memberKey(spaceId),
+    queryFn: async () =>
+      expectData(
+        await apiClient.GET('/financial-spaces/{spaceId}/members', {
+          params: { path: { spaceId } },
+        }),
+      ).items,
+  });
+}
+
+async function expectNoContent(result: {
+  error?: { error: { code: string } };
+  response: Response;
+}): Promise<void> {
+  if (!result.response.ok) {
+    throw new ApiRequestError(result.response.status, result.error?.error.code ?? 'UNKNOWN');
+  }
+}
+
+export function useChangeMemberPermissions(spaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      userId: string;
+      version: number;
+      permissions: SpacePermission[];
+    }) =>
+      expectNoContent(
+        await apiClient.PATCH('/financial-spaces/{spaceId}/members/{userId}', {
+          params: { path: { spaceId, userId: input.userId } },
+          body: { version: input.version, permissions: input.permissions },
+        }),
+      ),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: memberKey(spaceId) }),
+  });
+}
+
+export function useRemoveMember(spaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { userId: string; version: number }) =>
+      expectNoContent(
+        await apiClient.DELETE('/financial-spaces/{spaceId}/members/{userId}', {
+          params: { path: { spaceId, userId: input.userId }, query: { version: input.version } },
+        }),
+      ),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: memberKey(spaceId) }),
+  });
+}
+
+export function useLeaveSpace(spaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      expectNoContent(
+        await apiClient.POST('/financial-spaces/{spaceId}/leave', {
+          params: { path: { spaceId } },
+        }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['financial-spaces'] }),
+  });
+}

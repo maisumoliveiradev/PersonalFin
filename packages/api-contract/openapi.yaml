@@ -1651,6 +1651,124 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/members:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listMembers
+      summary: The Owner and active members of the space
+      responses:
+        '200':
+          description: Owner first, then members by joining date.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: changeMemberPermissions
+      summary: Replace a member's permissions (view is always kept)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - version
+                - permissions
+              properties:
+                version:
+                  type: integer
+                  minimum: 1
+                permissions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SpacePermission'
+      responses:
+        '204':
+          description: Changed; audited.
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: FINANCIAL_SPACE_NOT_FOUND or MEMBER_NOT_FOUND (including the Owner).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: removeMember
+      summary: Remove a member; records they created stay in the space
+      parameters:
+        - name: version
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '204':
+          description: Removed; audited.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: FINANCIAL_SPACE_NOT_FOUND or MEMBER_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: VERSION_CONFLICT or OWNER_CANNOT_LEAVE (the Owner cannot be removed).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/leave:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    post:
+      operationId: leaveSpace
+      summary: Leave a shared space (members only)
+      responses:
+        '204':
+          description: Left; audited.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '409':
+          description: OWNER_CANNOT_LEAVE (transfer ownership first, DR-009).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     InvoiceMonth:
@@ -2010,6 +2128,48 @@ components:
         - classify
         - manage_members
         - view_audit
+    Member:
+      type: object
+      additionalProperties: false
+      required:
+        - userId
+        - name
+        - email
+        - role
+        - permissions
+        - version
+      properties:
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+            - owner
+            - member
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpacePermission'
+        version:
+          type:
+            - integer
+            - 'null'
+          description: Membership version; null for the Owner.
+    MemberList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
     InvitationStatus:
       type: string
       enum:

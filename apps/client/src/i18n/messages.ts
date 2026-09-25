@@ -430,6 +430,18 @@ export const messages = {
     noPending: 'Nenhum convite pendente.',
     cancelInvitation: (email: string, date: string) =>
       `Cancelar convite para ${email} (vence em ${date})`,
+    listTitle: 'Pessoas com acesso',
+    customAccess: 'Acesso personalizado',
+    permissionsOf: (name: string) => `Permissões de ${name}`,
+    removeAction: (name: string) => `Remover ${name}`,
+    removeConfirmation: (name: string) =>
+      `${name} perde o acesso ao espaço. Os lançamentos que registrou continuam no espaço.`,
+    confirmRemoveAction: 'Confirmar remoção',
+    keepAction: 'Manter',
+    leaveAction: 'Sair do espaço',
+    leaveConfirmation:
+      'Você perde o acesso a este espaço. Os lançamentos que registrou continuam nele.',
+    confirmLeaveAction: 'Confirmar saída',
     acceptTitle: 'Convite para espaço',
     acceptSummary: (space: string) => `Você foi convidado para o espaço "${space}".`,
     acceptEmail: (email: string) => `Convite para ${email}.`,
@@ -443,6 +455,7 @@ export const messages = {
       notAvailable: 'Este convite expirou, foi cancelado ou já foi usado.',
       notFound: 'Convite não encontrado.',
       unexpected: 'Não foi possível concluir. Tente novamente.',
+      conflict: 'O acesso foi alterado em outro lugar. Os dados foram atualizados; tente de novo.',
     },
   },
   preferences: {

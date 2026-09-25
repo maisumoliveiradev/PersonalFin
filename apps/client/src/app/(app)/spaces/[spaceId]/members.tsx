@@ -7,8 +7,14 @@ import { Text } from 'react-native';
 
 import { ApiRequestError } from '../../../../api/api-client';
 import { useFinancialSpace } from '../../../../api/financial-spaces';
-import { useCancelInvitation, useCreateInvitation, useInvitations } from '../../../../api/members';
+import {
+  useCancelInvitation,
+  useCreateInvitation,
+  useInvitations,
+  useLeaveSpace,
+} from '../../../../api/members';
 import { can } from '../../../../features/financial-spaces/permissions';
+import { MemberList } from '../../../../features/members/MemberList';
 import { messages } from '../../../../i18n/messages';
 import { BodyText } from '../../../../ui/BodyText';
 import { Button } from '../../../../ui/Button';
@@ -78,7 +84,7 @@ export default function MembersScreen() {
   return (
     <Screen>
       <Title>{messages.members.title}</Title>
-      {!canManage && <BodyText muted>{messages.common.permissionDenied}</BodyText>}
+      <MemberList spaceId={spaceId} canManage={canManage} />
       {canManage && (
         <>
           <SectionTitle>{messages.members.inviteTitle}</SectionTitle>
@@ -130,11 +136,55 @@ export default function MembersScreen() {
           ))}
         </>
       )}
+      {space.data?.role === 'member' && (
+        <LeaveSection spaceId={spaceId} onLeft={() => router.replace('/')} />
+      )}
       <Button
         label={messages.spaces.backToSpace}
         variant="link"
         onPress={() => router.dismissTo({ pathname: '/spaces/[spaceId]', params: { spaceId } })}
       />
     </Screen>
+  );
+}
+
+function LeaveSection({ spaceId, onLeft }: { spaceId: string; onLeft: () => void }) {
+  const leave = useLeaveSpace(spaceId);
+  const [confirming, setConfirming] = useState(false);
+
+  async function handleLeave(): Promise<void> {
+    try {
+      await leave.mutateAsync();
+      onLeft();
+    } catch {
+      return;
+    }
+  }
+
+  if (!confirming) {
+    return (
+      <Button
+        label={messages.members.leaveAction}
+        variant="link"
+        onPress={() => setConfirming(true)}
+      />
+    );
+  }
+  return (
+    <>
+      <BodyText>{messages.members.leaveConfirmation}</BodyText>
+      <FormError message={leave.isError ? messages.members.errors.unexpected : null} />
+      <Button
+        label={messages.members.confirmLeaveAction}
+        variant="danger"
+        loading={leave.isPending}
+        onPress={handleLeave}
+      />
+      <Button
+        label={messages.members.keepAction}
+        variant="link"
+        onPress={() => setConfirming(false)}
+      />
+    </>
   );
 }

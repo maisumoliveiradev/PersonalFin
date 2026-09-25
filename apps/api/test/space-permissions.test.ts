@@ -121,6 +121,14 @@ const ENDPOINTS: Endpoint[] = [
   { method: 'GET', path: '/analytics/evolution?fromMonth=2026-10', permission: 'view' },
   { method: 'GET', path: '/analytics/comparison?month=2026-10', permission: 'view' },
   { method: 'GET', path: '/analytics/breakdown?fromMonth=2026-10', permission: 'view' },
+  { method: 'GET', path: '/members', permission: 'view' },
+  {
+    method: 'PATCH',
+    path: `/members/${MISSING}`,
+    permission: 'manage_members',
+    payload: { version: 1, permissions: [] },
+  },
+  { method: 'DELETE', path: `/members/${MISSING}?version=1`, permission: 'manage_members' },
   { method: 'GET', path: '/invitations', permission: 'manage_members' },
   {
     method: 'POST',
