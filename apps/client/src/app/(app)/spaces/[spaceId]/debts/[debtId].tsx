@@ -17,6 +17,7 @@ import {
   parseDate,
   percent,
 } from '../../../../../features/debts/debt-form';
+import { PrepaymentSimulator } from '../../../../../features/debts/PrepaymentSimulator';
 import { can } from '../../../../../features/financial-spaces/permissions';
 import { messages } from '../../../../../i18n/messages';
 import { BodyText } from '../../../../../ui/BodyText';
@@ -153,6 +154,10 @@ export default function DebtScreen() {
             loading={recordPayment.isPending}
           />
         </>
+      )}
+
+      {!summary.settled && (
+        <PrepaymentSimulator spaceId={spaceId} debt={current} canConfirm={canRecord} />
       )}
 
       <SectionTitle>{messages.debts.paymentsTitle}</SectionTitle>

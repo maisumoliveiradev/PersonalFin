@@ -1,6 +1,8 @@
 import type {
+  ConfirmPrepaymentRequest,
   CreateDebtRequest,
   DebtPaymentRequest,
+  PrepaymentMode,
   UpdateDebtRequest,
 } from '@personalfin/api-contract';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -94,5 +96,31 @@ export function useRemoveDebtPayment(spaceId: string, debtId: string) {
         }),
       ),
     onSettled: invalidate,
+  });
+}
+
+export function useSimulatePrepayment(spaceId: string, debtId: string) {
+  return useMutation({
+    mutationFn: async (input: { amountMinor: number; mode: PrepaymentMode }) =>
+      expectData(
+        await apiClient.POST('/financial-spaces/{spaceId}/debts/{debtId}/simulations', {
+          params: { path: { spaceId, debtId } },
+          body: input,
+        }),
+      ),
+  });
+}
+
+export function useConfirmPrepayment(spaceId: string, debtId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: ConfirmPrepaymentRequest) =>
+      expectData(
+        await apiClient.POST('/financial-spaces/{spaceId}/debts/{debtId}/prepayments', {
+          params: { path: { spaceId, debtId } },
+          body: input,
+        }),
+      ),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: debtKeys.forSpace(spaceId) }),
   });
 }

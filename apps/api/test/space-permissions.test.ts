@@ -151,6 +151,8 @@ const ENDPOINTS: Endpoint[] = [
   { method: 'PATCH', path: `/debts/${MISSING}`, permission: 'plan', payload: { version: 1 } },
   { method: 'POST', path: `/debts/${MISSING}/payments`, permission: 'record', payload: {} },
   { method: 'DELETE', path: `/debts/${MISSING}/payments/${MISSING}`, permission: 'record' },
+  { method: 'POST', path: `/debts/${MISSING}/simulations`, permission: 'view', payload: {} },
+  { method: 'POST', path: `/debts/${MISSING}/prepayments`, permission: 'record', payload: {} },
 ];
 
 async function shareWith(permissions: SpacePermission[]): Promise<string> {

@@ -4,6 +4,9 @@ import {
   DEFAULT_CURRENCY,
   type DebtPaymentKind,
   type FinancialDate,
+  type PrepaymentMode,
+  type PrepaymentSimulation,
+  simulatePrepayment,
   summarizeDebt,
 } from '@personalfin/domain';
 
@@ -204,6 +207,91 @@ export function recordDebtPayment(
   input: RecordDebtPaymentInput,
 ): Promise<DebtDetail> {
   return data.transaction((repositories) => recordDebtPaymentIn(repositories, input));
+}
+
+function simulate(
+  debt: Debt,
+  payments: readonly DebtPayment[],
+  amountMinor: number,
+  mode: PrepaymentMode,
+): PrepaymentSimulation {
+  if (amountMinor > summarizeDebt(debt, payments).outstandingMinor) {
+    throw new DebtOverpaymentError();
+  }
+  return simulatePrepayment(debt, payments, amountMinor, mode);
+}
+
+export async function simulateDebtPrepayment(
+  data: DataAccess,
+  input: { financialSpaceId: string; debtId: string; amountMinor: number; mode: PrepaymentMode },
+): Promise<PrepaymentSimulation> {
+  const debt = await data.repositories.debts.findInSpace(input.financialSpaceId, input.debtId);
+  if (debt === null) {
+    throw new DebtNotFoundError();
+  }
+  const payments = await data.repositories.debts.listPayments(input.financialSpaceId, debt.id);
+  return simulate(debt, payments, input.amountMinor, input.mode);
+}
+
+export interface ConfirmPrepaymentInput {
+  financialSpaceId: string;
+  debtId: string;
+  actorUserId: string;
+  expectedVersion: number;
+  amountMinor: number;
+  mode: PrepaymentMode;
+  paidOn: FinancialDate;
+}
+
+export async function confirmDebtPrepayment(
+  data: DataAccess,
+  input: ConfirmPrepaymentInput,
+): Promise<DebtDetail> {
+  return data.transaction(async (repositories) => {
+    const debt = await requireDebt(repositories, input.financialSpaceId, input.debtId);
+    if (debt.version !== input.expectedVersion) {
+      throw new VersionConflictError();
+    }
+    const payments = await repositories.debts.listPayments(input.financialSpaceId, debt.id);
+    const simulation = simulate(debt, payments, input.amountMinor, input.mode);
+    const { payments: withPrepayment } = await recordDebtPaymentIn(repositories, {
+      financialSpaceId: input.financialSpaceId,
+      debtId: debt.id,
+      actorUserId: input.actorUserId,
+      kind: 'prepayment',
+      amountMinor: input.amountMinor,
+      paidOn: input.paidOn,
+    });
+    const changes = diffFields(
+      {
+        installmentCount: debt.installmentCount,
+        installmentAmountMinor: debt.installmentAmountMinor,
+        prepaymentMode: null,
+      },
+      { ...simulation.plan, prepaymentMode: input.mode },
+    );
+    const updated = await repositories.debts.update({
+      financialSpaceId: input.financialSpaceId,
+      debtId: debt.id,
+      expectedVersion: input.expectedVersion,
+      name: debt.name,
+      firstDueDate: debt.firstDueDate,
+      archived: debt.archivedAt !== null,
+      ...simulation.plan,
+    });
+    if (updated === null) {
+      throw new VersionConflictError();
+    }
+    await repositories.audit.record({
+      financialSpaceId: input.financialSpaceId,
+      entityType: 'debt',
+      entityId: debt.id,
+      action: 'update',
+      actorUserId: input.actorUserId,
+      changes,
+    });
+    return { debt: updated, payments: withPrepayment };
+  });
 }
 
 export async function removeDebtPayment(

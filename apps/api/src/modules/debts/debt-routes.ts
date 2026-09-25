@@ -2,6 +2,7 @@ import type {
   DebtDetail as DebtDetailResponse,
   DebtList,
   Debt as DebtResponse,
+  PrepaymentSimulation as PrepaymentSimulationResponse,
 } from '@personalfin/api-contract';
 import {
   DEBT_NAME_MAX_LENGTH,
@@ -11,6 +12,8 @@ import {
   isValidFinancialDate,
   MAX_AMOUNT_MINOR,
   MAX_DEBT_INSTALLMENTS,
+  PREPAYMENT_MODES,
+  type PrepaymentSimulation,
   summarizeDebt,
 } from '@personalfin/domain';
 import type { FastifyInstance } from 'fastify';
@@ -23,10 +26,12 @@ import { requireAccessibleSpace } from '../financial-spaces/financial-space-acce
 import { type Debt, type DebtPayment, normalizeDebtName } from './debt.ts';
 import { DebtNotFoundError, DebtPaymentNotFoundError } from './debt-errors.ts';
 import {
+  confirmDebtPrepayment,
   createDebt,
   type DebtDetail,
   recordDebtPayment,
   removeDebtPayment,
+  simulateDebtPrepayment,
   updateDebt,
 } from './debt-management.ts';
 
@@ -72,6 +77,28 @@ const paymentSchema = z.strictObject({
   amountMinor: amountSchema,
   paidOn: dateSchema,
 });
+
+const simulationSchema = z.strictObject({
+  amountMinor: amountSchema,
+  mode: z.enum(PREPAYMENT_MODES),
+});
+
+const prepaymentSchema = z.strictObject({
+  version: z.number().int().min(1),
+  amountMinor: amountSchema,
+  mode: z.enum(PREPAYMENT_MODES),
+  paidOn: dateSchema,
+});
+
+function toSimulationResponse(simulation: PrepaymentSimulation): PrepaymentSimulationResponse {
+  return {
+    mode: simulation.mode,
+    amountMinor: simulation.amountMinor,
+    plan: simulation.plan,
+    before: simulation.before,
+    after: simulation.after,
+  };
+}
 
 export function toDebtResponse(debt: Debt, payments: readonly DebtPayment[]): DebtResponse {
   return {
@@ -226,6 +253,52 @@ export function registerDebtRoutes(server: FastifyInstance, data: DataAccess): v
         financialSpaceId: space.id,
         debtId: requireDebtId(params.debtId),
         actorUserId: user.id,
+        ...input,
+      });
+      reply.status(201);
+      return toDebtDetail(detail);
+    },
+  );
+
+  server.post(
+    '/financial-spaces/:spaceId/debts/:debtId/simulations',
+    async (request): Promise<PrepaymentSimulationResponse> => {
+      const user = requireAuthenticatedUser(request);
+      const params = parseInput(debtParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        params.spaceId,
+        'view',
+      );
+      const input = parseInput(simulationSchema, request.body);
+      return toSimulationResponse(
+        await simulateDebtPrepayment(data, {
+          financialSpaceId: space.id,
+          debtId: requireDebtId(params.debtId),
+          ...input,
+        }),
+      );
+    },
+  );
+
+  server.post(
+    '/financial-spaces/:spaceId/debts/:debtId/prepayments',
+    async (request, reply): Promise<DebtDetailResponse> => {
+      const user = requireAuthenticatedUser(request);
+      const params = parseInput(debtParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        params.spaceId,
+        'record',
+      );
+      const { version, ...input } = parseInput(prepaymentSchema, request.body);
+      const detail = await confirmDebtPrepayment(data, {
+        financialSpaceId: space.id,
+        debtId: requireDebtId(params.debtId),
+        actorUserId: user.id,
+        expectedVersion: version,
         ...input,
       });
       reply.status(201);

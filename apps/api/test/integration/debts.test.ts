@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createPostgresDataAccess, type DataAccess } from '../../src/database/data-access.ts';
 import type { DatabasePool } from '../../src/database/pool.ts';
 import {
+  confirmDebtPrepayment,
   createDebt,
   recordDebtPayment,
   removeDebtPayment,
@@ -103,5 +104,46 @@ describe('PostgreSQL debts', () => {
         createdByUserId: userId,
       }),
     ).rejects.toThrow();
+  });
+
+  it('confirms a prepayment atomically with the simulated plan', async () => {
+    const { userId, spaceId } = await setUp();
+    const { debt } = await createDebt(data, {
+      financialSpaceId: spaceId,
+      actorUserId: userId,
+      name: 'Casa',
+      originalAmountMinor: 1_200_000,
+      installmentCount: 12,
+      firstDueDate: '2026-10-10',
+    });
+
+    const { debt: updated, payments } = await confirmDebtPrepayment(data, {
+      financialSpaceId: spaceId,
+      debtId: debt.id,
+      actorUserId: userId,
+      expectedVersion: 1,
+      amountMinor: 250_000,
+      mode: 'reduce_term',
+      paidOn: '2026-10-01',
+    });
+
+    expect(updated).toMatchObject({
+      version: 2,
+      installmentCount: 10,
+      installmentAmountMinor: 100_000,
+    });
+    expect(payments.map((payment) => payment.kind)).toEqual(['prepayment']);
+    await expect(
+      confirmDebtPrepayment(data, {
+        financialSpaceId: spaceId,
+        debtId: debt.id,
+        actorUserId: userId,
+        expectedVersion: 1,
+        amountMinor: 1,
+        mode: 'reduce_term',
+        paidOn: '2026-10-01',
+      }),
+    ).rejects.toMatchObject({ code: 'VERSION_CONFLICT' });
+    expect(await data.repositories.debts.listPayments(spaceId, debt.id)).toHaveLength(1);
   });
 });

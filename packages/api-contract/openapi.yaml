@@ -2203,6 +2203,99 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/debts/{debtId}/simulations:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/DebtId'
+    post:
+      operationId: simulateDebtPrepayment
+      summary: Simulate a prepayment without changing any data
+      description: >
+        Stateless: nothing is stored (DR-046, DR-047).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrepaymentSimulationRequest'
+      responses:
+        '200':
+          description: The current and simulated states and the resulting plan (DR-093).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrepaymentSimulation'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >
+            DEBT_OVERPAYMENT (larger than the outstanding balance).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/debts/{debtId}/prepayments:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/DebtId'
+    post:
+      operationId: confirmDebtPrepayment
+      summary: Confirm a prepayment and apply the simulated plan (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmPrepaymentRequest'
+      responses:
+        '201':
+          description: The debt with the prepayment and the new plan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebtDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >
+            DEBT_OVERPAYMENT (larger than the outstanding balance).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     DebtId:
@@ -2375,6 +2468,58 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    PrepaymentMode:
+      type: string
+      enum: [reduce_term, reduce_installment]
+      description: reduce_term keeps the installment and lowers the count; reduce_installment keeps the count and lowers the installment.
+    PrepaymentSimulationRequest:
+      type: object
+      additionalProperties: false
+      required: [amountMinor, mode]
+      properties:
+        amountMinor:
+          type: integer
+          minimum: 1
+        mode:
+          $ref: '#/components/schemas/PrepaymentMode'
+    ConfirmPrepaymentRequest:
+      type: object
+      additionalProperties: false
+      required: [version, amountMinor, mode, paidOn]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        amountMinor:
+          type: integer
+          minimum: 1
+        mode:
+          $ref: '#/components/schemas/PrepaymentMode'
+        paidOn:
+          type: string
+          format: date
+    PrepaymentSimulation:
+      type: object
+      additionalProperties: false
+      required: [mode, amountMinor, plan, before, after]
+      properties:
+        mode:
+          $ref: '#/components/schemas/PrepaymentMode'
+        amountMinor:
+          type: integer
+        plan:
+          type: object
+          additionalProperties: false
+          required: [installmentCount, installmentAmountMinor]
+          properties:
+            installmentCount:
+              type: integer
+            installmentAmountMinor:
+              type: integer
+        before:
+          $ref: '#/components/schemas/DebtSummary'
+        after:
+          $ref: '#/components/schemas/DebtSummary'
     DebtSummary:
       type: object
       additionalProperties: false

@@ -6,6 +6,17 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Early-Amortization Simulation (SDD-046)
+
+-   "Simular amortização" on a debt compares today with the result of a
+    prepayment. You can reduce the term (same installment) or reduce the
+    installment (same number of installments, and the last one absorbs
+    the cents).
+-   Simulating never changes data. "Confirmar amortização" records the
+    prepayment and applies the simulated plan in one audited change
+    (DR-046, DR-047, DR-093).
+-   API: `POST .../debts/{id}/simulations` and `.../prepayments`.
+
 ### Debts and Loans (SDD-045)
 
 -   "Dívidas" per space: name, original amount, installments, installment
