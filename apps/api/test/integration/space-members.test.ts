@@ -71,3 +71,39 @@ describe('space membership persistence', () => {
     await expect(addMember(ownerId, ['view'])).rejects.toThrow(/owner is not a member/);
   });
 });
+
+describe('member management persistence', () => {
+  it('updates permissions with version checks and removes members for history', async () => {
+    const { ownerId, memberId, space, addMember } = await setUp();
+    await addMember(memberId, ['view']);
+    const { members } = data.repositories;
+
+    const updated = await members.updatePermissions({
+      financialSpaceId: space.id,
+      userId: memberId,
+      expectedVersion: 1,
+      permissions: ['view', 'plan'],
+    });
+    const stale = await members.updatePermissions({
+      financialSpaceId: space.id,
+      userId: memberId,
+      expectedVersion: 1,
+      permissions: ['view'],
+    });
+    const removed = await members.remove({
+      financialSpaceId: space.id,
+      userId: memberId,
+      expectedVersion: 2,
+      actorUserId: ownerId,
+    });
+    const history = await pool.query(
+      'SELECT count(*)::int AS count FROM financial_space_member WHERE user_id = $1',
+      [memberId],
+    );
+
+    expect([updated, stale, removed]).toEqual([true, false, true]);
+    expect(await members.listActive(space.id)).toEqual([]);
+    expect(history.rows[0]?.count).toBe(1);
+    expect(await members.ownerOf(space.id)).toMatchObject({ userId: ownerId });
+  });
+});

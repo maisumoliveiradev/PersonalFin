@@ -187,5 +187,35 @@ export function createPostgresMemberRepository(db: Queryable): MemberRepository 
       );
       return rows[0]?.name ?? null;
     },
+
+    async ownerOf(financialSpaceId) {
+      const { rows } = await db.query<{ user_id: string; name: string; email: string }>(
+        `SELECT u.id AS user_id, u.name, u.email
+         FROM financial_space s JOIN "user" u ON u.id = s.owner_user_id
+         WHERE s.id = $1`,
+        [financialSpaceId],
+      );
+      const [row] = rows;
+      return row === undefined ? null : { userId: row.user_id, name: row.name, email: row.email };
+    },
+
+    async updatePermissions({ financialSpaceId, userId, expectedVersion, permissions }) {
+      const result = await db.query(
+        `UPDATE financial_space_member SET permissions = $4, version = version + 1
+         WHERE financial_space_id = $1 AND user_id = $2 AND version = $3 AND removed_at IS NULL`,
+        [financialSpaceId, userId, expectedVersion, permissions],
+      );
+      return result.rowCount === 1;
+    },
+
+    async remove({ financialSpaceId, userId, expectedVersion, actorUserId }) {
+      const result = await db.query(
+        `UPDATE financial_space_member
+         SET removed_at = now(), removed_by_user_id = $4, version = version + 1
+         WHERE financial_space_id = $1 AND user_id = $2 AND version = $3 AND removed_at IS NULL`,
+        [financialSpaceId, userId, expectedVersion, actorUserId],
+      );
+      return result.rowCount === 1;
+    },
   };
 }

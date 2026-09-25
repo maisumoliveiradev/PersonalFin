@@ -818,6 +818,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** The Owner and active members of the space */
+        get: operations["listMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/members/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                userId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a member; records they created stay in the space */
+        delete: operations["removeMember"];
+        options?: never;
+        head?: never;
+        /** Replace a member's permissions (view is always kept) */
+        patch: operations["changeMemberPermissions"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave a shared space (members only) */
+        post: operations["leaveSpace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -899,6 +958,20 @@ export interface components {
         };
         /** @enum {string} */
         SpacePermission: "view" | "record" | "plan" | "classify" | "manage_members" | "view_audit";
+        Member: {
+            /** Format: uuid */
+            userId: string;
+            name: string;
+            email: string;
+            /** @enum {string} */
+            role: "owner" | "member";
+            permissions: components["schemas"]["SpacePermission"][];
+            /** @description Membership version; null for the Owner. */
+            version: number | null;
+        };
+        MemberList: {
+            items: components["schemas"]["Member"][];
+        };
         /** @enum {string} */
         InvitationStatus: "pending" | "accepted" | "cancelled" | "expired";
         Invitation: {
@@ -3243,6 +3316,154 @@ export interface operations {
             };
             /** @description INVITATION_NOT_AVAILABLE (expired, cancelled, or used). */
             410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner first, then members by joining date. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    removeMember: {
+        parameters: {
+            query: {
+                version: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed; audited. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description FINANCIAL_SPACE_NOT_FOUND or MEMBER_NOT_FOUND. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT or OWNER_CANNOT_LEAVE (the Owner cannot be removed). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    changeMemberPermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    version: number;
+                    permissions: components["schemas"]["SpacePermission"][];
+                };
+            };
+        };
+        responses: {
+            /** @description Changed; audited. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description FINANCIAL_SPACE_NOT_FOUND or MEMBER_NOT_FOUND (including the Owner). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    leaveSpace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Left; audited. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            /** @description OWNER_CANNOT_LEAVE (transfer ownership first, DR-009). */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

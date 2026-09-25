@@ -61,3 +61,5 @@ export type Invitation = components['schemas']['Invitation'];
 export type InvitationList = components['schemas']['InvitationList'];
 export type CreatedInvitation = components['schemas']['CreatedInvitation'];
 export type InvitationPreview = components['schemas']['InvitationPreview'];
+export type Member = components['schemas']['Member'];
+export type MemberList = components['schemas']['MemberList'];

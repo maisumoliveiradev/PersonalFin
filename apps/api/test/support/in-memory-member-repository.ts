@@ -126,5 +126,42 @@ export function createInMemoryMemberRepository(
     async spaceName(financialSpaceId) {
       return spaces.find((space) => space.id === financialSpaceId)?.name ?? null;
     },
+    async ownerOf(financialSpaceId) {
+      const space = spaces.find((candidate) => candidate.id === financialSpaceId);
+      const owner = USERS.find((user) => user.id === space?.ownerUserId);
+      return owner === undefined
+        ? null
+        : { userId: owner.id, name: owner.name, email: owner.email };
+    },
+    async updatePermissions({ financialSpaceId, userId, expectedVersion, permissions }) {
+      const member = members.find(
+        (candidate) =>
+          candidate.financialSpaceId === financialSpaceId &&
+          candidate.userId === userId &&
+          active(candidate) &&
+          (candidate.version ?? 1) === expectedVersion,
+      );
+      if (member === undefined) {
+        return false;
+      }
+      member.permissions = [...permissions] as InMemoryMember['permissions'];
+      member.version = (member.version ?? 1) + 1;
+      return true;
+    },
+    async remove({ financialSpaceId, userId, expectedVersion }) {
+      const member = members.find(
+        (candidate) =>
+          candidate.financialSpaceId === financialSpaceId &&
+          candidate.userId === userId &&
+          active(candidate) &&
+          (candidate.version ?? 1) === expectedVersion,
+      );
+      if (member === undefined) {
+        return false;
+      }
+      member.removedAt = new Date();
+      member.version = (member.version ?? 1) + 1;
+      return true;
+    },
   };
 }
