@@ -1,5 +1,7 @@
 import type { AnalyticsRepository } from '../modules/analytics/analytics-repository.ts';
 import { createPostgresAnalyticsRepository } from '../modules/analytics/postgres-analytics-repository.ts';
+import type { AttachmentRepository } from '../modules/attachments/attachment.ts';
+import { createPostgresAttachmentRepository } from '../modules/attachments/postgres-attachment-repository.ts';
 import type { AuditRepository } from '../modules/audit/audit-repository.ts';
 import { createPostgresAuditRepository } from '../modules/audit/postgres-audit-repository.ts';
 import type { BackupRepository } from '../modules/backup/backup.ts';
@@ -64,6 +66,7 @@ export interface Repositories {
   imports: ImportRepository;
   backup: BackupRepository;
   exchangeRates: ExchangeRateRepository;
+  attachments: AttachmentRepository;
 }
 
 export interface DataAccess {
@@ -94,6 +97,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     imports: createPostgresImportRepository(db),
     backup: createPostgresBackupRepository(db),
     exchangeRates: createPostgresExchangeRateRepository(db),
+    attachments: createPostgresAttachmentRepository(db),
   };
 }
 

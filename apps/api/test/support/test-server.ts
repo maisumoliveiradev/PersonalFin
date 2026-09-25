@@ -5,6 +5,7 @@ import type { DataAccess } from '../../src/database/data-access.ts';
 import type { AuthHandler } from '../../src/routes/auth.ts';
 import { buildServer } from '../../src/server.ts';
 import { createInMemoryAnalyticsRepository } from './in-memory-analytics-repository.ts';
+import { createInMemoryAttachmentRepository } from './in-memory-attachment-repository.ts';
 import { createInMemoryAuditRepository } from './in-memory-audit-repository.ts';
 import { createInMemoryBackupRepository } from './in-memory-backup-repository.ts';
 import { createInMemoryBalanceReminderRepository } from './in-memory-balance-reminder-repository.ts';
@@ -105,6 +106,7 @@ export function createInMemoryRepositories() {
     imports: createInMemoryImportRepository(() => transactions.transactions),
     backup: createInMemoryBackupRepository(() => transactions.transactions),
     exchangeRates: createInMemoryExchangeRateRepository(),
+    attachments: createInMemoryAttachmentRepository(),
   };
 }
 

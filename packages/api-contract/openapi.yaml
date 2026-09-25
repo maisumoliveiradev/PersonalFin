@@ -3264,8 +3264,149 @@ paths:
           $ref: '#/components/responses/PermissionDenied'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/transactions/{transactionId}/attachments:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/TransactionId'
+    get:
+      operationId: listAttachments
+      summary: List the attachments of a transaction
+      responses:
+        '200':
+          description: Oldest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttachmentList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space, transaction, or attachment does not exist (FINANCIAL_SPACE_NOT_FOUND, TRANSACTION_NOT_FOUND, ATTACHMENT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: addAttachment
+      summary: Attach an image or PDF to a transaction (audited)
+      description: >
+        The content type is detected from the file bytes, never from the name (FR-074).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadAttachmentRequest'
+      responses:
+        '201':
+          description: The attachment metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space, transaction, or attachment does not exist (FINANCIAL_SPACE_NOT_FOUND, TRANSACTION_NOT_FOUND, ATTACHMENT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >
+            ATTACHMENT_TOO_LARGE (over 5 MB), ATTACHMENT_TYPE_NOT_ALLOWED (only JPEG, PNG, WebP, HEIC, PDF, detected from the content), or ATTACHMENT_LIMIT_REACHED (10 per transaction).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/attachments/{attachmentId}/content:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/AttachmentId'
+    get:
+      operationId: getAttachmentContent
+      summary: Download an attachment
+      responses:
+        '200':
+          description: The file, served inline with its detected content type and no caching.
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+            image/heic:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space, transaction, or attachment does not exist (FINANCIAL_SPACE_NOT_FOUND, TRANSACTION_NOT_FOUND, ATTACHMENT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/attachments/{attachmentId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/AttachmentId'
+    delete:
+      operationId: removeAttachment
+      summary: Remove an attachment (soft delete, audited)
+      responses:
+        '204':
+          description: Removed.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space, transaction, or attachment does not exist (FINANCIAL_SPACE_NOT_FOUND, TRANSACTION_NOT_FOUND, ATTACHMENT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
+    AttachmentId:
+      name: attachmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     ImportId:
       name: importId
       in: path
@@ -3453,6 +3594,50 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    Attachment:
+      type: object
+      additionalProperties: false
+      required: [id, transactionId, fileName, contentType, sizeBytes, sha256, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        transactionId:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        contentType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp, image/heic, application/pdf]
+        sizeBytes:
+          type: integer
+        sha256:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    AttachmentList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+    UploadAttachmentRequest:
+      type: object
+      additionalProperties: false
+      required: [fileName, contentBase64]
+      properties:
+        fileName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        contentBase64:
+          type: string
+          description: File bytes in base64 (at most 5 MB decoded).
     CurrencyCode:
       type: string
       enum: [BRL, USD, EUR, GBP, ARS, CAD, CHF, CLP, JPY]
@@ -4616,6 +4801,7 @@ components:
                   - debt_payment
                   - goal
                   - import_batch
+                  - attachment
               entityId:
                 type: string
               action:
@@ -5038,7 +5224,11 @@ components:
         - installment
         - tags
         - original
+        - attachmentCount
       properties:
+        attachmentCount:
+          type: integer
+          minimum: 0
         original:
           description: >
             Original amount, currency, and applied exchange rate when the

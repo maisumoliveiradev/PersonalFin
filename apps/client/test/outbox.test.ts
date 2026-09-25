@@ -37,6 +37,7 @@ const transaction: Transaction = {
     { id: 'tag-a', name: 'A' },
   ],
   original: null,
+  attachmentCount: 0,
 };
 
 function entry(id: string, transactionId: string, state: OutboxEntry['state'] = 'pending') {

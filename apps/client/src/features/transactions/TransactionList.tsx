@@ -87,6 +87,9 @@ export function TransactionRow({
               transaction.tags.length === 0
                 ? null
                 : transaction.tags.map((tag) => `#${tag.name}`).join(' '),
+              transaction.attachmentCount === 0
+                ? null
+                : `📎 ${messages.attachments.rowCount(transaction.attachmentCount)}`,
               transaction.original === null
                 ? null
                 : messages.currencies.original(

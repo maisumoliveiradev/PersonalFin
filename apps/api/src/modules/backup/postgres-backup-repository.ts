@@ -22,6 +22,9 @@ const SPACE_QUERIES: Record<SpaceTable, string> = {
   import_batch: `SELECT id, financial_space_id, created_by_user_id, file_name, file_format,
     file_sha256, row_count, mapping, status, imported_count, created_at, confirmed_at, undone_at,
     version FROM import_batch WHERE financial_space_id = $1`,
+  attachment: `SELECT id, financial_space_id, transaction_id, file_name, content_type, size_bytes,
+    sha256, created_by_user_id, created_at, deleted_at, deleted_by_user_id
+    FROM attachment WHERE financial_space_id = $1`,
   audit_event: 'SELECT * FROM audit_event WHERE financial_space_id = $1',
 };
 

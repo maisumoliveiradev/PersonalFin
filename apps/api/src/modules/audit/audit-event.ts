@@ -14,7 +14,8 @@ export type AuditEntityType =
   | 'debt'
   | 'debt_payment'
   | 'goal'
-  | 'import_batch';
+  | 'import_batch'
+  | 'attachment';
 export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
 
 export interface AuditContext {

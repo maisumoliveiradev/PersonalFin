@@ -9,6 +9,7 @@ import { createAuthenticationHook } from './http/authenticate.ts';
 import { createClientVersionHook } from './http/client-version.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
 import { registerAnalyticsRoutes } from './modules/analytics/analytics-routes.ts';
+import { registerAttachmentRoutes } from './modules/attachments/attachment-routes.ts';
 import { registerAuditRoutes } from './modules/audit/audit-routes.ts';
 import { registerBackupRoutes } from './modules/backup/backup-routes.ts';
 import { registerBalanceRoutes } from './modules/balance/balance-routes.ts';
@@ -103,6 +104,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerReportRoutes(authenticated, options.data);
     registerBackupRoutes(authenticated, options.data);
     registerExchangeRateRoutes(authenticated, options.data);
+    registerAttachmentRoutes(authenticated, options.data);
   });
 
   return server;

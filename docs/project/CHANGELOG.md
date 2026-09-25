@@ -6,6 +6,22 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Transaction Attachments (SDD-057)
+
+-   "Anexos" on the transaction screen:
+    - attach photos (JPEG, PNG, WebP, HEIC) or PDF of up to 5 MB, at most
+      10 per transaction;
+    - take a photo on the phone;
+    - open or remove an attachment.
+
+    List rows show "📎 1 anexo".
+-   Files are checked by their real content, and only people with access
+    to the space can open them. Changes are audited.
+-   API: `.../transactions/{id}/attachments`,
+    `.../attachments/{id}/content`, and `DELETE .../attachments/{id}`.
+    Migration `0028_attachments`. New dependency: `expo-image-picker`.
+-   OCR/AI reading of receipts needs an owner decision on a provider.
+
 ## \[0.10.0\] --- 2026-09-25
 
 Multi-Currency. Released to `main` and tagged `v0.10.0`; validated in

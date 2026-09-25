@@ -183,6 +183,7 @@ export function toTransactionResponse(transaction: FinancialTransaction): Transa
     installment: transaction.installment,
     tags: transaction.tags,
     original: transaction.original,
+    attachmentCount: transaction.attachmentCount,
   };
 }
 
