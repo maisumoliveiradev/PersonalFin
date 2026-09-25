@@ -14,7 +14,11 @@ async function blobToBase64(blob: Blob): Promise<string> {
 }
 
 export async function pickSpreadsheet(): Promise<PickedFile | null> {
-  const result = await getDocumentAsync({ type: SPREADSHEET_TYPES, base64: false });
+  return pickFile(SPREADSHEET_TYPES);
+}
+
+export async function pickFile(types: string[]): Promise<PickedFile | null> {
+  const result = await getDocumentAsync({ type: types, base64: false });
   const asset = result.canceled ? undefined : result.assets[0];
   if (asset?.file === undefined) {
     return null;

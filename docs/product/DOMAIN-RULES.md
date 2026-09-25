@@ -455,6 +455,17 @@ execute arbitrary code.
 
 ## AI
 
+**DR-099** *(SDD-057; decided under delegation.)* A transaction may
+have up to 10 attachments:
+- **Accepted files:** JPEG, PNG, WebP, and HEIC images, and PDF
+  documents, up to 5 MB each. The type is detected from the content.
+- **Access:** attachments are visible to members with `view`, and are
+  added or removed with `record`.
+- **Removal:** a removed attachment is kept as removed (soft delete).
+  Every change is audited.
+
+Attachments never change financial values.
+
 **DR-069** Initial AI/OCR use is objective document-data extraction.
 
 **DR-070** Extracted data requires user review before persistence.

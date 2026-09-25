@@ -186,6 +186,15 @@ const ENDPOINTS: Endpoint[] = [
   { method: 'GET', path: '/exchange-rates', permission: 'view' },
   { method: 'GET', path: '/exchange-rates/latest?currency=USD&on=2026-10-01', permission: 'view' },
   { method: 'POST', path: '/exchange-rates', permission: 'record', payload: {} },
+  { method: 'GET', path: `/transactions/${MISSING}/attachments`, permission: 'view' },
+  {
+    method: 'POST',
+    path: `/transactions/${MISSING}/attachments`,
+    permission: 'record',
+    payload: {},
+  },
+  { method: 'GET', path: `/attachments/${MISSING}/content`, permission: 'view' },
+  { method: 'DELETE', path: `/attachments/${MISSING}`, permission: 'record' },
 ];
 
 async function shareWith(permissions: SpacePermission[]): Promise<string> {

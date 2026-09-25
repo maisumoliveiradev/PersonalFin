@@ -56,6 +56,7 @@ export interface FinancialTransaction {
   installment: InstallmentReference | null;
   tags: CategoryReference[];
   original: OriginalAmount | null;
+  attachmentCount: number;
 }
 
 export interface NewFinancialTransaction {

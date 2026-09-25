@@ -8,6 +8,7 @@ import { useCategories } from '../../../../../../api/categories';
 import { useRecurrences, useUpdateRecurrence } from '../../../../../../api/recurrences';
 import { useTags } from '../../../../../../api/tags';
 import { useTransaction, useUpdateTransaction } from '../../../../../../api/transactions';
+import { AttachmentsSection } from '../../../../../../features/attachments/AttachmentsSection';
 import { CancelInstallmentsSection } from '../../../../../../features/cards/CancelInstallmentsSection';
 import { DeleteTransactionSection } from '../../../../../../features/transactions/DeleteTransactionSection';
 import { TransactionForm } from '../../../../../../features/transactions/TransactionForm';
@@ -187,6 +188,7 @@ export default function EditTransactionScreen() {
         onCancel={() => router.back()}
       />
       {online && <CancelInstallmentsSection spaceId={spaceId} transaction={current} />}
+      <AttachmentsSection spaceId={spaceId} transactionId={current.id} canEdit />
       <DeleteTransactionSection
         spaceId={spaceId}
         transaction={current}
