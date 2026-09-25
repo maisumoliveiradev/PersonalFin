@@ -6,6 +6,12 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.10.0\] --- 2026-09-25
+
+Multi-Currency. Released to `main` and tagged `v0.10.0`; validated in
+SDD-056 (`docs/sdds/v0.10.0/SDD-056-validation-report.md`). Automatic
+rates are pending an owner decision.
+
 ### Foreign-Currency Transactions (SDD-055)
 
 -   Transactions can be recorded in USD, EUR, GBP, ARS, CAD, CHF, CLP,
