@@ -1334,6 +1334,58 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/dashboard-preferences:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getDashboardPreferences
+      summary: The current user's dashboard preferences for the space
+      description: Defaults to the advanced profile without overrides (isDefault true).
+      responses:
+        '200':
+          description: Preferences and the resolved section visibility.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardPreferences'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    put:
+      operationId: saveDashboardPreferences
+      summary: Save the experience profile and section overrides
+      description: >
+        Overrides equal to the profile default are dropped. Preferences
+        only change visibility for this user; values are never affected.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - profile
+                - overrides
+              properties:
+                profile:
+                  $ref: '#/components/schemas/ExperienceProfile'
+                overrides:
+                  $ref: '#/components/schemas/SectionOverrides'
+      responses:
+        '200':
+          description: The saved preferences.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardPreferences'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     InvoiceMonth:
@@ -2213,6 +2265,73 @@ components:
                 description: Share of totalMinor in tenths of a percent; null when the total is zero.
               previousAmountMinor:
                 type: integer
+    ExperienceProfile:
+      type: string
+      enum:
+        - basic
+        - intermediate
+        - advanced
+    SectionOverrides:
+      type: object
+      additionalProperties: false
+      properties:
+        observedBalance:
+          type: boolean
+        realized:
+          type: boolean
+        forecast:
+          type: boolean
+        projection:
+          type: boolean
+        projectionSeries:
+          type: boolean
+        commitments:
+          type: boolean
+        analytics:
+          type: boolean
+    DashboardSections:
+      type: object
+      additionalProperties: false
+      required:
+        - observedBalance
+        - realized
+        - forecast
+        - projection
+        - projectionSeries
+        - commitments
+        - analytics
+      properties:
+        observedBalance:
+          type: boolean
+        realized:
+          type: boolean
+        forecast:
+          type: boolean
+        projection:
+          type: boolean
+        projectionSeries:
+          type: boolean
+        commitments:
+          type: boolean
+        analytics:
+          type: boolean
+    DashboardPreferences:
+      type: object
+      additionalProperties: false
+      required:
+        - profile
+        - overrides
+        - sections
+        - isDefault
+      properties:
+        profile:
+          $ref: '#/components/schemas/ExperienceProfile'
+        overrides:
+          $ref: '#/components/schemas/SectionOverrides'
+        sections:
+          $ref: '#/components/schemas/DashboardSections'
+        isDefault:
+          type: boolean
     Tag:
       type: object
       additionalProperties: false

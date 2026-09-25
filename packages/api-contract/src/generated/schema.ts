@@ -711,6 +711,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/dashboard-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * The current user's dashboard preferences for the space
+         * @description Defaults to the advanced profile without overrides (isDefault true).
+         */
+        get: operations["getDashboardPreferences"];
+        /**
+         * Save the experience profile and section overrides
+         * @description Overrides equal to the profile default are dropped. Preferences only change visibility for this user; values are never affected.
+         */
+        put: operations["saveDashboardPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -999,6 +1025,32 @@ export interface components {
                 shareTenths: number | null;
                 previousAmountMinor: number;
             }[];
+        };
+        /** @enum {string} */
+        ExperienceProfile: "basic" | "intermediate" | "advanced";
+        SectionOverrides: {
+            observedBalance?: boolean;
+            realized?: boolean;
+            forecast?: boolean;
+            projection?: boolean;
+            projectionSeries?: boolean;
+            commitments?: boolean;
+            analytics?: boolean;
+        };
+        DashboardSections: {
+            observedBalance: boolean;
+            realized: boolean;
+            forecast: boolean;
+            projection: boolean;
+            projectionSeries: boolean;
+            commitments: boolean;
+            analytics: boolean;
+        };
+        DashboardPreferences: {
+            profile: components["schemas"]["ExperienceProfile"];
+            overrides: components["schemas"]["SectionOverrides"];
+            sections: components["schemas"]["DashboardSections"];
+            isDefault: boolean;
         };
         Tag: {
             /** Format: uuid */
@@ -2765,6 +2817,62 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Breakdown"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    getDashboardPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Preferences and the resolved section visibility. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardPreferences"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    saveDashboardPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    profile: components["schemas"]["ExperienceProfile"];
+                    overrides: components["schemas"]["SectionOverrides"];
+                };
+            };
+        };
+        responses: {
+            /** @description The saved preferences. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardPreferences"];
                 };
             };
             400: components["responses"]["ValidationFailed"];

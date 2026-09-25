@@ -54,6 +54,11 @@ deleted; archived tags stay on their transactions and are not offered
 for new ones. Tag changes on a transaction are audited. Installment
 purchases and recurrence series do not carry tags yet.
 
+**DR-084** *(SDD-032; decided under delegation.)* Dashboard
+preferences belong to one user and one space: an experience profile
+(Basic, Intermediate, or Advanced; default Advanced) and per-section
+overrides. They change only what is displayed, never any value.
+
 **DR-014** Split transactions are outside the initial model.
 
 **DR-015** A transaction uses one primary financial calendar date. The

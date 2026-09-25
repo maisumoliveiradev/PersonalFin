@@ -6,6 +6,17 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Dashboard Personalization (SDD-032)
+
+-   "Personalizar resumo": each user picks an experience profile per
+    space (Básico, Intermediário, Avançado; default Avançado) and can
+    show or hide individual sections on top of it (DR-084).
+-   The space screen shows the observed balance, realized and forecast
+    groups, projection, next months, commitments, and analytics according
+    to the preferences.
+-   `GET`/`PUT .../dashboard-preferences`; migration
+    `0018_dashboard_preferences`.
+
 ### Category and Tag Analytics (SDD-031)
 
 -   "Para onde foi o dinheiro" on the Análises screen: realized expenses

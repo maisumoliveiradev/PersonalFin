@@ -5,7 +5,8 @@
 `v0.4.0`, released on 2026-09-25 (`main`, tag `v0.4.0`). SDD-001 to
 SDD-028 implemented and validated
 (`docs/sdds/v0.4.0/SDD-028-validation-report.md`). `develop` is building
-v0.5.0: SDD-029 to SDD-031 implemented.
+v0.5.0: SDD-029 to SDD-032 implemented; SDD-033 (release validation)
+pending.
 
 ## Implemented Product Capabilities
 
@@ -63,7 +64,7 @@ v0.5.0: SDD-029 to SDD-031 implemented.
     income/expenses (7, 30, or 90 days) with exact totals. There are no
     notifications.
 -   **Cards (SDD-023):** cards with name, closing and due days, and an
-    append-only limit history with effective dates (DR-083); archive and
+    append-only limit history with effective dates (DR-084); archive and
     reactivate.
 -   **Card purchases and invoices (SDD-024):** expenses paid with a card
     are assigned to an invoice (suggested from the closing day,
@@ -85,6 +86,9 @@ v0.5.0: SDD-029 to SDD-031 implemented.
     year) and twelve-month evolution (M-009, M-010), and
     expenses by category and tag over 1--12 months (M-011, M-012,
     SDD-031). There are no charts, exports, or custom metrics.
+-   **Dashboard personalization (SDD-032):** per-user, per-space
+    experience profile and section visibility (DR-084). There is no
+    onboarding recommendation or section reordering.
 -   **Tags (SDD-029):** per-space tags (DR-083) on transactions, shown in
     the list and usable as a filter. There is no tag analytics yet.
 -   **Quick status change (SDD-010):** each list item toggles between
@@ -110,7 +114,7 @@ v0.5.0: SDD-029 to SDD-031 implemented.
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
     -   `packages/domain` --- shared money, financial date, transaction,
-        month, balance-reminder, business-day, card, and comparison rules (ADR-0011;
+        month, balance-reminder, business-day, card, comparison, and dashboard-preference rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
@@ -138,7 +142,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.5.0/SDD-032-dashboard-personalization.md`. Domain decisions
+`docs/sdds/v0.5.0/SDD-033-release-validation.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, DR-072 to
 DR-078).

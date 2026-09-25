@@ -39,10 +39,12 @@ listed here for owner review.
     length. New metrics are added to `METRICS.md` (metric catalog).
 -   **Personalization (FR-062, FR-067):** each user chooses, per space,
     an experience profile --- Basic (balance and realized summary),
-    Intermediate (adds forecast, projection, and commitments link;
-    default), or Advanced (adds projection series, comparisons, and
-    analytics links) --- and may hide or show individual dashboard
-    sections on top of the profile. Onboarding recommendation (FR-068)
+    Intermediate (adds forecast, projection, and commitments link), or
+    Advanced (adds projection series and analytics link) --- and may
+    hide or show individual dashboard sections on top of the profile.
+    *Revised in SDD-032:* the default is Advanced, which matches the
+    screen delivered before personalization, so existing users see no
+    change until they choose a profile. Onboarding recommendation (FR-068)
     and custom metrics (FR-065) are left for later.
 -   **No chart library:** evolution and breakdowns are shown as
     accessible lists with proportional bars drawn with plain views; a
