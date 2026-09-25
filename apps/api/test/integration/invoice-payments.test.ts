@@ -141,3 +141,21 @@ describe('invoice payments', () => {
     expect(paid).toEqual([]);
   });
 });
+
+describe('card usage', () => {
+  it('sums the unpaid part of every invoice of the card', async () => {
+    const { pay, spaceId, card } = await setUp();
+    await pay(4_000, '2026-10-10');
+
+    const used = await data.repositories.cards.usedByCard(spaceId);
+    const invoices = await data.repositories.cardInvoices.listForCard(spaceId, card.id, {
+      start: '2026-09-01',
+      endExclusive: '2026-12-01',
+    });
+
+    expect(used.get(card.id)).toBe(6_000);
+    expect(invoices.map((invoice) => [invoice.referenceMonth, invoice.paidMinor])).toEqual([
+      ['2026-10', 4_000],
+    ]);
+  });
+});

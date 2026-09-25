@@ -6,6 +6,16 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Card Limit and Summary (SDD-027)
+
+-   The cards screen shows used and available limit per card, counting
+    future installments and payments (DR-082).
+-   The card screen lists its invoices from two months back to three
+    months ahead with total and state, each opening the invoice.
+-   Fixed: the payment confirmation now stays visible after the invoice
+    refreshes.
+-   `GET .../card-limits?on=` and `GET .../cards/{cardId}/invoices`.
+
 ### Invoice Payment (SDD-026)
 
 -   "Pagar fatura" on the invoice screen records full or partial

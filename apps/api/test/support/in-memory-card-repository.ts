@@ -2,7 +2,9 @@ import type { Card, CardLimitChange } from '../../src/modules/cards/card.ts';
 import { CardNameTakenError } from '../../src/modules/cards/card-errors.ts';
 import type { CardRepository } from '../../src/modules/cards/card-repository.ts';
 
-export function createInMemoryCardRepository(): CardRepository & {
+export function createInMemoryCardRepository(
+  usedByCard: (financialSpaceId: string) => Map<string, number> = () => new Map(),
+): CardRepository & {
   cards: Card[];
   limitChanges: CardLimitChange[];
 } {
@@ -24,6 +26,9 @@ export function createInMemoryCardRepository(): CardRepository & {
   return {
     cards,
     limitChanges,
+    async usedByCard(financialSpaceId) {
+      return usedByCard(financialSpaceId);
+    },
     async listForSpace(financialSpaceId) {
       return cards
         .filter((card) => card.financialSpaceId === financialSpaceId)

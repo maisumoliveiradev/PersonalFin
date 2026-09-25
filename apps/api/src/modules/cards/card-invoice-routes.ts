@@ -1,10 +1,15 @@
-import type { CardInvoice as CardInvoiceResponse } from '@personalfin/api-contract';
+import type {
+  CardInvoice as CardInvoiceResponse,
+  CardInvoiceSummaryList,
+} from '@personalfin/api-contract';
 import {
   defaultInvoiceDates,
   isValidAmountMinor,
   isValidFinancialDate,
   isValidMonth,
   MAX_AMOUNT_MINOR,
+  monthRange,
+  shiftMonth,
 } from '@personalfin/domain';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -49,6 +54,12 @@ const paymentSchema = z.strictObject({
     .number()
     .refine(isValidAmountMinor, `must be an integer between 1 and ${MAX_AMOUNT_MINOR}`),
   paidOn: dateSchema,
+});
+
+const cardParamsSchema = z.object({ spaceId: z.string(), cardId: z.string() });
+const summaryQuerySchema = z.object({
+  fromMonth: z.string().refine(isValidMonth, 'must be a month (YYYY-MM)'),
+  months: z.coerce.number().int().min(1).max(24).default(6),
 });
 
 const paymentParamsSchema = z.object({ paymentId: z.string() });
@@ -189,6 +200,46 @@ export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAcc
         actorUserId: user.id,
       });
       return toResponse(card, month, invoice);
+    },
+  );
+
+  server.get(
+    '/financial-spaces/:spaceId/cards/:cardId/invoices',
+    async (request): Promise<CardInvoiceSummaryList> => {
+      const user = requireAuthenticatedUser(request);
+      const params = parseInput(cardParamsSchema, request.params);
+      const space = await requireAccessibleSpace(
+        data.repositories.financialSpaces,
+        user.id,
+        params.spaceId,
+      );
+      const card = isUuid(params.cardId)
+        ? await data.repositories.cards.findInSpace(space.id, params.cardId)
+        : null;
+      if (card === null) {
+        throw new CardNotFoundError();
+      }
+      const { fromMonth, months } = parseInput(summaryQuerySchema, request.query);
+      const invoices = await data.repositories.cardInvoices.listForCard(space.id, card.id, {
+        start: monthRange(fromMonth).start,
+        endExclusive: monthRange(shiftMonth(fromMonth, months)).start,
+      });
+      return {
+        items: Array.from({ length: months }, (_, index) => {
+          const month = shiftMonth(fromMonth, index);
+          const invoice = invoices.find((item) => item.referenceMonth === month) ?? null;
+          const dates = invoice ?? defaultInvoiceDates(month, card);
+          return {
+            referenceMonth: month,
+            closingDate: dates.closingDate,
+            dueDate: dates.dueDate,
+            totalMinor: invoice?.totalMinor ?? 0,
+            paidMinor: invoice?.paidMinor ?? 0,
+            outstandingMinor: invoice === null ? 0 : outstandingMinor(invoice),
+            state: invoiceState(invoice),
+          };
+        }),
+      };
     },
   );
 }

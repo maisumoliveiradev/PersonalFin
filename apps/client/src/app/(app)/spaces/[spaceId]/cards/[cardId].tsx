@@ -1,20 +1,35 @@
 import type { Card } from '@personalfin/api-contract';
-import { financialDateFromLocalClock, formatDisplayDate } from '@personalfin/domain';
+import {
+  financialDateFromLocalClock,
+  formatDisplayDate,
+  formatMonthLabel,
+  monthOf,
+  shiftMonth,
+} from '@personalfin/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { useCards, useRecordCardLimit, useUpdateCard } from '../../../../../api/cards';
+import {
+  useCardInvoiceSummaries,
+  useCardLimits,
+  useCards,
+  useRecordCardLimit,
+  useUpdateCard,
+} from '../../../../../api/cards';
 import {
   currentLimitLabel,
   describeCardError,
   limitAmountLabel,
+  moneyLabel,
   parseCardDetails,
   parseLimit,
+  usageLabel,
 } from '../../../../../features/cards/card-form';
 import { messages } from '../../../../../i18n/messages';
 import { BodyText } from '../../../../../ui/BodyText';
 import { Button } from '../../../../../ui/Button';
 import { FormError } from '../../../../../ui/FormError';
+import { ListItem } from '../../../../../ui/ListItem';
 import { LoadingScreen } from '../../../../../ui/LoadingScreen';
 import { Screen } from '../../../../../ui/Screen';
 import { SectionTitle } from '../../../../../ui/SectionTitle';
@@ -53,6 +68,9 @@ function CardEditor({ spaceId, card }: { spaceId: string; card: Card }) {
   const today = financialDateFromLocalClock(new Date());
   const updateCard = useUpdateCard(spaceId, card.id);
   const recordLimit = useRecordCardLimit(spaceId, card.id);
+  const limits = useCardLimits(spaceId, today);
+  const usage = limits.data?.find((item) => item.cardId === card.id);
+  const invoices = useCardInvoiceSummaries(spaceId, card.id, shiftMonth(monthOf(today), -2), 6);
   const [name, setName] = useState(card.name);
   const [closingDay, setClosingDay] = useState(String(card.closingDay));
   const [dueDay, setDueDay] = useState(String(card.dueDay));
@@ -88,6 +106,7 @@ function CardEditor({ spaceId, card }: { spaceId: string; card: Card }) {
       <Title>{card.name}</Title>
       {card.archived && <BodyText muted>{messages.cards.archivedTag}</BodyText>}
       <BodyText>{messages.cards.currentLimit(currentLimitLabel(card, today))}</BodyText>
+      {usage !== undefined && <BodyText>{usageLabel(usage)}</BodyText>}
       {updateCard.isSuccess && <StatusMessage>{messages.cards.saved}</StatusMessage>}
       <TextField
         label={messages.cards.nameLabel}
@@ -121,6 +140,27 @@ function CardEditor({ spaceId, card }: { spaceId: string; card: Card }) {
         variant="link"
         onPress={() => updateCard.mutate({ version: card.version, archived: !card.archived })}
       />
+      <SectionTitle>{messages.cards.invoicesTitle}</SectionTitle>
+      {(invoices.data ?? []).map((invoice) => {
+        const label = formatMonthLabel(invoice.referenceMonth, 'pt-BR');
+        return (
+          <ListItem
+            key={invoice.referenceMonth}
+            title={messages.cards.invoiceSummary(
+              label.charAt(0).toUpperCase() + label.slice(1),
+              moneyLabel(invoice.totalMinor),
+              messages.cards.invoiceStates[invoice.state],
+            )}
+            accessibilityHint={messages.cards.openHint}
+            onPress={() =>
+              router.push({
+                pathname: '/spaces/[spaceId]/cards/invoice',
+                params: { spaceId, cardId: card.id, month: invoice.referenceMonth },
+              })
+            }
+          />
+        );
+      })}
       <Button
         label={messages.cards.invoicesAction}
         variant="link"

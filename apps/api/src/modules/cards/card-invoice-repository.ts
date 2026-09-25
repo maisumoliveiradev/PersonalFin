@@ -29,6 +29,11 @@ export interface CardInvoiceRepository {
     financialSpaceId: string,
     range: { start: FinancialDate; endExclusive: FinancialDate },
   ): Promise<DueInvoice[]>;
+  listForCard(
+    financialSpaceId: string,
+    cardId: string,
+    range: { start: FinancialDate; endExclusive: FinancialDate },
+  ): Promise<CardInvoice[]>;
   recordPayment(payment: NewInvoicePayment): Promise<void>;
   listPayments(financialSpaceId: string, invoiceId: string): Promise<InvoicePayment[]>;
   deletePayment(

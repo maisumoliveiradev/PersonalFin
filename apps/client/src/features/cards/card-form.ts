@@ -98,3 +98,24 @@ export function describeCardError(error: Error | null): string | null {
   }
   return messages.cards.errors.unexpected;
 }
+
+export function moneyLabel(amountMinor: number): string {
+  return formatMoney({ amountMinor, currency: 'BRL' }, 'pt-BR');
+}
+
+export interface CardUsage {
+  currentLimitMinor: number | null;
+  usedMinor: number;
+  availableMinor: number | null;
+}
+
+export function usageLabel(usage: CardUsage): string {
+  if (usage.currentLimitMinor === null || usage.availableMinor === null) {
+    return messages.cards.usedOnly(moneyLabel(usage.usedMinor));
+  }
+  return messages.cards.usage(
+    moneyLabel(usage.usedMinor),
+    moneyLabel(usage.availableMinor),
+    moneyLabel(usage.currentLimitMinor),
+  );
+}

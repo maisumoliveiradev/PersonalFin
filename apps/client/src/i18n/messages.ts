@@ -329,6 +329,12 @@ export const messages = {
     invoiceTag: (card: string, month: string) => `${card} · fatura de ${month}`,
     invoicesAction: 'Ver faturas',
     settledTag: '(paga)',
+    usage: (used: string, available: string, limit: string) =>
+      `Usado: ${used} · Disponível: ${available} de ${limit}`,
+    usedOnly: (used: string) => `Usado: ${used}`,
+    invoicesTitle: 'Faturas',
+    invoiceSummary: (month: string, total: string, state: string) =>
+      `${month}: ${total} · ${state}`,
     invoiceBalance: (paid: string, outstanding: string) =>
       `Pago: ${paid} · Em aberto: ${outstanding}`,
     invoiceStates: {

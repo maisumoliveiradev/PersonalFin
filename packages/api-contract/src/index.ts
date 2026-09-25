@@ -47,3 +47,5 @@ export type InvoiceDatesRequest = components['schemas']['InvoiceDatesRequest'];
 export type CommitmentInvoice = components['schemas']['CommitmentInvoice'];
 export type Installment = components['schemas']['Installment'];
 export type InvoicePayment = components['schemas']['InvoicePayment'];
+export type CardLimits = components['schemas']['CardLimits'];
+export type CardInvoiceSummaryList = components['schemas']['CardInvoiceSummaryList'];

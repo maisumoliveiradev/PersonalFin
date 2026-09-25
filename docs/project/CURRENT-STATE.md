@@ -5,7 +5,8 @@
 `v0.3.0`, released on 2026-09-24 (`main`, tag `v0.3.0`). SDD-001 to
 SDD-022 implemented and validated
 (`docs/sdds/v0.3.0/SDD-022-validation-report.md`). `develop` is building
-v0.4.0: SDD-023 to SDD-026 implemented.
+v0.4.0: SDD-023 to SDD-027 implemented; SDD-028 (release validation)
+pending.
 
 ## Implemented Product Capabilities
 
@@ -64,7 +65,7 @@ v0.4.0: SDD-023 to SDD-026 implemented.
     income/expenses (7, 30, or 90 days) with exact totals. There are no
     notifications.
 -   **Cards (SDD-023):** cards with name, closing and due days, and an
-    append-only limit history with effective dates (DR-081); archive and
+    append-only limit history with effective dates (DR-082); archive and
     reactivate.
 -   **Card purchases and invoices (SDD-024):** expenses paid with a card
     are assigned to an invoice (suggested from the closing day,
@@ -75,7 +76,10 @@ v0.4.0: SDD-023 to SDD-026 implemented.
     includes card purchases.
 -   **Invoice payment (SDD-026):** full and partial payments per invoice
     (removable), open amount and state; purchases of paid invoices are
-    realized (DR-081). There is no used/available limit yet.
+    realized (DR-081).
+-   **Card limit and summary (SDD-027):** used and available limit per
+    card (DR-082) and invoice totals by month. There are no charts or
+    per-category card analytics.
 -   **Installments (SDD-025):** card purchases split into 2--48
     installments across consecutive invoices (DR-080); later installments
     can be cancelled. Installments are edited one at a time.
@@ -130,7 +134,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.4.0/SDD-027-card-limit-and-summary.md`. Domain decisions
+`docs/sdds/v0.4.0/SDD-028-release-validation.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, DR-072 to
 DR-078).

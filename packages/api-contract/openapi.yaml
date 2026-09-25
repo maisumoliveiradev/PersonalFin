@@ -1046,6 +1046,72 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/card-limits:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getCardLimits
+      summary: Known used and available limit of every card on a date
+      description: >
+        usedMinor is the unpaid part of all invoices of the card (every
+        non-deleted purchase, including future installments, minus
+        payments). availableMinor = current limit on the date - usedMinor;
+        it may be negative and is null when no limit is effective yet.
+      parameters:
+        - name: 'on'
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: One entry per card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardLimits'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/cards/{cardId}/invoices:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+    get:
+      operationId: listCardInvoices
+      summary: Invoice totals of a card for consecutive months
+      parameters:
+        - name: fromMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        - name: months
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+            default: 6
+      responses:
+        '200':
+          description: One entry per month, including months without purchases.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardInvoiceSummaryList'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
 components:
   parameters:
     InvoiceMonth:
@@ -1773,6 +1839,78 @@ components:
             $ref: '#/components/schemas/Transaction'
         hasMore:
           type: boolean
+    CardLimits:
+      type: object
+      additionalProperties: false
+      required:
+        - 'on'
+        - items
+      properties:
+        'on':
+          $ref: '#/components/schemas/FinancialDate'
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - cardId
+              - currentLimitMinor
+              - usedMinor
+              - availableMinor
+            properties:
+              cardId:
+                type: string
+                format: uuid
+              currentLimitMinor:
+                type:
+                  - integer
+                  - 'null'
+              usedMinor:
+                type: integer
+              availableMinor:
+                type:
+                  - integer
+                  - 'null'
+    CardInvoiceSummaryList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - referenceMonth
+              - closingDate
+              - dueDate
+              - totalMinor
+              - paidMinor
+              - outstandingMinor
+              - state
+            properties:
+              referenceMonth:
+                type: string
+              closingDate:
+                $ref: '#/components/schemas/FinancialDate'
+              dueDate:
+                $ref: '#/components/schemas/FinancialDate'
+              totalMinor:
+                type: integer
+              paidMinor:
+                type: integer
+              outstandingMinor:
+                type: integer
+              state:
+                type: string
+                enum:
+                  - empty
+                  - open
+                  - partially_paid
+                  - paid
     InvoicePayment:
       type: object
       additionalProperties: false
