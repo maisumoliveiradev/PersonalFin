@@ -41,6 +41,6 @@ describe('GET /me', () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual(user);
+    expect(response.json()).toEqual({ ...user, platformAdmin: false });
   });
 });

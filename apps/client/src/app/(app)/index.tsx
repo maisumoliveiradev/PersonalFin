@@ -79,6 +79,13 @@ export default function FinancialSpacesScreen() {
         onPress={() => router.push('/goals')}
       />
       <BackupButton />
+      {currentUser.data.platformAdmin && (
+        <Button
+          label={messages.admin.action}
+          variant="link"
+          onPress={() => router.push('/admin')}
+        />
+      )}
       {signOutButton}
     </Screen>
   );

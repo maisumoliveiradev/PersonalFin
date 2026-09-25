@@ -10,7 +10,8 @@
     "test": "vitest run",
     "db:migrate": "node --env-file-if-exists=.env src/database/migrate-cli.ts",
     "auth:schema": "node --env-file-if-exists=.env src/auth/print-auth-schema.ts",
-    "test:integration": "node --env-file-if-exists=.env ../../node_modules/vitest/vitest.mjs run --config vitest.integration.config.ts"
+    "test:integration": "node --env-file-if-exists=.env ../../node_modules/vitest/vitest.mjs run --config vitest.integration.config.ts",
+    "admin": "node --env-file-if-exists=.env src/database/admin-cli.ts"
   },
   "dependencies": {
     "@better-auth/expo": "1.7.5",

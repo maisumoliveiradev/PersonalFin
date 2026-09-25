@@ -8,6 +8,7 @@ import type { DataAccess } from './database/data-access.ts';
 import { createAuthenticationHook } from './http/authenticate.ts';
 import { createClientVersionHook } from './http/client-version.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
+import { registerAdminRoutes } from './modules/admin/admin-routes.ts';
 import { registerAnalyticsRoutes } from './modules/analytics/analytics-routes.ts';
 import { registerAttachmentRoutes } from './modules/attachments/attachment-routes.ts';
 import { registerAuditRoutes } from './modules/audit/audit-routes.ts';
@@ -79,7 +80,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
 
   server.register(async (authenticated) => {
     authenticated.addHook('preHandler', createAuthenticationHook(options.sessionResolver));
-    registerMeRoute(authenticated);
+    registerMeRoute(authenticated, options.data);
     registerFinancialSpaceRoutes(authenticated, options.data);
     registerCategoryRoutes(authenticated, options.data);
     registerTransactionRoutes(authenticated, options.data);
@@ -105,6 +106,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerBackupRoutes(authenticated, options.data);
     registerExchangeRateRoutes(authenticated, options.data);
     registerAttachmentRoutes(authenticated, options.data);
+    registerAdminRoutes(authenticated, options.data);
   });
 
   return server;

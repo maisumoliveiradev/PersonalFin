@@ -22,6 +22,7 @@ import { createInMemoryGoalRepository } from './in-memory-goal-repository.ts';
 import { createInMemoryImportRepository } from './in-memory-import-repository.ts';
 import { createInMemoryInstallmentRepository } from './in-memory-installment-repository.ts';
 import { createInMemoryMemberRepository } from './in-memory-member-repository.ts';
+import { createInMemoryPlatformAdminRepository } from './in-memory-platform-admin-repository.ts';
 import { createInMemoryRecurrenceRepository } from './in-memory-recurrence-repository.ts';
 import { createInMemoryReminderRepository } from './in-memory-reminder-repository.ts';
 import { createInMemoryTagRepository } from './in-memory-tag-repository.ts';
@@ -107,6 +108,7 @@ export function createInMemoryRepositories() {
     backup: createInMemoryBackupRepository(() => transactions.transactions),
     exchangeRates: createInMemoryExchangeRateRepository(),
     attachments: createInMemoryAttachmentRepository(),
+    platformAdmins: createInMemoryPlatformAdminRepository(),
   };
 }
 
