@@ -234,6 +234,15 @@ invalid sessions with `401 UNAUTHENTICATED`. Web clients use an
 `HttpOnly` session cookie; native clients keep the same cookie in
 secure storage.
 
+## Debts (SDD-045, DR-092)
+
+`modules/debts` stores `debt` (the plan) and `debt_payment` (soft
+delete). The summary (outstanding balance, paid and remaining
+installments, next due date, progress) is computed by
+`summarizeDebt` in `packages/domain` from the plan and the active
+payments, so the API and any client share one definition. Debts do not
+create or read transactions.
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:

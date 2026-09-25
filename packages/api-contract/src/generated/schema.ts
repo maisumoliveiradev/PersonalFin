@@ -918,10 +918,179 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/debts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the debts of the space with their summaries */
+        get: operations["listDebts"];
+        put?: never;
+        /**
+         * Register a debt or loan (audited)
+         * @description Debts are tracked by value and progress without interest (DR-045, DR-092); they do not create transactions.
+         */
+        post: operations["createDebt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/debts/{debtId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        /** Get a debt with its payments */
+        get: operations["getDebt"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit or archive a debt (audited) */
+        patch: operations["updateDebt"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/debts/{debtId}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a debt payment (audited) */
+        post: operations["recordDebtPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/debts/{debtId}/payments/{paymentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a debt payment (soft delete, audited) */
+        delete: operations["removeDebtPayment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Derived from the plan and the active payments (DR-092). */
+        DebtSummary: {
+            paidMinor: number;
+            outstandingMinor: number;
+            paidInstallments: number;
+            remainingInstallments: number;
+            lastInstallmentMinor: number | null;
+            /** Format: date */
+            nextDueDate: string | null;
+            /** @description Paid share of the original amount in tenths of a percent, rounded down. */
+            progressTenths: number;
+            settled: boolean;
+        };
+        Debt: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            originalAmountMinor: number;
+            currency: string;
+            installmentCount: number;
+            installmentAmountMinor: number;
+            /** Format: date */
+            firstDueDate: string;
+            archived: boolean;
+            version: number;
+            summary: components["schemas"]["DebtSummary"];
+        };
+        DebtPayment: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "installment" | "prepayment";
+            amountMinor: number;
+            /** Format: date */
+            paidOn: string;
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        DebtDetail: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            originalAmountMinor: number;
+            currency: string;
+            installmentCount: number;
+            installmentAmountMinor: number;
+            /** Format: date */
+            firstDueDate: string;
+            archived: boolean;
+            version: number;
+            summary: components["schemas"]["DebtSummary"];
+            payments: components["schemas"]["DebtPayment"][];
+        };
+        DebtList: {
+            items: components["schemas"]["Debt"][];
+        };
+        CreateDebtRequest: {
+            name: string;
+            originalAmountMinor: number;
+            installmentCount: number;
+            /** @description Defaults to the original amount divided by the installment count, rounded down. */
+            installmentAmountMinor?: number;
+            /** Format: date */
+            firstDueDate: string;
+        };
+        UpdateDebtRequest: {
+            version: number;
+            name?: string;
+            installmentCount?: number;
+            installmentAmountMinor?: number;
+            /** Format: date */
+            firstDueDate?: string;
+            archived?: boolean;
+        };
+        DebtPaymentRequest: {
+            /**
+             * @default installment
+             * @enum {string}
+             */
+            kind: "installment" | "prepayment";
+            amountMinor: number;
+            /** Format: date */
+            paidOn: string;
+        };
         /** @description Day of the month; months without it use their last day. */
         CardDay: number;
         CardName: string;
@@ -1013,7 +1182,7 @@ export interface components {
                 occurredAt: string;
                 actorName: string;
                 /** @enum {string} */
-                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation";
+                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation" | "debt" | "debt_payment";
                 entityId: string;
                 /** @enum {string} */
                 action: "create" | "update" | "delete" | "restore";
@@ -1762,6 +1931,7 @@ export interface components {
         };
     };
     parameters: {
+        DebtId: string;
         InvoiceMonth: string;
         CardId: string;
         SeriesId: string;
@@ -3722,6 +3892,250 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listDebts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Debts in creation order. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    createDebt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDebtRequest"];
+            };
+        };
+        responses: {
+            /** @description The created debt. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            /** @description INVALID_DEBT_PLAN (installment larger than the original amount). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getDebt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The debt. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    updateDebt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDebtRequest"];
+            };
+        };
+        responses: {
+            /** @description The updated debt. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description INVALID_DEBT_PLAN (installment above the original amount, or fewer installments than already paid). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    recordDebtPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebtPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description The debt with the new payment. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DEBT_OVERPAYMENT (larger than the outstanding balance). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    removeDebtPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The debt without the payment. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             426: components["responses"]["ClientUpgradeRequired"];
         };
     };

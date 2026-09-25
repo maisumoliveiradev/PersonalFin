@@ -13,6 +13,7 @@ import { createInMemoryCardRepository } from './in-memory-card-repository.ts';
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
 import { createInMemoryDashboardPreferenceRepository } from './in-memory-dashboard-preference-repository.ts';
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
+import { createInMemoryDebtRepository } from './in-memory-debt-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
 import { createInMemoryInstallmentRepository } from './in-memory-installment-repository.ts';
 import { createInMemoryMemberRepository } from './in-memory-member-repository.ts';
@@ -93,6 +94,7 @@ export function createInMemoryRepositories() {
     tags: createInMemoryTagRepository(() => transactions.transactions),
     analytics: createInMemoryAnalyticsRepository(() => transactions.transactions),
     dashboardPreferences: createInMemoryDashboardPreferenceRepository(),
+    debts: createInMemoryDebtRepository(),
   };
 }
 

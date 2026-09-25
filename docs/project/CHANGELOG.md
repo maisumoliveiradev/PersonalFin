@@ -6,6 +6,18 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Debts and Loans (SDD-045)
+
+-   "Dívidas" per space: name, original amount, installments, installment
+    amount (default: original ÷ installments), and first due date.
+-   Each debt shows its outstanding balance, paid and remaining
+    installments, last installment, next due date, and progress.
+-   Payments are recorded and removed with an audit trail, and never
+    exceed the outstanding balance. Debts do not create transactions
+    (DR-092).
+-   API: `/financial-spaces/{id}/debts` and payments; migration
+    `0023_debts`.
+
 ## \[0.7.0\] --- 2026-09-25
 
 Mobile Resilience. Released to `main` and tagged `v0.7.0`; validated in

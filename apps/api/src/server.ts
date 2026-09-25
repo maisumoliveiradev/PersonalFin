@@ -17,6 +17,7 @@ import { registerCardRoutes } from './modules/cards/card-routes.ts';
 import { registerCategoryRoutes } from './modules/categories/category-routes.ts';
 import { registerCommitmentRoutes } from './modules/commitments/commitment-routes.ts';
 import { registerDashboardRoutes } from './modules/dashboard/dashboard-routes.ts';
+import { registerDebtRoutes } from './modules/debts/debt-routes.ts';
 import { registerFinancialSpaceRoutes } from './modules/financial-spaces/financial-space-routes.ts';
 import { registerInvitationRoutes } from './modules/members/invitation-routes.ts';
 import { registerMemberRoutes } from './modules/members/member-routes.ts';
@@ -87,6 +88,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerInvitationRoutes(authenticated, options.data);
     registerMemberRoutes(authenticated, options.data);
     registerAuditRoutes(authenticated, options.data);
+    registerDebtRoutes(authenticated, options.data);
   });
 
   return server;

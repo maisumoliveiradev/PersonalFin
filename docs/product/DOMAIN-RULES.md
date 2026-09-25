@@ -283,6 +283,23 @@ confirmed.
 
 **DR-047** Simulation must not mutate real debt or transaction data.
 
+**DR-092** *(SDD-045; decided under delegation.)* A debt belongs to a
+space and has a name, original amount, planned installment count,
+current installment amount, and first due date. Payments (installment or
+prepayment) are recorded on the debt and never exceed the outstanding
+balance; the outstanding balance is the original amount minus active
+payments, and paid installments are the recorded installment payments.
+Interest is not modeled. Debt payments do not create transactions and
+transactions do not pay debts; cash outflows are recorded as
+transactions.
+
+**DR-093** *(SDD-046; decided under delegation.)* A prepayment
+simulation either keeps the installment amount and reduces the number of
+remaining installments (the last one absorbs the difference) or keeps
+the number of remaining installments and reduces the installment (the
+last one absorbs the cents). Confirmation records a prepayment and the
+new plan atomically.
+
 ## Goals
 
 **DR-048** Goals may be global or Financial-Space scoped.
@@ -291,6 +308,12 @@ confirmed.
 
 **DR-050** Goal accumulated value does not automatically reduce
 projected available balance.
+
+**DR-094** *(SDD-047; decided under delegation.)* A goal has a name,
+target, accumulated amount, and optional target date. Space goals are
+visible to members and changed with `plan`; global goals are visible
+only to their owner. Each accumulated-amount update is kept in an
+append-only progress history.
 
 ## Dates and time
 
