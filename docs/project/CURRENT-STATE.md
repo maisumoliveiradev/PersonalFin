@@ -123,7 +123,8 @@ SDD-044 implemented and validated
 -   **Debts (SDD-045):** per-space debts and loans with payments,
     outstanding balance, installments, next due date, and progress
     (DR-092). They are separate from transactions, and there is no
-    interest model.
+    interest model. Prepayments can be simulated (reduce the term or
+    reduce the installment) and confirmed (SDD-046, DR-093).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -174,7 +175,7 @@ SDD-044 implemented and validated
 ## Active Target
 
 `v0.8.0` --- Debts, Goals, and Reminders (`docs/sdds/v0.8.0/README.md`,
-SDD-045 to SDD-049). SDD-045 implemented.
+SDD-045 to SDD-049). SDD-045 and SDD-046 implemented.
 
 ## Important Constraint
 
@@ -183,7 +184,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Implement SDD-046 (amortization simulation). Owner decision
+Implement SDD-047 (goals). Owner decision
 pending on invitation email delivery (TD-011). Domain decisions taken
 under delegation await owner review (`docs/sdds/v0.2.0/README.md` to
 `docs/sdds/v0.8.0/README.md`, DR-072 to DR-094, ADR-0013 to ADR-0016).

@@ -1003,10 +1003,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/debts/{debtId}/simulations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Simulate a prepayment without changing any data
+         * @description Stateless: nothing is stored (DR-046, DR-047).
+         */
+        post: operations["simulateDebtPrepayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/debts/{debtId}/prepayments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm a prepayment and apply the simulated plan (audited) */
+        post: operations["confirmDebtPrepayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description reduce_term keeps the installment and lowers the count; reduce_installment keeps the count and lowers the installment.
+         * @enum {string}
+         */
+        PrepaymentMode: "reduce_term" | "reduce_installment";
+        PrepaymentSimulationRequest: {
+            amountMinor: number;
+            mode: components["schemas"]["PrepaymentMode"];
+        };
+        ConfirmPrepaymentRequest: {
+            version: number;
+            amountMinor: number;
+            mode: components["schemas"]["PrepaymentMode"];
+            /** Format: date */
+            paidOn: string;
+        };
+        PrepaymentSimulation: {
+            mode: components["schemas"]["PrepaymentMode"];
+            amountMinor: number;
+            plan: {
+                installmentCount: number;
+                installmentAmountMinor: number;
+            };
+            before: components["schemas"]["DebtSummary"];
+            after: components["schemas"]["DebtSummary"];
+        };
         /** @description Derived from the plan and the active payments (DR-092). */
         DebtSummary: {
             paidMinor: number;
@@ -4129,6 +4198,113 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND, DEBT_PAYMENT_NOT_FOUND). */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    simulateDebtPrepayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrepaymentSimulationRequest"];
+            };
+        };
+        responses: {
+            /** @description The current and simulated states and the resulting plan (DR-093). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrepaymentSimulation"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DEBT_OVERPAYMENT (larger than the outstanding balance). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    confirmDebtPrepayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                debtId: components["parameters"]["DebtId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmPrepaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description The debt with the prepayment and the new plan. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebtDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the debt does not exist (FINANCIAL_SPACE_NOT_FOUND, DEBT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description DEBT_OVERPAYMENT (larger than the outstanding balance). */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

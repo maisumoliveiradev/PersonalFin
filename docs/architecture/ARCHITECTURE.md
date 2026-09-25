@@ -243,6 +243,13 @@ installments, next due date, progress) is computed by
 payments, so the API and any client share one definition. Debts do not
 create or read transactions.
 
+Prepayment simulation (SDD-046, DR-093) is the pure `simulatePrepayment`:
+it returns the new plan and the summary that plan would produce.
+`POST .../simulations` only returns it. `POST .../prepayments` recomputes
+it in the same database transaction (debt row locked, version checked),
+records the prepayment, and stores the plan. What is confirmed is
+therefore exactly what was simulated.
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:

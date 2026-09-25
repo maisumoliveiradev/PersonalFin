@@ -72,3 +72,6 @@ export type DebtSummary = components['schemas']['DebtSummary'];
 export type CreateDebtRequest = components['schemas']['CreateDebtRequest'];
 export type UpdateDebtRequest = components['schemas']['UpdateDebtRequest'];
 export type DebtPaymentRequest = components['schemas']['DebtPaymentRequest'];
+export type PrepaymentMode = components['schemas']['PrepaymentMode'];
+export type PrepaymentSimulation = components['schemas']['PrepaymentSimulation'];
+export type ConfirmPrepaymentRequest = components['schemas']['ConfirmPrepaymentRequest'];

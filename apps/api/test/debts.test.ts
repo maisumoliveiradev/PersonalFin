@@ -172,4 +172,68 @@ describe('debts', () => {
 
     expect(response.statusCode).toBe(404);
   });
+
+  it('simulates a prepayment without changing anything, then confirms exactly that', async () => {
+    const { base, create } = await setUp();
+    const debt = (await create(carLoan)).json();
+    const simulate = (mode: string) =>
+      server.inject({
+        method: 'POST',
+        url: `${base}/${debt.id}/simulations`,
+        headers: asAna,
+        payload: { amountMinor: 250_000, mode },
+      });
+
+    const shorter = (await simulate('reduce_term')).json();
+    const smaller = (await simulate('reduce_installment')).json();
+    expect(shorter.after).toMatchObject({ outstandingMinor: 950_000, remainingInstallments: 10 });
+    expect(shorter.plan).toEqual({ installmentCount: 10, installmentAmountMinor: 100_000 });
+    expect(smaller.plan).toEqual({ installmentCount: 12, installmentAmountMinor: 79_166 });
+    const unchanged = await server.inject({
+      method: 'GET',
+      url: `${base}/${debt.id}`,
+      headers: asAna,
+    });
+    expect(unchanged.json()).toMatchObject({ version: 1, payments: [] });
+    expect(repositories.audit.events).toHaveLength(1);
+
+    const confirmed = await server.inject({
+      method: 'POST',
+      url: `${base}/${debt.id}/prepayments`,
+      headers: asAna,
+      payload: {
+        version: 1,
+        amountMinor: 250_000,
+        mode: 'reduce_installment',
+        paidOn: '2026-10-01',
+      },
+    });
+    expect(confirmed.statusCode).toBe(201);
+    expect(confirmed.json()).toMatchObject({
+      version: 2,
+      installmentCount: 12,
+      installmentAmountMinor: 79_166,
+      payments: [{ kind: 'prepayment', amountMinor: 250_000 }],
+    });
+    expect(confirmed.json().summary).toEqual(smaller.after);
+    expect(repositories.audit.events.at(-1)?.changes).toEqual({
+      installmentAmountMinor: { before: 100_000, after: 79_166 },
+      prepaymentMode: { before: null, after: 'reduce_installment' },
+    });
+
+    const stale = await server.inject({
+      method: 'POST',
+      url: `${base}/${debt.id}/prepayments`,
+      headers: asAna,
+      payload: { version: 1, amountMinor: 1, mode: 'reduce_term', paidOn: '2026-10-01' },
+    });
+    expect(stale.statusCode).toBe(409);
+    const tooMuch = await server.inject({
+      method: 'POST',
+      url: `${base}/${debt.id}/simulations`,
+      headers: asAna,
+      payload: { amountMinor: 950_001, mode: 'reduce_term' },
+    });
+    expect(tooMuch.statusCode).toBe(422);
+  });
 });
