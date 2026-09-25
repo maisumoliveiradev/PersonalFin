@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: PersonalFin Application API
-  version: 0.4.0
+  version: 0.5.0
   description: >
     Application API contract. Authentication endpoints (sign-up, sign-in,
     sign-out, session) are served by Better Auth under /api/auth and are
