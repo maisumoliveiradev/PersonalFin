@@ -2,11 +2,11 @@
 
 ## Current Version
 
-`v0.10.0`, released on 2026-09-25 (`main`, tag `v0.10.0`). SDD-001 to
-SDD-056 implemented and validated
-(`docs/sdds/v0.10.0/SDD-056-validation-report.md`). Pending owner
+`v0.11.0`, released on 2026-09-25 (`main`, tag `v0.11.0`). SDD-001 to
+SDD-058 implemented and validated
+(`docs/sdds/v0.11.0/SDD-058-validation-report.md`). Pending owner
 decisions: push notifications (v0.8.0), automatic exchange rates
-(v0.10.0), invitation email (TD-011).
+(v0.10.0), OCR/AI extraction (v0.11.0), invitation email (TD-011).
 
 ## Implemented Product Capabilities
 
@@ -207,8 +207,8 @@ decisions: push notifications (v0.8.0), automatic exchange rates
 
 ## Active Target
 
-`v0.11.0` --- Documents and OCR (`docs/sdds/v0.11.0/README.md`). SDD-057
-implemented.
+`v0.12.0` --- Platform Administration (`docs/product/ROADMAP.md`). No SDD
+drafted yet.
 
 ## Important Constraint
 
@@ -217,8 +217,8 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Run SDD-058 (v0.11.0 release validation). Owner decisions pending: FX
-rate provider, push notifications (hosted push service), and invitation
+Draft the v0.12.0 SDDs (Platform Administration). Owner decisions pending: OCR/AI
+provider, FX rate provider, push notifications (hosted push service), and invitation
 email delivery (TD-011). Domain decisions taken under delegation await
 owner review (`docs/sdds/v0.2.0/README.md` to
 `docs/sdds/v0.11.0/README.md`, DR-072 to DR-099, ADR-0013 to ADR-0017).

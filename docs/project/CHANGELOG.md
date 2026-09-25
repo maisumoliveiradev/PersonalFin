@@ -6,6 +6,12 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.11.0\] --- 2026-09-25
+
+Documents (attachments). Released to `main` and tagged `v0.11.0`;
+validated in SDD-058 (`docs/sdds/v0.11.0/SDD-058-validation-report.md`).
+OCR/AI extraction is pending an owner decision.
+
 ### Transaction Attachments (SDD-057)
 
 -   "Anexos" on the transaction screen:
