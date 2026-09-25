@@ -1,33 +1,52 @@
+import type { Transaction } from '@personalfin/api-contract';
 import { useState } from 'react';
 
 import { useDeleteTransaction } from '../../api/transactions';
 import { messages } from '../../i18n/messages';
+import { isNetworkFailure, isOffline, queueDelete } from '../../sync/offline-writes';
 import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
 import { FormError } from '../../ui/FormError';
 
 interface DeleteTransactionSectionProps {
   spaceId: string;
-  transactionId: string;
-  version: number;
+  transaction: Transaction;
   onDeleted: () => void;
+  onQueued: () => void;
 }
 
 export function DeleteTransactionSection({
   spaceId,
-  transactionId,
-  version,
+  transaction,
   onDeleted,
+  onQueued,
 }: DeleteTransactionSectionProps) {
   const [confirming, setConfirming] = useState(false);
-  const deleteTransaction = useDeleteTransaction(spaceId, transactionId);
+  const [queueFailed, setQueueFailed] = useState(false);
+  const deleteTransaction = useDeleteTransaction(spaceId, transaction.id);
+
+  async function deleteOnDevice(): Promise<void> {
+    try {
+      await queueDelete(spaceId, transaction);
+      onQueued();
+    } catch {
+      setQueueFailed(true);
+    }
+  }
 
   async function handleDelete(): Promise<void> {
-    try {
-      await deleteTransaction.mutateAsync(version);
-      onDeleted();
-    } catch {
+    if (isOffline()) {
+      await deleteOnDevice();
       return;
+    }
+    try {
+      await deleteTransaction.mutateAsync(transaction.version);
+      onDeleted();
+    } catch (error) {
+      if (isNetworkFailure(error)) {
+        deleteTransaction.reset();
+        await deleteOnDevice();
+      }
     }
   }
 
@@ -45,7 +64,11 @@ export function DeleteTransactionSection({
     <>
       <BodyText>{messages.transactions.deleteConfirmation}</BodyText>
       <FormError
-        message={deleteTransaction.isError ? messages.transactions.errors.deleteFailed : null}
+        message={
+          deleteTransaction.isError || queueFailed
+            ? messages.transactions.errors.deleteFailed
+            : null
+        }
       />
       <Button
         label={messages.transactions.confirmDeleteAction}

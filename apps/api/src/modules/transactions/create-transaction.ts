@@ -10,6 +10,7 @@ import {
 } from '@personalfin/domain';
 
 import type { DataAccess } from '../../database/data-access.ts';
+import { AppError } from '../../http/errors.ts';
 import {
   CardNotAvailableError,
   InvalidCardPurchaseError,
@@ -20,6 +21,7 @@ import { assertCategorySelection } from './category-selection.ts';
 import type { FinancialTransaction } from './transaction.ts';
 
 export interface CreateTransactionInput {
+  id?: string;
   financialSpaceId: string;
   createdByUserId: string;
   type: TransactionType;
@@ -35,12 +37,56 @@ export interface CreateTransactionInput {
 
 const SPACE_CURRENCY: CurrencyCode = DEFAULT_CURRENCY;
 
+export class TransactionIdConflictError extends AppError {
+  override name = 'TransactionIdConflictError';
+
+  constructor() {
+    super(409, 'TRANSACTION_ID_CONFLICT', 'The transaction id is already in use');
+  }
+}
+
+export interface CreatedTransaction {
+  transaction: FinancialTransaction;
+  replayed: boolean;
+}
+
+async function findReplay(
+  data: DataAccess,
+  input: CreateTransactionInput,
+): Promise<FinancialTransaction | null> {
+  if (input.id === undefined) {
+    return null;
+  }
+  const origin = await data.repositories.transactions.findOrigin(input.id);
+  if (origin === null) {
+    return null;
+  }
+  if (
+    origin.financialSpaceId !== input.financialSpaceId ||
+    origin.createdByUserId !== input.createdByUserId
+  ) {
+    throw new TransactionIdConflictError();
+  }
+  return data.repositories.transactions.findInSpace(input.financialSpaceId, input.id);
+}
+
+export async function createTransactionOnce(
+  data: DataAccess,
+  input: CreateTransactionInput,
+): Promise<CreatedTransaction> {
+  const existing = await findReplay(data, input);
+  if (existing !== null) {
+    return { transaction: existing, replayed: true };
+  }
+  return { transaction: await createTransaction(data, input), replayed: false };
+}
+
 export async function createTransaction(
   data: DataAccess,
   input: CreateTransactionInput,
 ): Promise<FinancialTransaction> {
   await assertCategorySelection(data.repositories.categories, input);
-  const { card: cardSelection, tagIds = [], ...fields } = input;
+  const { card: cardSelection, tagIds = [], id: requestedId, ...fields } = input;
   if (cardSelection !== undefined && fields.type !== 'expense') {
     throw new InvalidCardPurchaseError('Card purchases must be expenses');
   }
@@ -64,7 +110,7 @@ export async function createTransaction(
       cardFields = { status: 'pending', cardInvoiceId: invoice.id };
     }
     const created = await repositories.transactions.create({
-      id: randomUUID(),
+      id: requestedId ?? randomUUID(),
       currency: SPACE_CURRENCY,
       ...fields,
       ...cardFields,

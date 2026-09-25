@@ -325,6 +325,15 @@ paths:
             schema:
               $ref: '#/components/schemas/CreateTransactionRequest'
       responses:
+        '200':
+          description: >
+            Replay of a request whose client id was already created by the
+            same user in this space; the existing transaction is returned
+            and nothing is created (ADR-0016).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
         '201':
           description: The created transaction, recorded in the space currency (BRL).
           content:
@@ -341,6 +350,14 @@ paths:
           $ref: '#/components/responses/PermissionDenied'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+        '409':
+          description: >
+            The client id is already used by another space or another user
+            (code TRANSACTION_ID_CONFLICT).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '422':
           $ref: '#/components/responses/TransactionRejected'
   /financial-spaces/{spaceId}/transactions/{transactionId}:
@@ -2715,6 +2732,13 @@ components:
         - financialDate
         - categoryId
       properties:
+        id:
+          type: string
+          format: uuid
+          description: >
+            Optional client-generated id (UUID) so a request can be
+            retried safely, for example after an offline period. Not
+            allowed with installments.
         type:
           $ref: '#/components/schemas/TransactionType'
         status:

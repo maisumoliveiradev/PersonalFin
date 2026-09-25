@@ -256,6 +256,33 @@ secure storage.
         of hanging.
 -   A global banner tells the user they are seeing saved data.
 
+## Offline transaction changes (ADR-0016, SDD-042)
+
+-   `apps/client/src/sync`:
+    -   `outbox.ts`: pure model, local schema `outbox` v1, response
+        classification.
+    -   `sync-engine.ts`: per-user outbox store, serialized writes,
+        ordered sending.
+    -   `offline-writes.ts`: queueing helpers used by the screens.
+-   A transaction create, edit, status change, or delete is queued when
+    the app is offline, or when the request fails at the network level.
+    Creates always carry a client UUID (`expo-crypto`), and the API
+    returns the existing record on replay (`200`), so a lost response
+    never duplicates a transaction.
+-   Edits and deletes keep the base version and a snapshot of the fields
+    (`transactionSyncFields`). An edit sends only the fields that
+    changed.
+-   The outbox is sent in order when connectivity returns, at startup,
+    after each new entry, and on "Sincronizar agora".
+    -   Success removes the entry and invalidates the space's queries.
+    -   A rejected change becomes `error`. A `409` on edit or delete
+        becomes `conflict` (resolved in SDD-043).
+    -   `5xx` retries after 30 seconds. `401` and `426` stop sending.
+-   Entries leave the outbox only when the server confirms them, or when
+    the user discards them explicitly. Signing out with entries asks for
+    confirmation. A transaction with a queued change cannot be changed
+    again until the change is synchronized (DR-088).
+
 ## Minimum client version (ADR-0016, SDD-040)
 
 Clients send `X-Client-Version` (the app version from `app.json`). When

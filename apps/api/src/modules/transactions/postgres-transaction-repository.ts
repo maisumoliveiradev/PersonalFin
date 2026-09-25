@@ -213,6 +213,17 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
 
     findInSpace,
 
+    async findOrigin(transactionId) {
+      const { rows } = await db.query<{ financial_space_id: string; created_by_user_id: string }>(
+        'SELECT financial_space_id, created_by_user_id FROM financial_transaction WHERE id = $1',
+        [transactionId],
+      );
+      const [row] = rows;
+      return row === undefined
+        ? null
+        : { financialSpaceId: row.financial_space_id, createdByUserId: row.created_by_user_id };
+    },
+
     async update({ financialSpaceId, transactionId, expectedVersion, fields, updatedByUserId }) {
       const result = await db.query(
         `UPDATE financial_transaction SET

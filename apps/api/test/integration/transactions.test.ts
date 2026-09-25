@@ -6,6 +6,10 @@ import { createPostgresDataAccess, type DataAccess } from '../../src/database/da
 import type { DatabasePool } from '../../src/database/pool.ts';
 import type { Category } from '../../src/modules/categories/category.ts';
 import { createFinancialSpace } from '../../src/modules/financial-spaces/create-financial-space.ts';
+import {
+  createTransactionOnce,
+  TransactionIdConflictError,
+} from '../../src/modules/transactions/create-transaction.ts';
 import type { NewFinancialTransaction } from '../../src/modules/transactions/transaction.ts';
 import { createMigratedTestPool } from './database.ts';
 import { insertUser } from './fixtures.ts';
@@ -206,5 +210,55 @@ describe('listing transactions', () => {
     ).items;
 
     expect(listed.map((item) => item.financialDate)).toEqual(['2026-01-03', '2026-01-02']);
+  });
+});
+
+describe('PostgreSQL client-id transaction creation', () => {
+  it('creates once with the client id and returns the same record on replay', async () => {
+    const { userId, spaceId, find } = await setUp();
+    const input = {
+      id: randomUUID(),
+      financialSpaceId: spaceId,
+      createdByUserId: userId,
+      type: 'expense' as const,
+      status: 'paid' as const,
+      description: 'Padaria',
+      amountMinor: 1250,
+      financialDate: '2026-09-25',
+      categoryId: find('food').id,
+      subcategoryId: null,
+    };
+
+    const first = await createTransactionOnce(data, input);
+    const replay = await createTransactionOnce(data, input);
+
+    expect(first).toMatchObject({ replayed: false, transaction: { id: input.id } });
+    expect(replay).toEqual({ replayed: true, transaction: first.transaction });
+    expect(await data.repositories.transactions.findOrigin(input.id)).toEqual({
+      financialSpaceId: spaceId,
+      createdByUserId: userId,
+    });
+  });
+
+  it('rejects reusing an id from another space', async () => {
+    const owner = await setUp();
+    const other = await setUp();
+    const id = randomUUID();
+    await data.repositories.transactions.create(owner.transaction({ id }));
+
+    await expect(
+      createTransactionOnce(data, {
+        id,
+        financialSpaceId: other.spaceId,
+        createdByUserId: other.userId,
+        type: 'expense',
+        status: 'paid',
+        description: 'Padaria',
+        amountMinor: 1250,
+        financialDate: '2026-09-25',
+        categoryId: other.find('food').id,
+        subcategoryId: null,
+      }),
+    ).rejects.toBeInstanceOf(TransactionIdConflictError);
   });
 });
