@@ -75,6 +75,12 @@ accepting creates one membership. Invitations can be cancelled; people
 who already have access cannot be invited, and one email has at most one
 pending invitation per space. Email delivery is pending (TD-011).
 
+**DR-087** *(SDD-037; decided under delegation.)* Only the Owner can
+transfer ownership, and only to an active member. In one transaction the
+new Owner's membership ends, ownership moves, and the previous Owner
+becomes a member with every permission (Administrator). The Owner
+cannot leave or be removed until ownership is transferred (DR-009).
+
 **DR-014** Split transactions are outside the initial model.
 
 **DR-015** A transaction uses one primary financial calendar date. The

@@ -7,8 +7,12 @@ import type { DataAccess } from '../../database/data-access.ts';
 import { requireAuthenticatedUser } from '../../http/authenticate.ts';
 import { isUuid, parseInput } from '../../http/validation.ts';
 import { OWNER_ACCESS } from '../financial-spaces/financial-space.ts';
-import { requireAccessibleSpace } from '../financial-spaces/financial-space-access.ts';
+import {
+  PermissionDeniedError,
+  requireAccessibleSpace,
+} from '../financial-spaces/financial-space-access.ts';
 import { changeMemberPermissions, MemberNotFoundError, removeMember } from './member-management.ts';
+import { transferOwnership } from './ownership-transfer.ts';
 
 const spaceParamsSchema = z.object({ spaceId: z.string() });
 const memberParamsSchema = z.object({ spaceId: z.string(), userId: z.string() });
@@ -16,6 +20,8 @@ const updateSchema = z.strictObject({
   version: z.number().int().min(1),
   permissions: z.array(z.enum(SPACE_PERMISSIONS)).max(SPACE_PERMISSIONS.length),
 });
+const transferSchema = z.strictObject({ newOwnerUserId: z.uuid() });
+
 const versionQuerySchema = z.object({ version: z.coerce.number().int().min(1) });
 
 function requireUserId(userId: string): string {
@@ -118,6 +124,27 @@ export function registerMemberRoutes(server: FastifyInstance, data: DataAccess):
       userId: user.id,
       actorUserId: user.id,
       expectedVersion: null,
+    });
+    return reply.status(204).send();
+  });
+
+  server.post('/financial-spaces/:spaceId/ownership-transfer', async (request, reply) => {
+    const user = requireAuthenticatedUser(request);
+    const { spaceId } = parseInput(spaceParamsSchema, request.params);
+    const space = await requireAccessibleSpace(
+      data.repositories.financialSpaces,
+      user.id,
+      spaceId,
+      'view',
+    );
+    if (space.access.role !== 'owner') {
+      throw new PermissionDeniedError();
+    }
+    const { newOwnerUserId } = parseInput(transferSchema, request.body);
+    await transferOwnership(data, {
+      financialSpaceId: space.id,
+      currentOwnerId: user.id,
+      newOwnerId: newOwnerUserId,
     });
     return reply.status(204).send();
   });

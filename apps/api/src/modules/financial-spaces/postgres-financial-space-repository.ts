@@ -80,5 +80,13 @@ export function createPostgresFinancialSpaceRepository(db: Queryable): Financial
       const [row] = rows;
       return row === undefined ? null : toAccessibleSpace(row, userId);
     },
+
+    async transferOwnership(spaceId, fromUserId, toUserId) {
+      const result = await db.query(
+        'UPDATE financial_space SET owner_user_id = $3 WHERE id = $1 AND owner_user_id = $2',
+        [spaceId, fromUserId, toUserId],
+      );
+      return result.rowCount === 1;
+    },
   };
 }

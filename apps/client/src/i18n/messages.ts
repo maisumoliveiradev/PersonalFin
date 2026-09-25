@@ -438,6 +438,10 @@ export const messages = {
       `${name} perde o acesso ao espaço. Os lançamentos que registrou continuam no espaço.`,
     confirmRemoveAction: 'Confirmar remoção',
     keepAction: 'Manter',
+    transferAction: (name: string) => `Transferir propriedade para ${name}`,
+    transferConfirmation: (name: string) =>
+      `${name} passa a ser o proprietário. Você continua no espaço como Administrador.`,
+    confirmTransferAction: 'Confirmar transferência',
     leaveAction: 'Sair do espaço',
     leaveConfirmation:
       'Você perde o acesso a este espaço. Os lançamentos que registrou continuam nele.',

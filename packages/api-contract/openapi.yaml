@@ -1769,6 +1769,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/ownership-transfer:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    post:
+      operationId: transferOwnership
+      summary: Transfer ownership to an active member (Owner only)
+      description: >
+        The new Owner's membership ends and they hold every permission as
+        Owner; the previous Owner becomes an Administrator member. Exactly
+        one Owner before and after (DR-006). Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - newOwnerUserId
+              properties:
+                newOwnerUserId:
+                  type: string
+                  format: uuid
+      responses:
+        '204':
+          description: Transferred.
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: FINANCIAL_SPACE_NOT_FOUND or MEMBER_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     InvoiceMonth:

@@ -134,3 +134,17 @@ export function useLeaveSpace(spaceId: string) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['financial-spaces'] }),
   });
 }
+
+export function useTransferOwnership(spaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (newOwnerUserId: string) =>
+      expectNoContent(
+        await apiClient.POST('/financial-spaces/{spaceId}/ownership-transfer', {
+          params: { path: { spaceId } },
+          body: { newOwnerUserId },
+        }),
+      ),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['financial-spaces'] }),
+  });
+}

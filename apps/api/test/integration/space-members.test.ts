@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createPostgresDataAccess, type DataAccess } from '../../src/database/data-access.ts';
 import type { DatabasePool } from '../../src/database/pool.ts';
 import { createFinancialSpace } from '../../src/modules/financial-spaces/create-financial-space.ts';
+import { transferOwnership } from '../../src/modules/members/ownership-transfer.ts';
 import { createMigratedTestPool } from './database.ts';
 import { insertUser } from './fixtures.ts';
 
@@ -105,5 +106,35 @@ describe('member management persistence', () => {
     expect(await members.listActive(space.id)).toEqual([]);
     expect(history.rows[0]?.count).toBe(1);
     expect(await members.ownerOf(space.id)).toMatchObject({ userId: ownerId });
+  });
+});
+
+describe('ownership transfer persistence', () => {
+  it('keeps exactly one Owner and records the change', async () => {
+    const { ownerId, memberId, space, addMember } = await setUp();
+    await addMember(memberId, ['view']);
+
+    await transferOwnership(data, {
+      financialSpaceId: space.id,
+      currentOwnerId: ownerId,
+      newOwnerId: memberId,
+    });
+    const asNewOwner = await data.repositories.financialSpaces.findAccessibleTo(memberId, space.id);
+    const asPreviousOwner = await data.repositories.financialSpaces.findAccessibleTo(
+      ownerId,
+      space.id,
+    );
+    const events = await data.repositories.audit.listForEntity(
+      space.id,
+      'financial_space',
+      space.id,
+    );
+
+    expect(asNewOwner?.access.role).toBe('owner');
+    expect(asPreviousOwner?.access).toMatchObject({ role: 'member' });
+    expect(asPreviousOwner?.access.permissions).toHaveLength(6);
+    expect(events.at(-1)?.changes).toEqual({
+      ownerUserId: { before: ownerId, after: memberId },
+    });
   });
 });

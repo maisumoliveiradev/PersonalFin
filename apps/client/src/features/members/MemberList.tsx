@@ -4,7 +4,12 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { ApiRequestError } from '../../api/api-client';
-import { useChangeMemberPermissions, useMembers, useRemoveMember } from '../../api/members';
+import {
+  useChangeMemberPermissions,
+  useMembers,
+  useRemoveMember,
+  useTransferOwnership,
+} from '../../api/members';
 import { messages } from '../../i18n/messages';
 import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
@@ -29,17 +34,22 @@ function MemberCard({
   spaceId,
   member,
   canManage,
+  isOwner,
 }: {
   spaceId: string;
   member: Member;
   canManage: boolean;
+  isOwner: boolean;
 }) {
   const palette = usePalette();
   const change = useChangeMemberPermissions(spaceId);
   const remove = useRemoveMember(spaceId);
   const [confirmingRemoval, setConfirmingRemoval] = useState(false);
+  const transfer = useTransferOwnership(spaceId);
+  const [confirmingTransfer, setConfirmingTransfer] = useState(false);
+  const canTransfer = isOwner && member.role === 'member';
   const editable = canManage && member.role === 'member' && member.version !== null;
-  const failure = change.error ?? remove.error;
+  const failure = change.error ?? remove.error ?? transfer.error;
   let error: string | null = null;
   if (failure instanceof ApiRequestError && failure.code === 'VERSION_CONFLICT') {
     error = messages.members.errors.conflict;
@@ -94,6 +104,29 @@ function MemberCard({
           />
         </>
       )}
+      {canTransfer && confirmingTransfer && (
+        <>
+          <BodyText>{messages.members.transferConfirmation(member.name)}</BodyText>
+          <Button
+            label={messages.members.confirmTransferAction}
+            variant="danger"
+            loading={transfer.isPending}
+            onPress={() => transfer.mutate(member.userId)}
+          />
+          <Button
+            label={messages.members.keepAction}
+            variant="link"
+            onPress={() => setConfirmingTransfer(false)}
+          />
+        </>
+      )}
+      {canTransfer && !confirmingTransfer && (
+        <Button
+          label={messages.members.transferAction(member.name)}
+          variant="link"
+          onPress={() => setConfirmingTransfer(true)}
+        />
+      )}
       {editable && !confirmingRemoval && (
         <Button
           label={messages.members.removeAction(member.name)}
@@ -105,14 +138,28 @@ function MemberCard({
   );
 }
 
-export function MemberList({ spaceId, canManage }: { spaceId: string; canManage: boolean }) {
+export function MemberList({
+  spaceId,
+  canManage,
+  isOwner,
+}: {
+  spaceId: string;
+  canManage: boolean;
+  isOwner: boolean;
+}) {
   const members = useMembers(spaceId);
   return (
     <>
       <SectionTitle>{messages.members.listTitle}</SectionTitle>
       {members.isError && <FormError message={messages.members.errors.unexpected} />}
       {(members.data ?? []).map((member) => (
-        <MemberCard key={member.userId} spaceId={spaceId} member={member} canManage={canManage} />
+        <MemberCard
+          key={member.userId}
+          spaceId={spaceId}
+          member={member}
+          canManage={canManage}
+          isOwner={isOwner}
+        />
       ))}
     </>
   );

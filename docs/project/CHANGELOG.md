@@ -6,6 +6,13 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Ownership Transfer (SDD-037)
+
+-   The Owner transfers ownership to a member from "Membros" after
+    confirmation; the previous Owner stays as Administrator and may then
+    leave (DR-087). Audited.
+-   `POST .../ownership-transfer`.
+
 ### Member Management (SDD-036)
 
 -   "Membros" lists the Owner and members for everyone in the space;
