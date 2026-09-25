@@ -106,6 +106,16 @@ SDD-039 implemented and validated
     (ADR-0016). It is cleared at sign-out and expires after 7 days or on
     an app version change. The Web app cannot be opened offline (no
     service worker). No offline writes yet.
+-   **Offline transaction changes (SDD-042):** transactions can be
+    created, edited, have their status changed, or be deleted offline.
+    Changes go to a per-user outbox and are sent when the connection
+    returns.
+    -   Creates carry a client UUID and replays are idempotent.
+    -   Sync states and a "Não sincronizado" list appear on the space
+        screen.
+    -   Conflicting edits are held as conflicts and can only be discarded
+        until SDD-043.
+    -   Other writes need a connection (DR-088).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -150,7 +160,7 @@ SDD-039 implemented and validated
 ## Active Target
 
 `v0.7.0` --- Mobile Resilience (`docs/sdds/v0.7.0/README.md`, SDD-040
-to SDD-044). SDD-040 and SDD-041 implemented.
+to SDD-044). SDD-040 to SDD-042 implemented.
 
 ## Important Constraint
 
@@ -159,7 +169,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Implement SDD-042 (offline transaction changes). Owner decision pending on
+Implement SDD-043 (sync conflict resolution). Owner decision pending on
 invitation email delivery (TD-011). Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, `docs/sdds/v0.7.0/README.md`, DR-072 to

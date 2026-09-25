@@ -6,6 +6,24 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Offline Transaction Changes (SDD-042)
+
+-   With no connection, transactions can be created (including a single
+    card purchase), edited, marked paid or pending, and deleted. Each
+    change is saved on the device and sent when the connection returns.
+    Changes whose request fails at the network level are saved the same
+    way.
+-   The space shows the sync state (offline, pending, syncing,
+    synchronized, attention needed) and a "Não sincronizado" list. Items
+    in the list can be retried or discarded after confirmation. Rows with
+    a pending change are marked, and signing out with pending changes
+    asks for confirmation.
+-   API: `POST .../transactions` accepts an optional client `id`. A
+    replay by the same author returns the existing transaction (`200`);
+    other reuse returns `409 TRANSACTION_ID_CONFLICT`.
+-   Recurrence, installments, "Este e os próximos", and non-transaction
+    actions still need a connection (DR-088).
+
 ### Offline Reading (SDD-041)
 
 -   Data already viewed stays available without a connection or when the

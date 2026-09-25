@@ -127,6 +127,7 @@ interface TransactionFormProps {
   allowRecurrence?: boolean;
   cards?: readonly Card[];
   allowCardChoice?: boolean;
+  allowInstallments?: boolean;
   tags?: readonly Tag[];
   onSubmit: (request: CreateTransactionRequest, recurrence: RecurrenceChoice | null) => void;
   onCancel: () => void;
@@ -140,6 +141,7 @@ export function TransactionForm({
   allowRecurrence = false,
   cards = [],
   allowCardChoice = false,
+  allowInstallments = allowCardChoice,
   tags = [],
   onSubmit,
   onCancel,
@@ -332,7 +334,7 @@ export function TransactionForm({
           onSelect={setChosenInvoice}
         />
       )}
-      {isCardPurchase && allowCardChoice && (
+      {isCardPurchase && allowInstallments && (
         <TextField
           label={messages.cards.installmentsLabel}
           hint={messages.cards.installmentsHint}

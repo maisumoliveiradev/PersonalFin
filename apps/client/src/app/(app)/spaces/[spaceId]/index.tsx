@@ -11,6 +11,8 @@ import { BalanceUpdatePrompt } from '../../../../features/balance/BalanceUpdateP
 import { MonthlyDashboard } from '../../../../features/dashboard/MonthlyDashboard';
 import { ProjectionSeries } from '../../../../features/dashboard/ProjectionSeries';
 import { can, roleLabel } from '../../../../features/financial-spaces/permissions';
+import { PendingChanges } from '../../../../features/sync/PendingChanges';
+import { SyncStatus } from '../../../../features/sync/SyncStatus';
 import { MonthNavigator } from '../../../../features/transactions/MonthNavigator';
 import { TransactionFiltersPanel } from '../../../../features/transactions/TransactionFiltersPanel';
 import { TransactionList } from '../../../../features/transactions/TransactionList';
@@ -89,6 +91,10 @@ export default function FinancialSpaceHomeScreen() {
       {saved === 'created' && <StatusMessage>{messages.transactions.saved}</StatusMessage>}
       {saved === 'updated' && <StatusMessage>{messages.transactions.updated}</StatusMessage>}
       {saved === 'deleted' && <StatusMessage>{messages.transactions.deleted}</StatusMessage>}
+      {saved === 'queued-create' && <StatusMessage>{messages.sync.queued.create}</StatusMessage>}
+      {saved === 'queued-update' && <StatusMessage>{messages.sync.queued.update}</StatusMessage>}
+      {saved === 'queued-delete' && <StatusMessage>{messages.sync.queued.delete}</StatusMessage>}
+      <SyncStatus spaceId={space.data.id} />
       {saved === 'recurrence' && (
         <StatusMessage>{messages.recurrences.created(Number(params.count ?? 0))}</StatusMessage>
       )}
@@ -112,6 +118,7 @@ export default function FinancialSpaceHomeScreen() {
         <MonthlyDashboard spaceId={space.data.id} month={month} sections={sections} />
       )}
       {sections.projectionSeries && <ProjectionSeries spaceId={space.data.id} fromMonth={month} />}
+      <PendingChanges spaceId={space.data.id} />
       <SectionTitle>{messages.transactions.listTitle}</SectionTitle>
       <Button
         label={

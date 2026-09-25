@@ -28,13 +28,14 @@ import { createInstallmentPurchase } from '../cards/card-installment-management.
 import { InvalidCardPurchaseError } from '../cards/card-invoice-management.ts';
 import { requireAccessibleSpace } from '../financial-spaces/financial-space-access.ts';
 import { MAX_TAGS_PER_TRANSACTION } from '../tags/tag.ts';
-import { createTransaction } from './create-transaction.ts';
+import { createTransactionOnce } from './create-transaction.ts';
 import type { FinancialTransaction } from './transaction.ts';
 import { deleteTransaction, restoreTransaction } from './transaction-deletion.ts';
 import { InvalidCursorError } from './transaction-repository.ts';
 import { TransactionNotFoundError, updateTransaction } from './update-transaction.ts';
 
 const createTransactionSchema = z.strictObject({
+  id: z.uuid().optional(),
   type: z.enum(TRANSACTION_TYPES),
   status: z.enum(TRANSACTION_STATUSES).optional(),
   description: z
@@ -304,6 +305,9 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       if (input.cardId === undefined && input.installments !== undefined) {
         throw new InvalidCardPurchaseError('installments require cardId');
       }
+      if (input.installments !== undefined && input.id !== undefined) {
+        throw new ValidationError('id: not supported on installment purchases');
+      }
       if (input.installments !== undefined && (input.tagIds ?? []).length > 0) {
         throw new ValidationError('tagIds: not supported on installment purchases');
       }
@@ -329,6 +333,7 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
               ...(input.invoiceMonth === undefined ? {} : { invoiceMonth: input.invoiceMonth }),
             };
       let transaction: FinancialTransaction;
+      let replayed = false;
       if (card !== undefined && input.installments !== undefined) {
         const [first] = await createInstallmentPurchase(data, {
           ...fields,
@@ -340,13 +345,14 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         }
         transaction = first;
       } else {
-        transaction = await createTransaction(data, {
+        ({ transaction, replayed } = await createTransactionOnce(data, {
           ...fields,
+          ...(input.id === undefined ? {} : { id: input.id }),
           ...(input.tagIds === undefined ? {} : { tagIds: input.tagIds }),
           ...(card === undefined ? {} : { card }),
-        });
+        }));
       }
-      reply.status(201);
+      reply.status(replayed ? 200 : 201);
       return toTransactionResponse(transaction);
     },
   );

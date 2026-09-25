@@ -9,4 +9,5 @@ export * from './money.ts';
 export * from './month.ts';
 export * from './permissions.ts';
 export * from './recurrence.ts';
+export * from './sync.ts';
 export * from './transaction.ts';

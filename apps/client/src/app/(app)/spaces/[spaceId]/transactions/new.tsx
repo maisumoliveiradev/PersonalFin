@@ -1,5 +1,6 @@
 import type { CreateTransactionRequest } from '@personalfin/api-contract';
 import { type FinancialDate, monthOf } from '@personalfin/domain';
+import { randomUUID } from 'expo-crypto';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
@@ -14,6 +15,9 @@ import {
   TransactionForm,
 } from '../../../../../features/transactions/TransactionForm';
 import { messages } from '../../../../../i18n/messages';
+import { useIsOnline } from '../../../../../local/connectivity';
+import { isNetworkFailure, isOffline, queueCreate } from '../../../../../sync/offline-writes';
+import { BodyText } from '../../../../../ui/BodyText';
 import { Button } from '../../../../../ui/Button';
 import { FormError } from '../../../../../ui/FormError';
 import { LoadingScreen } from '../../../../../ui/LoadingScreen';
@@ -29,6 +33,8 @@ export default function NewTransactionScreen() {
   const createTransaction = useCreateTransaction(spaceId);
   const createRecurrence = useCreateRecurrence(spaceId);
   const [initialValues] = useState(emptyTransactionFormValues);
+  const online = useIsOnline();
+  const [offlineError, setOfflineError] = useState<string | null>(null);
 
   function backToSpace(savedDate?: FinancialDate): void {
     router.dismissTo({
@@ -40,10 +46,46 @@ export default function NewTransactionScreen() {
     });
   }
 
+  async function saveOnDevice(request: CreateTransactionRequest & { id: string }): Promise<void> {
+    try {
+      await queueCreate(spaceId, request);
+    } catch {
+      setOfflineError(messages.sync.blocked);
+      return;
+    }
+    router.dismissTo({
+      pathname: '/spaces/[spaceId]',
+      params: { spaceId, saved: 'queued-create', month: monthOf(request.financialDate) },
+    });
+  }
+
   async function handleSubmit(
     request: CreateTransactionRequest,
     recurrence: RecurrenceChoice | null,
   ): Promise<void> {
+    setOfflineError(null);
+    const needsConnection = recurrence !== null || request.installments !== undefined;
+    if (isOffline() && needsConnection) {
+      setOfflineError(messages.sync.offlineFormHint);
+      return;
+    }
+    if (recurrence === null && request.installments === undefined) {
+      const withId = { ...request, id: randomUUID() };
+      if (isOffline()) {
+        await saveOnDevice(withId);
+        return;
+      }
+      try {
+        const created = await createTransaction.mutateAsync(withId);
+        backToSpace(created.financialDate);
+      } catch (error) {
+        if (isNetworkFailure(error)) {
+          createTransaction.reset();
+          await saveOnDevice(withId);
+        }
+      }
+      return;
+    }
     try {
       if (recurrence === null) {
         const created = await createTransaction.mutateAsync(request);
@@ -88,18 +130,23 @@ export default function NewTransactionScreen() {
           <Button label={messages.common.retry} onPress={() => categories.refetch()} />
         </>
       ) : (
-        <TransactionForm
-          categories={categories.data}
-          initialValues={initialValues}
-          submitting={createTransaction.isPending || createRecurrence.isPending}
-          submitError={createTransaction.error ?? createRecurrence.error}
-          allowRecurrence
-          cards={cards.data ?? []}
-          tags={tags.data ?? []}
-          allowCardChoice
-          onSubmit={handleSubmit}
-          onCancel={() => router.back()}
-        />
+        <>
+          {!online && <BodyText muted>{messages.sync.offlineFormHint}</BodyText>}
+          <FormError message={offlineError} />
+          <TransactionForm
+            categories={categories.data}
+            initialValues={initialValues}
+            submitting={createTransaction.isPending || createRecurrence.isPending}
+            submitError={createTransaction.error ?? createRecurrence.error}
+            allowRecurrence={online}
+            cards={cards.data ?? []}
+            tags={tags.data ?? []}
+            allowCardChoice
+            allowInstallments={online}
+            onSubmit={handleSubmit}
+            onCancel={() => router.back()}
+          />
+        </>
       )}
     </Screen>
   );

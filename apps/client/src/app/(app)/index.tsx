@@ -2,13 +2,11 @@ import type { FinancialSpace } from '@personalfin/api-contract';
 import { useRouter } from 'expo-router';
 
 import { useFinancialSpaces } from '../../api/financial-spaces';
-import { queryClient } from '../../api/query-client';
 import { useCurrentUser } from '../../api/use-current-user';
-import { authClient } from '../../auth/auth-client';
+import { SignOutButton } from '../../features/auth/SignOutButton';
 import { CreateFinancialSpaceForm } from '../../features/financial-spaces/CreateFinancialSpaceForm';
 import { roleLabel } from '../../features/financial-spaces/permissions';
 import { messages } from '../../i18n/messages';
-import { clearQueryCache } from '../../local/query-persistence';
 import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
 import { FormError } from '../../ui/FormError';
@@ -26,23 +24,11 @@ export default function FinancialSpacesScreen() {
     router.push({ pathname: '/spaces/[spaceId]', params: { spaceId: space.id } });
   }
 
-  async function handleSignOut(): Promise<void> {
-    const userId = currentUser.data?.id;
-    await authClient.signOut();
-    if (userId === undefined) {
-      queryClient.clear();
-      return;
-    }
-    await clearQueryCache(queryClient, userId);
-  }
-
   if (spaces.isPending || currentUser.isPending) {
     return <LoadingScreen />;
   }
 
-  const signOutButton = (
-    <Button label={messages.auth.signOutAction} variant="link" onPress={handleSignOut} />
-  );
+  const signOutButton = <SignOutButton />;
 
   if (spaces.isError || currentUser.isError) {
     return (

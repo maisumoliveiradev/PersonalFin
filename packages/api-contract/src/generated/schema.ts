@@ -1133,6 +1133,11 @@ export interface components {
             name: string;
         };
         CreateTransactionRequest: {
+            /**
+             * Format: uuid
+             * @description Optional client-generated id (UUID) so a request can be retried safely, for example after an offline period. Not allowed with installments.
+             */
+            id?: string;
             type: components["schemas"]["TransactionType"];
             /** @description Defaults to paid. */
             status?: components["schemas"]["TransactionStatus"];
@@ -2053,6 +2058,15 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Replay of a request whose client id was already created by the same user in this space; the existing transaction is returned and nothing is created (ADR-0016). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
             /** @description The created transaction, recorded in the space currency (BRL). */
             201: {
                 headers: {
@@ -2066,6 +2080,15 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            /** @description The client id is already used by another space or another user (code TRANSACTION_ID_CONFLICT). */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             422: components["responses"]["TransactionRejected"];
             426: components["responses"]["ClientUpgradeRequired"];
         };

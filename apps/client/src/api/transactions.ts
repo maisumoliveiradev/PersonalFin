@@ -1,11 +1,21 @@
 import type {
   CreateTransactionRequest,
+  Transaction,
+  TransactionList,
   TransactionStatus,
   UpdateTransactionRequest,
 } from '@personalfin/api-contract';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  type InfiniteData,
+  type QueryClient,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
 import type { TransactionFilters } from '../features/transactions/transaction-filters';
+import { isNetworkFailure, isOffline, queueUpdate } from '../sync/offline-writes';
 
 import { apiClient, expectData } from './api-client';
 
@@ -59,9 +69,31 @@ export function useRestoreTransaction(spaceId: string) {
   });
 }
 
+function findInLists(
+  queryClient: QueryClient,
+  spaceId: string,
+  transactionId: string,
+): Transaction | undefined {
+  const lists = queryClient.getQueriesData<InfiniteData<TransactionList>>({
+    queryKey: [...transactionKeys.forSpace(spaceId), 'list'],
+  });
+  for (const [, data] of lists) {
+    for (const page of data?.pages ?? []) {
+      const match = page.items.find((item) => item.id === transactionId);
+      if (match !== undefined) {
+        return match;
+      }
+    }
+  }
+  return undefined;
+}
+
 export function useTransaction(spaceId: string, transactionId: string) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: transactionKeys.detail(spaceId, transactionId),
+    initialData: () => findInLists(queryClient, spaceId, transactionId),
+    initialDataUpdatedAt: 0,
     queryFn: async () =>
       expectData(
         await apiClient.GET('/financial-spaces/{spaceId}/transactions/{transactionId}', {
@@ -129,17 +161,33 @@ export function useCreateTransaction(spaceId: string) {
 export function useChangeTransactionStatus(spaceId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: {
-      transactionId: string;
-      version: number;
+    mutationFn: async ({
+      transaction,
+      status,
+    }: {
+      transaction: Transaction;
       status: TransactionStatus;
-    }) =>
-      expectData(
-        await apiClient.PATCH('/financial-spaces/{spaceId}/transactions/{transactionId}', {
-          params: { path: { spaceId, transactionId: input.transactionId } },
-          body: { version: input.version, status: input.status },
-        }),
-      ),
+    }): Promise<'saved' | 'queued'> => {
+      if (isOffline()) {
+        await queueUpdate(spaceId, transaction, { status });
+        return 'queued';
+      }
+      try {
+        expectData(
+          await apiClient.PATCH('/financial-spaces/{spaceId}/transactions/{transactionId}', {
+            params: { path: { spaceId, transactionId: transaction.id } },
+            body: { version: transaction.version, status },
+          }),
+        );
+        return 'saved';
+      } catch (error) {
+        if (!isNetworkFailure(error)) {
+          throw error;
+        }
+        await queueUpdate(spaceId, transaction, { status });
+        return 'queued';
+      }
+    },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
     },

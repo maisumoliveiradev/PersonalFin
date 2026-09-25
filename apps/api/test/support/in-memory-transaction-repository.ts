@@ -58,6 +58,15 @@ export function createInMemoryTransactionRepository(
       transactions.push(created);
       return created;
     },
+    async findOrigin(transactionId) {
+      const transaction = transactions.find((item) => item.id === transactionId);
+      return transaction === undefined
+        ? null
+        : {
+            financialSpaceId: transaction.financialSpaceId,
+            createdByUserId: transaction.createdByUserId,
+          };
+    },
     async findInSpace(financialSpaceId, transactionId) {
       return find(financialSpaceId, transactionId) ?? null;
     },

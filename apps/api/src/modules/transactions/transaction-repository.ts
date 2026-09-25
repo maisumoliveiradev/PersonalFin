@@ -46,8 +46,14 @@ export interface TransactionUpdate {
   updatedByUserId: string;
 }
 
+export interface TransactionOrigin {
+  financialSpaceId: string;
+  createdByUserId: string;
+}
+
 export interface TransactionRepository {
   create(transaction: NewFinancialTransaction): Promise<FinancialTransaction>;
+  findOrigin(transactionId: string): Promise<TransactionOrigin | null>;
   list(query: TransactionListQuery): Promise<TransactionPage>;
   findInSpace(
     financialSpaceId: string,
