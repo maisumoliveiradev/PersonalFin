@@ -2,18 +2,19 @@ import { randomUUID } from 'node:crypto';
 
 import {
   candidateInvoiceMonths,
+  DEFAULT_CURRENCY,
   defaultInvoiceDates,
   type FinancialDate,
   type Month,
 } from '@personalfin/domain';
 
 import type { DataAccess, Repositories } from '../../database/data-access.ts';
-import { AppError } from '../../http/errors.ts';
+import { AppError, NotFoundError } from '../../http/errors.ts';
 import { diffFields } from '../audit/audit-event.ts';
 import { VersionConflictError } from '../transactions/update-transaction.ts';
 import type { Card } from './card.ts';
 import { CardNotFoundError } from './card-errors.ts';
-import type { CardInvoice } from './card-invoice.ts';
+import { type CardInvoice, outstandingMinor } from './card-invoice.ts';
 
 export class CardNotAvailableError extends AppError {
   override name = 'CardNotAvailableError';
@@ -140,5 +141,119 @@ export async function updateInvoiceDates(
       changes,
     });
     return updated;
+  });
+}
+
+export class PaymentExceedsOutstandingError extends AppError {
+  override name = 'PaymentExceedsOutstandingError';
+
+  constructor() {
+    super(
+      422,
+      'PAYMENT_EXCEEDS_OUTSTANDING',
+      'The payment is larger than the open amount of the invoice',
+    );
+  }
+}
+
+export class InvoicePaymentNotFoundError extends NotFoundError {
+  constructor() {
+    super('INVOICE_PAYMENT_NOT_FOUND', 'Invoice payment not found');
+  }
+}
+
+export interface PayInvoiceInput {
+  financialSpaceId: string;
+  cardId: string;
+  referenceMonth: Month;
+  actorUserId: string;
+  amountMinor: number;
+  paidOn: FinancialDate;
+}
+
+export async function payInvoice(data: DataAccess, input: PayInvoiceInput): Promise<CardInvoice> {
+  return data.transaction(async ({ cards, cardInvoices, audit }) => {
+    const card = await cards.findInSpace(input.financialSpaceId, input.cardId);
+    if (card === null) {
+      throw new CardNotFoundError();
+    }
+    const invoice = await cardInvoices.findByMonth(
+      input.financialSpaceId,
+      card.id,
+      input.referenceMonth,
+      { lock: true },
+    );
+    if (invoice === null || input.amountMinor > outstandingMinor(invoice)) {
+      throw new PaymentExceedsOutstandingError();
+    }
+    const paymentId = randomUUID();
+    await cardInvoices.recordPayment({
+      id: paymentId,
+      invoiceId: invoice.id,
+      financialSpaceId: input.financialSpaceId,
+      amountMinor: input.amountMinor,
+      currency: DEFAULT_CURRENCY,
+      paidOn: input.paidOn,
+      recordedByUserId: input.actorUserId,
+    });
+    await audit.record({
+      financialSpaceId: input.financialSpaceId,
+      entityType: 'card_invoice_payment',
+      entityId: paymentId,
+      action: 'create',
+      actorUserId: input.actorUserId,
+      changes: {
+        invoiceId: { before: null, after: invoice.id },
+        amountMinor: { before: null, after: input.amountMinor },
+        paidOn: { before: null, after: input.paidOn },
+      },
+    });
+    return { ...invoice, paidMinor: invoice.paidMinor + input.amountMinor };
+  });
+}
+
+export interface RemoveInvoicePaymentInput {
+  financialSpaceId: string;
+  cardId: string;
+  referenceMonth: Month;
+  paymentId: string;
+  actorUserId: string;
+}
+
+export async function removeInvoicePayment(
+  data: DataAccess,
+  input: RemoveInvoicePaymentInput,
+): Promise<CardInvoice> {
+  return data.transaction(async ({ cardInvoices, audit }) => {
+    const invoice = await cardInvoices.findByMonth(
+      input.financialSpaceId,
+      input.cardId,
+      input.referenceMonth,
+      { lock: true },
+    );
+    const removed =
+      invoice === null
+        ? null
+        : await cardInvoices.deletePayment(
+            input.financialSpaceId,
+            invoice.id,
+            input.paymentId,
+            input.actorUserId,
+          );
+    if (invoice === null || removed === null) {
+      throw new InvoicePaymentNotFoundError();
+    }
+    await audit.record({
+      financialSpaceId: input.financialSpaceId,
+      entityType: 'card_invoice_payment',
+      entityId: removed.id,
+      action: 'delete',
+      actorUserId: input.actorUserId,
+      changes: {
+        amountMinor: { before: removed.amountMinor, after: null },
+        paidOn: { before: removed.paidOn, after: null },
+      },
+    });
+    return { ...invoice, paidMinor: invoice.paidMinor - removed.amountMinor };
   });
 }

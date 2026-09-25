@@ -1,6 +1,12 @@
 import type { FinancialDate, Month } from '@personalfin/domain';
 
-import type { CardInvoice, DueInvoice, NewCardInvoice } from './card-invoice.ts';
+import type {
+  CardInvoice,
+  DueInvoice,
+  InvoicePayment,
+  NewCardInvoice,
+  NewInvoicePayment,
+} from './card-invoice.ts';
 
 export interface CardInvoiceDatesUpdate {
   financialSpaceId: string;
@@ -23,4 +29,12 @@ export interface CardInvoiceRepository {
     financialSpaceId: string,
     range: { start: FinancialDate; endExclusive: FinancialDate },
   ): Promise<DueInvoice[]>;
+  recordPayment(payment: NewInvoicePayment): Promise<void>;
+  listPayments(financialSpaceId: string, invoiceId: string): Promise<InvoicePayment[]>;
+  deletePayment(
+    financialSpaceId: string,
+    invoiceId: string,
+    paymentId: string,
+    actorUserId: string,
+  ): Promise<InvoicePayment | null>;
 }

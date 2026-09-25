@@ -127,6 +127,7 @@ export function toTransactionResponse(transaction: FinancialTransaction): Transa
             cardId: transaction.cardPurchase.cardId,
             cardName: transaction.cardPurchase.cardName,
             invoiceMonth: transaction.cardPurchase.invoiceMonth,
+            invoiceSettled: transaction.cardPurchase.invoiceSettled,
           },
     installment: transaction.installment,
   };

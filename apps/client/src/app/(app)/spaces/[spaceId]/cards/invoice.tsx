@@ -6,12 +6,20 @@ import {
   isValidMonth,
   type Month,
   monthOf,
+  parseAmountInput,
   parseDisplayDate,
 } from '@personalfin/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { useCardInvoice, useCards, useSetInvoiceDates } from '../../../../../api/cards';
+import { ApiRequestError } from '../../../../../api/api-client';
+import {
+  useCardInvoice,
+  useCards,
+  usePayInvoice,
+  useRemoveInvoicePayment,
+  useSetInvoiceDates,
+} from '../../../../../api/cards';
 import { describeCardError } from '../../../../../features/cards/card-form';
 import { MonthNavigator } from '../../../../../features/transactions/MonthNavigator';
 import { TransactionRow } from '../../../../../features/transactions/TransactionList';
@@ -49,7 +57,7 @@ export default function CardInvoiceScreen() {
       {invoice.isError && <FormError message={messages.cards.loadError} />}
       {invoice.isSuccess && (
         <InvoiceDetails
-          key={`${month}-${invoice.data.version ?? 0}`}
+          key={`${month}-${invoice.data.version ?? 0}-${invoice.data.paidMinor}`}
           spaceId={spaceId}
           month={month}
           invoice={invoice.data}
@@ -99,10 +107,10 @@ function InvoiceDetails({
           formatDisplayDate(invoice.dueDate, 'pt-BR'),
         )}
       </BodyText>
+      <BodyText>{messages.cards.invoiceTotal(money(invoice.totalMinor))}</BodyText>
+      <BodyText>{messages.cards.invoiceStates[invoice.state]}</BodyText>
       <BodyText>
-        {messages.cards.invoiceTotal(
-          formatMoney({ amountMinor: invoice.totalMinor, currency: 'BRL' }, 'pt-BR'),
-        )}
+        {messages.cards.invoiceBalance(money(invoice.paidMinor), money(invoice.outstandingMinor))}
       </BodyText>
       {invoice.purchases.length === 0 && <BodyText muted>{messages.cards.invoiceEmpty}</BodyText>}
       {invoice.purchases.map((purchase) => (
@@ -114,6 +122,7 @@ function InvoiceDetails({
           onToggleStatus={() => undefined}
         />
       ))}
+      <PaymentSection spaceId={spaceId} month={month} invoice={invoice} />
       <SectionTitle>{messages.cards.invoiceDatesTitle}</SectionTitle>
       <BodyText muted>{messages.cards.invoiceDatesHint}</BodyText>
       {setDates.isSuccess && <StatusMessage>{messages.cards.datesSaved}</StatusMessage>}
@@ -138,6 +147,95 @@ function InvoiceDetails({
         onPress={saveDates}
         loading={setDates.isPending}
       />
+    </>
+  );
+}
+
+function money(amountMinor: number): string {
+  return formatMoney({ amountMinor, currency: 'BRL' }, 'pt-BR');
+}
+
+function PaymentSection({
+  spaceId,
+  month,
+  invoice,
+}: {
+  spaceId: string;
+  month: Month;
+  invoice: CardInvoice;
+}) {
+  const pay = usePayInvoice(spaceId, invoice.cardId, month);
+  const remove = useRemoveInvoicePayment(spaceId, invoice.cardId, month);
+  const [amount, setAmount] = useState(() =>
+    invoice.outstandingMinor > 0 ? money(invoice.outstandingMinor).replace(/^R\$\u00a0/, '') : '',
+  );
+  const [paidOn, setPaidOn] = useState(() =>
+    formatDisplayDate(financialDateFromLocalClock(new Date()), 'pt-BR'),
+  );
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  function submit(): void {
+    const parsed = parseAmountInput(amount, 'BRL', 'pt-BR');
+    const date = parseDisplayDate(paidOn, 'pt-BR');
+    if (!parsed.ok) {
+      setValidationError(messages.cards.errors.paymentInvalid);
+      return;
+    }
+    if (date === null) {
+      setValidationError(messages.cards.errors.dateInvalid);
+      return;
+    }
+    setValidationError(null);
+    pay.mutate({ amountMinor: parsed.amountMinor, paidOn: date });
+  }
+
+  const failure = pay.error ?? remove.error;
+  let submitError: string | null = null;
+  if (failure instanceof ApiRequestError && failure.code === 'PAYMENT_EXCEEDS_OUTSTANDING') {
+    submitError = messages.cards.errors.paymentTooLarge;
+  } else if (failure !== null) {
+    submitError = messages.cards.errors.paymentFailed;
+  }
+
+  return (
+    <>
+      {invoice.payments.length > 0 && <SectionTitle>{messages.cards.paymentsTitle}</SectionTitle>}
+      {invoice.payments.map((payment) => {
+        const amountLabel = money(payment.amountMinor);
+        const dateLabel = formatDisplayDate(payment.paidOn, 'pt-BR');
+        return (
+          <Button
+            key={payment.id}
+            label={messages.cards.removePaymentAction(amountLabel, dateLabel)}
+            variant="link"
+            loading={remove.isPending && remove.variables === payment.id}
+            onPress={() => remove.mutate(payment.id)}
+          />
+        );
+      })}
+      {invoice.outstandingMinor > 0 && (
+        <>
+          <SectionTitle>{messages.cards.payTitle}</SectionTitle>
+          <BodyText muted>{messages.cards.payHint}</BodyText>
+          {pay.isSuccess && <StatusMessage>{messages.cards.paid}</StatusMessage>}
+          <TextField
+            label={messages.cards.paymentAmountLabel}
+            value={amount}
+            onChangeText={setAmount}
+            inputMode="decimal"
+          />
+          <TextField
+            label={messages.cards.paymentDateLabel}
+            hint={messages.transactions.dateHint}
+            value={paidOn}
+            onChangeText={setPaidOn}
+            inputMode="numeric"
+            maxLength={10}
+          />
+          <FormError message={validationError ?? submitError} />
+          <Button label={messages.cards.payAction} onPress={submit} loading={pay.isPending} />
+        </>
+      )}
     </>
   );
 }

@@ -120,3 +120,36 @@ export function useCancelInstallments(spaceId: string) {
       queryClient.invalidateQueries({ queryKey: ['financial-spaces', spaceId, 'transactions'] }),
   });
 }
+
+export function usePayInvoice(spaceId: string, cardId: string, month: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { amountMinor: number; paidOn: string }) =>
+      expectData(
+        await apiClient.POST(
+          '/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments',
+          {
+            params: { path: { spaceId, cardId, month } },
+            body: input,
+          },
+        ),
+      ),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ['financial-spaces', spaceId, 'transactions'] }),
+  });
+}
+
+export function useRemoveInvoicePayment(spaceId: string, cardId: string, month: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (paymentId: string) =>
+      expectData(
+        await apiClient.DELETE(
+          '/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments/{paymentId}',
+          { params: { path: { spaceId, cardId, month, paymentId } } },
+        ),
+      ),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ['financial-spaces', spaceId, 'transactions'] }),
+  });
+}

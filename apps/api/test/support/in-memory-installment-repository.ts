@@ -6,6 +6,7 @@ import type { FinancialTransaction } from '../../src/modules/transactions/transa
 
 export function createInMemoryInstallmentRepository(
   transactions: () => FinancialTransaction[],
+  invoiceHasPayment: (invoiceId: string) => boolean = () => false,
 ): InstallmentRepository & { purchases: InstallmentPurchase[] } {
   const purchases: InstallmentPurchase[] = [];
   return {
@@ -25,7 +26,8 @@ export function createInMemoryInstallmentRepository(
             item.financialSpaceId === financialSpaceId &&
             item.installment?.purchaseId === purchaseId &&
             item.deletedAt === null &&
-            (item.cardPurchase?.invoiceMonth ?? '') > afterMonth,
+            (item.cardPurchase?.invoiceMonth ?? '') > afterMonth &&
+            !invoiceHasPayment(item.cardPurchase?.invoiceId ?? ''),
         )
         .map((item) => item.id);
     },

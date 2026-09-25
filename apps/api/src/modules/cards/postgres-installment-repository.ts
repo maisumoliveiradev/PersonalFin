@@ -38,6 +38,10 @@ export function createPostgresInstallmentRepository(db: Queryable): InstallmentR
          JOIN card_invoice i ON i.id = t.card_invoice_id
          WHERE t.financial_space_id = $1 AND t.installment_purchase_id = $2
            AND t.deleted_at IS NULL AND i.reference_month > $3::date
+           AND NOT EXISTS (
+             SELECT 1 FROM card_invoice_payment p
+             WHERE p.invoice_id = i.id AND p.deleted_at IS NULL
+           )
          ORDER BY t.installment_number
          FOR UPDATE OF t`,
         [financialSpaceId, purchaseId, `${afterMonth}-01`],

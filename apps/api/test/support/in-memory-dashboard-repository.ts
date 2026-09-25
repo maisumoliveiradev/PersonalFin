@@ -5,7 +5,14 @@ import type { FinancialTransaction } from '../../src/modules/transactions/transa
 export function createInMemoryDashboardRepository(
   transactions: () => readonly FinancialTransaction[],
   snapshots: () => readonly BalanceSnapshot[],
-  invoiceDueDate: (invoiceId: string) => string = () => '9999-12-31',
+  invoiceFlows: (
+    financialSpaceId: string,
+    observedOn: string,
+    endExclusive: string,
+  ) => { openInvoices: number; invoicePayments: number } = () => ({
+    openInvoices: 0,
+    invoicePayments: 0,
+  }),
 ): DashboardRepository {
   function inRange(
     transaction: FinancialTransaction,
@@ -22,6 +29,12 @@ export function createInMemoryDashboardRepository(
       metricDate < range.endExclusive
     );
   }
+  const effectiveStatus = (item: FinancialTransaction) => {
+    if (item.cardPurchase === null) {
+      return item.status;
+    }
+    return item.cardPurchase.invoiceSettled ? 'paid' : 'pending';
+  };
   const sum = (items: readonly FinancialTransaction[]) =>
     items.reduce((total, item) => total + item.amountMinor, 0);
 
@@ -29,7 +42,7 @@ export function createInMemoryDashboardRepository(
     async monthTotals(range) {
       const items = transactions().filter((transaction) => inRange(transaction, range));
       const pick = (type: string, status: string) =>
-        sum(items.filter((item) => item.type === type && item.status === status));
+        sum(items.filter((item) => item.type === type && effectiveStatus(item) === status));
       return {
         realizedIncome: pick('income', 'paid'),
         realizedExpenses: pick('expense', 'paid'),
@@ -40,7 +53,7 @@ export function createInMemoryDashboardRepository(
     async realizedExpensesByCategory(range) {
       const totals = new Map<string, { categoryId: string; name: string; amountMinor: number }>();
       for (const item of transactions()) {
-        if (inRange(item, range) && item.type === 'expense' && item.status === 'paid') {
+        if (inRange(item, range) && item.type === 'expense' && effectiveStatus(item) === 'paid') {
           const current = totals.get(item.category.id) ?? {
             categoryId: item.category.id,
             name: item.category.name,
@@ -87,15 +100,7 @@ export function createInMemoryDashboardRepository(
         pendingUpToObservation: flow(
           active.filter((item) => item.financialDate <= observedOn && item.status === 'pending'),
         ),
-        openInvoices: sum(
-          transactions().filter(
-            (item) =>
-              item.financialSpaceId === financialSpaceId &&
-              item.deletedAt === null &&
-              item.cardPurchase !== null &&
-              invoiceDueDate(item.cardPurchase.invoiceId) < endExclusive,
-          ),
-        ),
+        ...invoiceFlows(financialSpaceId, observedOn, endExclusive),
       };
     },
     async observedBalanceBefore(financialSpaceId, endExclusive) {

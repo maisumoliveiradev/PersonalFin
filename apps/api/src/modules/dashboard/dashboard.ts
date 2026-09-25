@@ -27,6 +27,7 @@ export interface ProjectionComponents {
   afterObservation: FlowTotals;
   pendingUpToObservation: FlowTotals;
   openInvoices: number;
+  invoicePayments: number;
 }
 
 export interface Projection extends ProjectionComponents {
@@ -55,7 +56,8 @@ export function computeProjection(
       base.amountMinor +
       net(components.afterObservation) +
       net(components.pendingUpToObservation) -
-      components.openInvoices,
+      components.openInvoices -
+      components.invoicePayments,
   };
 }
 

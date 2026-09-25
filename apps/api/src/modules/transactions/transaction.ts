@@ -16,6 +16,7 @@ export interface CardPurchaseReference {
   cardName: string;
   invoiceId: string;
   invoiceMonth: Month;
+  invoiceSettled: boolean;
 }
 
 export interface InstallmentReference {

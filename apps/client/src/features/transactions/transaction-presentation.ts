@@ -16,10 +16,11 @@ export function transactionTypeLabel(transaction: Transaction): string {
 
 export function transactionStatusLabel(transaction: Transaction): string {
   if (transaction.cardPurchase !== null) {
-    return messages.cards.invoiceTag(
+    const tag = messages.cards.invoiceTag(
       transaction.cardPurchase.cardName,
       formatMonthLabel(transaction.cardPurchase.invoiceMonth, 'pt-BR'),
     );
+    return transaction.cardPurchase.invoiceSettled ? `${tag} ${messages.cards.settledTag}` : tag;
   }
   if (transaction.status === 'pending') {
     return messages.transactions.pending;

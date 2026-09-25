@@ -37,6 +37,7 @@ interface TransactionRow {
   card_id: string | null;
   card_name: string | null;
   invoice_month: FinancialDate | null;
+  invoice_settled: boolean;
   installment_purchase_id: string | null;
   installment_number: number | null;
   installment_count: number | null;
@@ -55,7 +56,8 @@ const COLUMNS = `t.id, t.financial_space_id, t.type, t.status, t.description, t.
          t.version, t.deleted_at, t.recurrence_series_id, t.occurrence_date,
          t.individually_modified, t.card_invoice_id, ci.card_id, cd.name AS card_name,
          ci.reference_month AS invoice_month, t.installment_purchase_id, t.installment_number,
-         ip.installment_count`;
+         ip.installment_count,
+         COALESCE(cb.total_minor > 0 AND cb.paid_minor >= cb.total_minor, false) AS invoice_settled`;
 
 const CURSOR_KEY_COLUMNS = `to_char(t.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at_key,
          to_char(t.deleted_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS deleted_at_key`;
@@ -65,6 +67,7 @@ const FROM_WITH_CATEGORIES = `FROM financial_transaction t
   LEFT JOIN category s ON s.id = t.subcategory_id
   LEFT JOIN card_invoice ci ON ci.id = t.card_invoice_id
   LEFT JOIN card cd ON cd.id = ci.card_id
+  LEFT JOIN card_invoice_balance cb ON cb.invoice_id = t.card_invoice_id
   LEFT JOIN card_installment_purchase ip ON ip.id = t.installment_purchase_id`;
 
 const SELECT_WITH_CATEGORIES = `SELECT ${COLUMNS} ${FROM_WITH_CATEGORIES}`;
@@ -113,6 +116,7 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
             cardName: row.card_name,
             invoiceId: row.card_invoice_id,
             invoiceMonth: row.invoice_month.slice(0, 7),
+            invoiceSettled: row.invoice_settled,
           },
     installment:
       row.installment_purchase_id === null ||

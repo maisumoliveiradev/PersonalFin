@@ -522,6 +522,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record a full or partial invoice payment
+         * @description Settles already-recorded card expenses; it never creates an expense (DR-036). The amount cannot exceed the open amount (DR-039). Audited.
+         */
+        post: operations["payCardInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments/{paymentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an invoice payment recorded by mistake
+         * @description Soft-deletes the payment; audited.
+         */
+        delete: operations["removeCardInvoicePayment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -743,6 +792,8 @@ export interface components {
             cardId: string;
             cardName: string;
             invoiceMonth: string;
+            /** @description True when the invoice is fully paid; the purchase then counts as realized. */
+            invoiceSettled: boolean;
         };
         /** @description An invoice of a card for a reference month (the month of its due date). Before any purchase or date change it does not exist yet: version is null and the dates are the card defaults. */
         CardInvoice: {
@@ -753,9 +804,24 @@ export interface components {
             dueDate: components["schemas"]["FinancialDate"];
             /** @description Sum of the non-deleted purchases of the invoice. */
             totalMinor: number;
+            /** @description Sum of the payments of the invoice (never expenses, DR-036). */
+            paidMinor: number;
+            /** @description totalMinor - paidMinor; negative when purchases were removed after payment. */
+            outstandingMinor: number;
+            /** @enum {string} */
+            state: "empty" | "open" | "partially_paid" | "paid";
+            payments: components["schemas"]["InvoicePayment"][];
             version: number | null;
             purchases: components["schemas"]["Transaction"][];
             hasMore: boolean;
+        };
+        InvoicePayment: {
+            /** Format: uuid */
+            id: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            paidOn: components["schemas"]["FinancialDate"];
+            /** Format: date-time */
+            recordedAt: string;
         };
         InvoiceDatesRequest: {
             /** @description The invoice version, or null when it does not exist yet. */
@@ -924,7 +990,7 @@ export interface components {
             income: number;
             expenses: number;
         };
-        /** @description M-008. amountMinor = base.amountMinor + (afterObservation.income - afterObservation.expenses) + (pendingUpToObservation.income - pendingUpToObservation.expenses) - openInvoices. Card purchases enter only through openInvoices. A calculation, never an observed balance. */
+        /** @description M-008. amountMinor = base.amountMinor + (afterObservation.income - afterObservation.expenses) + (pendingUpToObservation.income - pendingUpToObservation.expenses) - openInvoices - invoicePayments. Card purchases enter only through their invoices. A calculation, never an observed balance. */
         Projection: {
             amountMinor: number;
             base: {
@@ -933,8 +999,10 @@ export interface components {
             };
             afterObservation: components["schemas"]["FlowTotals"];
             pendingUpToObservation: components["schemas"]["FlowTotals"];
-            /** @description Open amount of card invoices due before the end of the month. */
+            /** @description Amount of card invoices due before the end of the month not covered by payments dated before the end of the month. */
             openInvoices: number;
+            /** @description Invoice payments dated after the observation and before the end of the month. */
+            invoicePayments: number;
         };
         ProjectionSeries: {
             items: {
@@ -2087,6 +2155,84 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             /** @description The purchase does not exist in this space (code INSTALLMENT_PURCHASE_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    payCardInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    amountMinor: components["schemas"]["AmountMinor"];
+                    paidOn: components["schemas"]["FinancialDate"];
+                };
+            };
+        };
+        responses: {
+            /** @description The invoice after the payment. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardInvoice"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
+            /** @description The invoice has no open amount this large (code PAYMENT_EXCEEDS_OUTSTANDING). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    removeCardInvoicePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The invoice after the removal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardInvoice"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            /** @description CARD_NOT_FOUND or INVOICE_PAYMENT_NOT_FOUND. */
             404: {
                 headers: {
                     [name: string]: unknown;
