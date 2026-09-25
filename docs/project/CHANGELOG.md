@@ -6,6 +6,12 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.9.0\] --- 2026-09-25
+
+Import, Export, and Data Portability. Released to `main` and tagged
+`v0.9.0`; validated in SDD-054
+(`docs/sdds/v0.9.0/SDD-054-validation-report.md`).
+
 ### Portable Backup (SDD-053)
 
 -   "Baixar backup dos meus dados" on the home screen downloads a
