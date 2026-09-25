@@ -131,8 +131,7 @@ SDD-033 implemented and validated
 
 ## Active Target
 
-`v0.6.0` --- Collaboration (`docs/product/ROADMAP.md`). No SDD drafted
-yet.
+`v0.6.0` --- Collaboration (`docs/sdds/v0.6.0/`).
 
 ## Important Constraint
 
@@ -141,7 +140,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.6.0 SDDs (Collaboration) from the roadmap. Domain decisions
+`docs/sdds/v0.6.0/SDD-034-membership-and-permissions.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, DR-072 to
+`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, DR-072 to
 DR-078).
