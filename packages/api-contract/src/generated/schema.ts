@@ -1591,6 +1591,15 @@ export interface components {
         };
     };
     responses: {
+        /** @description The X-Client-Version header is missing, invalid, or lower than the configured minimum client version (code CLIENT_UPGRADE_REQUIRED). */
+        ClientUpgradeRequired: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description The tag does not exist in this space (code TAG_NOT_FOUND). */
         TagNotFound: {
             headers: {
@@ -1779,6 +1788,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listFinancialSpaces: {
@@ -1800,6 +1810,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthenticated"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     createFinancialSpace: {
@@ -1826,6 +1837,7 @@ export interface operations {
             };
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getFinancialSpace: {
@@ -1851,6 +1863,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listCategories: {
@@ -1876,6 +1889,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     createCategory: {
@@ -1916,6 +1930,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     deleteCategory: {
@@ -1944,6 +1959,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CategoryNotFound"];
             409: components["responses"]["CategoryConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     updateCategory: {
@@ -1976,6 +1992,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CategoryNotFound"];
             409: components["responses"]["CategoryConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listTransactions: {
@@ -2018,6 +2035,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     createTransaction: {
@@ -2049,6 +2067,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
             422: components["responses"]["TransactionRejected"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getTransaction: {
@@ -2075,6 +2094,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TransactionNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     deleteTransaction: {
@@ -2105,6 +2125,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TransactionNotFound"];
             409: components["responses"]["StateConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     updateTransaction: {
@@ -2138,6 +2159,7 @@ export interface operations {
             404: components["responses"]["TransactionNotFound"];
             409: components["responses"]["StateConflict"];
             422: components["responses"]["TransactionRejected"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     restoreTransaction: {
@@ -2170,6 +2192,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TransactionNotFound"];
             409: components["responses"]["StateConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listBalanceSnapshots: {
@@ -2198,6 +2221,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     recordBalanceSnapshot: {
@@ -2228,6 +2252,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getBalanceReminder: {
@@ -2253,6 +2278,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     setBalanceReminder: {
@@ -2283,6 +2309,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getMonthlyDashboard: {
@@ -2311,6 +2338,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listRecurrences: {
@@ -2336,6 +2364,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     createRecurrence: {
@@ -2367,6 +2396,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
             422: components["responses"]["CategoryNotAvailable"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     updateRecurrenceFrom: {
@@ -2400,6 +2430,7 @@ export interface operations {
             404: components["responses"]["RecurrenceNotFound"];
             409: components["responses"]["StateConflict"];
             422: components["responses"]["CategoryNotAvailable"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     endRecurrence: {
@@ -2435,6 +2466,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["RecurrenceNotFound"];
             409: components["responses"]["StateConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     materializeRecurrences: {
@@ -2469,6 +2501,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getProjectionSeries: {
@@ -2498,6 +2531,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getCommitments: {
@@ -2528,6 +2562,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listCards: {
@@ -2553,6 +2588,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     createCard: {
@@ -2584,6 +2620,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
             409: components["responses"]["CardConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getCard: {
@@ -2610,6 +2647,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     updateCard: {
@@ -2642,6 +2680,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
             409: components["responses"]["CardConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     recordCardLimit: {
@@ -2673,6 +2712,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getCardInvoice: {
@@ -2701,6 +2741,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     setCardInvoiceDates: {
@@ -2734,6 +2775,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
             409: components["responses"]["StateConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     cancelInstallments: {
@@ -2777,6 +2819,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     payCardInvoice: {
@@ -2821,6 +2864,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     removeCardInvoicePayment: {
@@ -2857,6 +2901,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getCardLimits: {
@@ -2885,6 +2930,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listCardInvoices: {
@@ -2915,6 +2961,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["CardNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listTags: {
@@ -2940,6 +2987,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     createTag: {
@@ -2973,6 +3021,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
             409: components["responses"]["TagConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     deleteTag: {
@@ -3000,6 +3049,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TagNotFound"];
             409: components["responses"]["TagConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     updateTag: {
@@ -3036,6 +3086,7 @@ export interface operations {
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["TagNotFound"];
             409: components["responses"]["TagConflict"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getEvolution: {
@@ -3065,6 +3116,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getComparison: {
@@ -3093,6 +3145,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getBreakdown: {
@@ -3122,6 +3175,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     getDashboardPreferences: {
@@ -3147,6 +3201,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     saveDashboardPreferences: {
@@ -3180,6 +3235,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listInvitations: {
@@ -3205,6 +3261,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     createInvitation: {
@@ -3250,6 +3307,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     cancelInvitation: {
@@ -3291,6 +3349,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     previewInvitation: {
@@ -3323,6 +3382,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     acceptInvitation: {
@@ -3385,6 +3445,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listMembers: {
@@ -3410,6 +3471,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     removeMember: {
@@ -3453,6 +3515,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     changeMemberPermissions: {
@@ -3502,6 +3565,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     leaveSpace: {
@@ -3533,6 +3597,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     transferOwnership: {
@@ -3581,6 +3646,7 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
     listAuditEvents: {
@@ -3610,6 +3676,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
         };
     };
 }

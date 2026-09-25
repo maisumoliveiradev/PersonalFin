@@ -14,6 +14,7 @@ const server = buildServer({
   sessionResolver: createSessionResolver(auth),
   authHandler: auth.handler,
   data: createPostgresDataAccess(pool),
+  minClientVersion: config.minClientVersion,
 });
 
 server.addHook('onClose', async () => {

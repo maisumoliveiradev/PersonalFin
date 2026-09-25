@@ -7,6 +7,13 @@ info:
     sign-out, session) are served by Better Auth under /api/auth and are
     consumed through the Better Auth client; they are not part of this
     contract (ADR-0007).
+
+
+    Clients send their version in the X-Client-Version header
+    (MAJOR.MINOR.PATCH). When the operator configures a minimum client
+    version, every operation except /health answers
+    426 CLIENT_UPGRADE_REQUIRED to older or unversioned clients
+    (ADR-0016).
 security:
   - sessionCookie: []
 paths:
@@ -35,6 +42,8 @@ paths:
                 $ref: '#/components/schemas/CurrentUser'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
   /financial-spaces:
     get:
       operationId: listFinancialSpaces
@@ -48,6 +57,8 @@ paths:
                 $ref: '#/components/schemas/FinancialSpaceList'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
     post:
       operationId: createFinancialSpace
       summary: Create a Financial Space owned by the user
@@ -68,6 +79,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
   /financial-spaces/{spaceId}:
     parameters:
       - $ref: '#/components/parameters/SpaceId'
@@ -83,6 +96,8 @@ paths:
                 $ref: '#/components/schemas/FinancialSpace'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -106,6 +121,8 @@ paths:
                 $ref: '#/components/schemas/CategoryList'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -130,6 +147,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -171,6 +190,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -194,6 +215,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -286,6 +309,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -310,6 +335,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -332,6 +359,8 @@ paths:
                 $ref: '#/components/schemas/Transaction'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -361,6 +390,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -390,6 +421,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -420,6 +453,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -455,6 +490,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -479,6 +516,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -499,6 +538,8 @@ paths:
                 $ref: '#/components/schemas/BalanceReminder'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -523,6 +564,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -551,6 +594,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -570,6 +615,8 @@ paths:
                 $ref: '#/components/schemas/RecurrenceSeriesList'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -598,6 +645,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -632,6 +681,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -677,6 +728,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -721,6 +774,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -757,6 +812,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -799,6 +856,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -818,6 +877,8 @@ paths:
                 $ref: '#/components/schemas/CardList'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -843,6 +904,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -865,6 +928,8 @@ paths:
                 $ref: '#/components/schemas/Card'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -890,6 +955,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -924,6 +991,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -947,6 +1016,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -980,6 +1051,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1032,6 +1105,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1077,6 +1152,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1111,6 +1188,8 @@ paths:
                 $ref: '#/components/schemas/CardInvoice'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1148,6 +1227,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1185,6 +1266,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1204,6 +1287,8 @@ paths:
                 $ref: '#/components/schemas/TagList'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1236,6 +1321,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1284,6 +1371,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1305,6 +1394,8 @@ paths:
           description: Deleted.
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1343,6 +1434,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1371,6 +1464,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1414,6 +1509,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1434,6 +1531,8 @@ paths:
                 $ref: '#/components/schemas/DashboardPreferences'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1470,6 +1569,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1489,6 +1590,8 @@ paths:
                 $ref: '#/components/schemas/InvitationList'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1535,6 +1638,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1562,6 +1667,8 @@ paths:
           description: Cancelled.
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1595,6 +1702,8 @@ paths:
                 $ref: '#/components/schemas/InvitationPreview'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '404':
           description: INVITATION_NOT_FOUND.
           content:
@@ -1627,6 +1736,8 @@ paths:
                     format: uuid
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           description: INVITATION_EMAIL_MISMATCH.
           content:
@@ -1666,6 +1777,8 @@ paths:
                 $ref: '#/components/schemas/MemberList'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1707,6 +1820,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1736,6 +1851,8 @@ paths:
           description: Removed; audited.
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1761,6 +1878,8 @@ paths:
           description: Left; audited.
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
         '409':
@@ -1799,6 +1918,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1844,6 +1965,8 @@ paths:
           $ref: '#/components/responses/ValidationFailed'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
         '403':
           $ref: '#/components/responses/PermissionDenied'
         '404':
@@ -1894,6 +2017,14 @@ components:
         Session cookie issued by Better Auth. Native clients send the same
         cookie through the Cookie header.
   responses:
+    ClientUpgradeRequired:
+      description: >
+        The X-Client-Version header is missing, invalid, or lower than the
+        configured minimum client version (code CLIENT_UPGRADE_REQUIRED).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     TagNotFound:
       description: The tag does not exist in this space (code TAG_NOT_FOUND).
       content:

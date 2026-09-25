@@ -1,3 +1,5 @@
+import Constants from 'expo-constants';
+
 const HTTP_URL_PATTERN = /^https?:\/\/[^\s/]+/;
 
 function readApiUrl(): string {
@@ -10,3 +12,4 @@ function readApiUrl(): string {
 
 export const apiUrl = readApiUrl();
 export const APP_SCHEME = 'personalfin';
+export const clientVersion = Constants.expoConfig?.version ?? '0.0.0';

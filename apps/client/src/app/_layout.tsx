@@ -3,11 +3,14 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { queryClient } from '../api/query-client';
+import { useUpgradeRequired } from '../api/upgrade-required';
 import { authClient } from '../auth/auth-client';
+import { UpgradeRequiredScreen } from '../features/upgrade/UpgradeRequiredScreen';
 import { LoadingScreen } from '../ui/LoadingScreen';
 
 export default function RootLayout() {
   const { data: session, isPending } = authClient.useSession();
+  const upgradeRequired = useUpgradeRequired();
 
   if (isPending) {
     return <LoadingScreen />;
@@ -18,15 +21,19 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={isSignedIn}>
-          <Stack.Screen name="(app)" />
-        </Stack.Protected>
-        <Stack.Protected guard={!isSignedIn}>
-          <Stack.Screen name="sign-in" />
-          <Stack.Screen name="sign-up" />
-        </Stack.Protected>
-      </Stack>
+      {upgradeRequired ? (
+        <UpgradeRequiredScreen />
+      ) : (
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Protected guard={isSignedIn}>
+            <Stack.Screen name="(app)" />
+          </Stack.Protected>
+          <Stack.Protected guard={!isSignedIn}>
+            <Stack.Screen name="sign-in" />
+            <Stack.Screen name="sign-up" />
+          </Stack.Protected>
+        </Stack>
+      )}
     </QueryClientProvider>
   );
 }
