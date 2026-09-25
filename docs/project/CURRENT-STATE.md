@@ -139,6 +139,9 @@ from the v0.8.0 roadmap item are pending an owner decision.
     column mapping, per-row validation, duplicate review, confirmation,
     undo, discard, and history. The original file is stored (DR-096).
     There is no OFX and no saved mapping presets.
+-   **Exports (SDD-051):** CSV (pt-BR) and XLSX exports of the filtered
+    month's transactions, as a download on Web and through the share
+    sheet on native (DR-097).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -190,7 +193,7 @@ from the v0.8.0 roadmap item are pending an owner decision.
 ## Active Target
 
 `v0.9.0` --- Import, Export, and Data Portability
-(`docs/sdds/v0.9.0/README.md`, SDD-050 to SDD-054). SDD-050 implemented.
+(`docs/sdds/v0.9.0/README.md`, SDD-050 to SDD-054). SDD-050 and SDD-051 implemented.
 
 ## Important Constraint
 
@@ -199,7 +202,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Implement SDD-051 (exports). Owner
+Implement SDD-052 (PDF report). Owner
 decisions pending: push notifications (hosted push service) and
 invitation email delivery (TD-011). Domain decisions taken under
 delegation await owner review (`docs/sdds/v0.2.0/README.md` to

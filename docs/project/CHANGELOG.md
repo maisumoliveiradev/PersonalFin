@@ -6,6 +6,19 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### CSV and Excel Exports (SDD-051)
+
+-   "Exportar CSV" and "Exportar Excel" on the space screen export the
+    month's transactions with the filters applied.
+    - Columns: date, type, description, category, subcategory, amount,
+      signed amount, currency, status, tags, card, invoice, installment,
+      id.
+    - The CSV opens directly in Excel pt-BR. The XLSX has real date and
+      number cells.
+-   API: `GET .../exports/transactions?format=csv|xlsx` with the list
+    filters. New dependencies: `write-excel-file` (API) and
+    `expo-sharing` (client).
+
 ### CSV/Excel Import (SDD-050)
 
 -   "Importar planilha" reads a CSV (UTF-8 or Latin-1, detected
