@@ -971,6 +971,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+      - $ref: '#/components/parameters/InvoiceMonth'
+    post:
+      operationId: payCardInvoice
+      summary: Record a full or partial invoice payment
+      description: >
+        Settles already-recorded card expenses; it never creates an expense
+        (DR-036). The amount cannot exceed the open amount (DR-039). Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - amountMinor
+                - paidOn
+              properties:
+                amountMinor:
+                  $ref: '#/components/schemas/AmountMinor'
+                paidOn:
+                  $ref: '#/components/schemas/FinancialDate'
+      responses:
+        '201':
+          description: The invoice after the payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardInvoice'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
+        '422':
+          description: The invoice has no open amount this large (code PAYMENT_EXCEEDS_OUTSTANDING).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments/{paymentId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+      - $ref: '#/components/parameters/InvoiceMonth'
+      - name: paymentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: removeCardInvoicePayment
+      summary: Remove an invoice payment recorded by mistake
+      description: Soft-deletes the payment; audited.
+      responses:
+        '200':
+          description: The invoice after the removal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardInvoice'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: CARD_NOT_FOUND or INVOICE_PAYMENT_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     InvoiceMonth:
@@ -1623,6 +1698,7 @@ components:
         - cardId
         - cardName
         - invoiceMonth
+        - invoiceSettled
       properties:
         cardId:
           type: string
@@ -1631,6 +1707,9 @@ components:
           type: string
         invoiceMonth:
           type: string
+        invoiceSettled:
+          type: boolean
+          description: True when the invoice is fully paid; the purchase then counts as realized.
     CardInvoice:
       type: object
       additionalProperties: false
@@ -1644,6 +1723,10 @@ components:
         - closingDate
         - dueDate
         - totalMinor
+        - paidMinor
+        - outstandingMinor
+        - state
+        - payments
         - version
         - purchases
         - hasMore
@@ -1661,6 +1744,24 @@ components:
           type: integer
           minimum: 0
           description: Sum of the non-deleted purchases of the invoice.
+        paidMinor:
+          type: integer
+          minimum: 0
+          description: Sum of the payments of the invoice (never expenses, DR-036).
+        outstandingMinor:
+          type: integer
+          description: totalMinor - paidMinor; negative when purchases were removed after payment.
+        state:
+          type: string
+          enum:
+            - empty
+            - open
+            - partially_paid
+            - paid
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoicePayment'
         version:
           type:
             - integer
@@ -1672,6 +1773,25 @@ components:
             $ref: '#/components/schemas/Transaction'
         hasMore:
           type: boolean
+    InvoicePayment:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - amountMinor
+        - paidOn
+        - recordedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        paidOn:
+          $ref: '#/components/schemas/FinancialDate'
+        recordedAt:
+          type: string
+          format: date-time
     InvoiceDatesRequest:
       type: object
       additionalProperties: false
@@ -2139,8 +2259,8 @@ components:
       description: >
         M-008. amountMinor = base.amountMinor + (afterObservation.income -
         afterObservation.expenses) + (pendingUpToObservation.income -
-        pendingUpToObservation.expenses) - openInvoices. Card purchases enter
-        only through openInvoices. A calculation, never an observed
+        pendingUpToObservation.expenses) - openInvoices - invoicePayments.
+        Card purchases enter only through their invoices. A calculation, never an observed
         balance.
       required:
         - amountMinor
@@ -2148,6 +2268,7 @@ components:
         - afterObservation
         - pendingUpToObservation
         - openInvoices
+        - invoicePayments
       properties:
         amountMinor:
           type: integer
@@ -2168,7 +2289,12 @@ components:
           $ref: '#/components/schemas/FlowTotals'
         openInvoices:
           type: integer
-          description: Open amount of card invoices due before the end of the month.
+          description: >
+            Amount of card invoices due before the end of the month not
+            covered by payments dated before the end of the month.
+        invoicePayments:
+          type: integer
+          description: Invoice payments dated after the observation and before the end of the month.
     ProjectionSeries:
       type: object
       additionalProperties: false

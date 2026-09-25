@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { DataAccess } from '../../database/data-access.ts';
 import { requireAuthenticatedUser } from '../../http/authenticate.ts';
 import { parseInput } from '../../http/validation.ts';
+import { outstandingMinor } from '../cards/card-invoice.ts';
 import { requireAccessibleSpace } from '../financial-spaces/financial-space-access.ts';
 import { toTransactionResponse } from '../transactions/transaction-routes.ts';
 
@@ -47,7 +48,10 @@ export function registerCommitmentRoutes(server: FastifyInstance, data: DataAcce
           data.repositories.dashboard.pendingTotals({ financialSpaceId: space.id, ...range }),
           data.repositories.cardInvoices.listOpenDue(space.id, range),
         ]);
-        const invoiceTotal = invoices.reduce((total, invoice) => total + invoice.totalMinor, 0);
+        const invoiceTotal = invoices.reduce(
+          (total, invoice) => total + outstandingMinor(invoice),
+          0,
+        );
         return {
           items: [...page.items]
             .sort((left, right) => left.financialDate.localeCompare(right.financialDate))
@@ -57,7 +61,7 @@ export function registerCommitmentRoutes(server: FastifyInstance, data: DataAcce
             cardName: invoice.cardName,
             referenceMonth: invoice.referenceMonth,
             dueDate: invoice.dueDate,
-            amountMinor: invoice.totalMinor,
+            amountMinor: outstandingMinor(invoice),
           })),
           hasMore: page.nextCursor !== null,
           income: totals.income,

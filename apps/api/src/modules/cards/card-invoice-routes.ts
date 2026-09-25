@@ -1,5 +1,11 @@
 import type { CardInvoice as CardInvoiceResponse } from '@personalfin/api-contract';
-import { defaultInvoiceDates, isValidFinancialDate, isValidMonth } from '@personalfin/domain';
+import {
+  defaultInvoiceDates,
+  isValidAmountMinor,
+  isValidFinancialDate,
+  isValidMonth,
+  MAX_AMOUNT_MINOR,
+} from '@personalfin/domain';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
@@ -10,8 +16,13 @@ import { requireAccessibleSpace } from '../financial-spaces/financial-space-acce
 import { toTransactionResponse } from '../transactions/transaction-routes.ts';
 import type { Card } from './card.ts';
 import { CardNotFoundError } from './card-errors.ts';
-import type { CardInvoice } from './card-invoice.ts';
-import { updateInvoiceDates } from './card-invoice-management.ts';
+import { type CardInvoice, outstandingMinor } from './card-invoice.ts';
+import {
+  InvoicePaymentNotFoundError,
+  payInvoice,
+  removeInvoicePayment,
+  updateInvoiceDates,
+} from './card-invoice-management.ts';
 
 const PURCHASE_LIMIT = 200;
 
@@ -32,6 +43,25 @@ const invoiceDatesSchema = z
   .refine((input) => input.closingDate <= input.dueDate, {
     message: 'closingDate must be on or before dueDate',
   });
+
+const paymentSchema = z.strictObject({
+  amountMinor: z
+    .number()
+    .refine(isValidAmountMinor, `must be an integer between 1 and ${MAX_AMOUNT_MINOR}`),
+  paidOn: dateSchema,
+});
+
+const paymentParamsSchema = z.object({ paymentId: z.string() });
+
+function invoiceState(invoice: CardInvoice | null): CardInvoiceResponse['state'] {
+  if (invoice === null || invoice.totalMinor === 0) {
+    return 'empty';
+  }
+  if (invoice.paidMinor >= invoice.totalMinor) {
+    return 'paid';
+  }
+  return invoice.paidMinor > 0 ? 'partially_paid' : 'open';
+}
 
 export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAccess): void {
   async function requireCard(request: { params: unknown }, userId: string) {
@@ -66,12 +96,25 @@ export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAcc
             cursor: null,
           });
     const dates = invoice ?? defaultInvoiceDates(month, card);
+    const payments =
+      invoice === null
+        ? []
+        : await data.repositories.cardInvoices.listPayments(card.financialSpaceId, invoice.id);
     return {
       cardId: card.id,
       referenceMonth: month,
       closingDate: dates.closingDate,
       dueDate: dates.dueDate,
       totalMinor: invoice?.totalMinor ?? 0,
+      paidMinor: invoice?.paidMinor ?? 0,
+      outstandingMinor: invoice === null ? 0 : outstandingMinor(invoice),
+      state: invoiceState(invoice),
+      payments: payments.map((payment) => ({
+        id: payment.id,
+        amountMinor: payment.amountMinor,
+        paidOn: payment.paidOn,
+        recordedAt: payment.recordedAt.toISOString(),
+      })),
       version: invoice?.version ?? null,
       purchases: purchases.items.map(toTransactionResponse),
       hasMore: purchases.nextCursor !== null,
@@ -106,6 +149,44 @@ export function registerCardInvoiceRoutes(server: FastifyInstance, data: DataAcc
         expectedVersion: input.version,
         closingDate: input.closingDate,
         dueDate: input.dueDate,
+      });
+      return toResponse(card, month, invoice);
+    },
+  );
+
+  server.post(
+    '/financial-spaces/:spaceId/cards/:cardId/invoices/:month/payments',
+    async (request, reply): Promise<CardInvoiceResponse> => {
+      const user = requireAuthenticatedUser(request);
+      const { card, month } = await requireCard(request, user.id);
+      const input = parseInput(paymentSchema, request.body);
+      const invoice = await payInvoice(data, {
+        financialSpaceId: card.financialSpaceId,
+        cardId: card.id,
+        referenceMonth: month,
+        actorUserId: user.id,
+        ...input,
+      });
+      reply.status(201);
+      return toResponse(card, month, invoice);
+    },
+  );
+
+  server.delete(
+    '/financial-spaces/:spaceId/cards/:cardId/invoices/:month/payments/:paymentId',
+    async (request): Promise<CardInvoiceResponse> => {
+      const user = requireAuthenticatedUser(request);
+      const { card, month } = await requireCard(request, user.id);
+      const { paymentId } = parseInput(paymentParamsSchema, request.params);
+      if (!isUuid(paymentId)) {
+        throw new InvoicePaymentNotFoundError();
+      }
+      const invoice = await removeInvoicePayment(data, {
+        financialSpaceId: card.financialSpaceId,
+        cardId: card.id,
+        referenceMonth: month,
+        paymentId,
+        actorUserId: user.id,
       });
       return toResponse(card, month, invoice);
     },

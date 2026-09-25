@@ -208,6 +208,14 @@ card purchase linked to the original purchase. Cancelling future
 installments moves to the trash only the installments whose invoice is
 after a chosen invoice month; earlier installments are kept (DR-043).
 
+**DR-081** *(SDD-026; decided under delegation.)* Invoice payments are
+recorded against one invoice with an amount and a payment date; they
+never create expenses (DR-036) and cannot exceed the invoice's open
+amount. A payment recorded by mistake can be removed (soft delete,
+audited). An invoice is paid when its payments cover its total; its
+purchases then count as Realized. Cancelling installments keeps those in
+invoices that already have a payment.
+
 **DR-040** Interest/fees may be represented as separate expenses rather
 than inferred automatically.
 

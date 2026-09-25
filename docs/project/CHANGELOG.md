@@ -6,6 +6,18 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Invoice Payment (SDD-026)
+
+-   "Pagar fatura" on the invoice screen records full or partial
+    payments (never above the open amount); the invoice shows paid, open
+    amount, and state, and payments can be removed (audited, DR-081).
+-   Payments never create expenses (DR-036); purchases of a paid invoice
+    count as realized and show "(paga)".
+-   The projection subtracts the unpaid part of invoices and payments
+    after the observation; commitments list only open amounts.
+-   `POST`/`DELETE .../invoices/{month}/payments`; migration
+    `0016_invoice_payments`.
+
 ### Installment Purchases (SDD-025)
 
 -   Card purchases can be split into 2 to 48 installments ("Parcelas"),

@@ -51,7 +51,10 @@ export function createInMemoryRepositories() {
     (purchaseId) =>
       installments.purchases.find((purchase) => purchase.id === purchaseId)?.installmentCount ?? 0,
   );
-  const installments = createInMemoryInstallmentRepository(() => transactions.transactions);
+  const installments = createInMemoryInstallmentRepository(
+    () => transactions.transactions,
+    (invoiceId) => cardInvoices.hasPayment(invoiceId),
+  );
   const balanceSnapshots = createInMemoryBalanceSnapshotRepository();
   return {
     financialSpaces: createInMemoryFinancialSpaceRepository(),
@@ -63,8 +66,8 @@ export function createInMemoryRepositories() {
     dashboard: createInMemoryDashboardRepository(
       () => transactions.transactions,
       () => balanceSnapshots.snapshots,
-      (invoiceId) =>
-        cardInvoices.invoices.find((invoice) => invoice.id === invoiceId)?.dueDate ?? '9999-12-31',
+      (financialSpaceId, observedOn, endExclusive) =>
+        cardInvoices.flows(financialSpaceId, observedOn, endExclusive),
     ),
     balanceReminders: createInMemoryBalanceReminderRepository(),
     cards,
