@@ -181,3 +181,20 @@ implemented yet.
     invited email's account.
 -   **Resolution:** Owner chooses an email provider (and its cost
     limits); then add delivery behind the existing invitation flow.
+
+### TD-012 --- Local offline data is not encrypted by the app
+
+-   **Status:** Open
+-   **Priority:** Medium
+-   **Origin:** SDD-041
+-   **Reason:** Offline reading and queued changes (ADR-0016) store
+    financial data in AsyncStorage (native app sandbox) and
+    `localStorage` (Web). Encrypting it would need a key kept in secure
+    storage and a crypto dependency; the increment relies on the
+    operating system and browser isolation instead.
+-   **Impact:** Someone with access to an unlocked device, a rooted
+    device, or the browser profile can read cached financial data. The
+    cache is removed at sign-out and expires after 7 days.
+-   **Resolution:** Encrypt local documents with a per-user key stored in
+    `expo-secure-store` (native) and evaluate the Web threat model before
+    offering offline data on shared computers.

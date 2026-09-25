@@ -6,6 +6,18 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Offline Reading (SDD-041)
+
+-   Data already viewed stays available without a connection or when the
+    server cannot be reached. A banner shows "Sem conexão. Mostrando os
+    dados salvos neste aparelho."
+-   The local copy is saved per user with a versioned local schema
+    (FR-097). It is removed at sign-out and discarded after 7 days or
+    when the app version changes.
+-   New dependency `@react-native-async-storage/async-storage`. Client
+    unit tests (Vitest) for local storage logic. TD-012 (local data is
+    not encrypted by the app).
+
 ### Minimum Supported Client Version (SDD-040)
 
 -   Clients send their version (`X-Client-Version`). When the operator

@@ -23,7 +23,8 @@ The foundation should define:
 Location: `apps/client/src/ui`.
 
 -   **Color tokens** (`theme.ts`): `background`, `surface`, `text`,
-    `textMuted`, `border`, `primary`, `onPrimary`, `danger`, each with
+    `textMuted`, `border`, `primary`, `onPrimary`, `danger`, `success`,
+    `warning`, and `warningSurface` (offline banner, SDD-041), each with
     Light and Dark values. `usePalette()` follows the operating-system
     theme (user-selected theme is not implemented yet; TD-005).
 -   **Spacing:** `xs 4`, `sm 8`, `md 16`, `lg 24`, `xl 32`.
