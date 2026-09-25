@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: PersonalFin Application API
-  version: 0.9.0
+  version: 0.10.0
   description: >
     Application API contract. Authentication endpoints (sign-up, sign-in,
     sign-out, session) are served by Better Auth under /api/auth and are
@@ -3175,6 +3175,95 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '426':
           $ref: '#/components/responses/ClientUpgradeRequired'
+  /financial-spaces/{spaceId}/exchange-rates:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listExchangeRates
+      summary: List the manual exchange rates of the space (newest first)
+      parameters:
+        - name: currency
+          in: query
+          schema:
+            $ref: '#/components/schemas/ForeignCurrencyCode'
+      responses:
+        '200':
+          description: The rates.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeRateList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: recordExchangeRate
+      summary: Record a manual exchange rate (append-only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordExchangeRateRequest'
+      responses:
+        '201':
+          description: The recorded rate.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeRate'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/exchange-rates/latest:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getLatestExchangeRate
+      summary: The rate that applies on a date (latest on or before it)
+      parameters:
+        - name: currency
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ForeignCurrencyCode'
+        - name: on
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: The rate or null.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LatestExchangeRate'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     ImportId:
@@ -3264,6 +3353,9 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
     TransactionRejected:
       description: >
+        EXCHANGE_RATE_REQUIRED, EXCHANGE_RATE_INVALID, FOREIGN_AMOUNT_REQUIRED
+        (changing the base amount of a foreign transaction without foreign),
+        CONVERTED_AMOUNT_ZERO or CONVERTED_AMOUNT_TOO_LARGE,
         CATEGORY_NOT_AVAILABLE (category not usable for the type),
         TAG_NOT_AVAILABLE (tag missing or archived),
         CARD_NOT_AVAILABLE (missing or archived card), or
@@ -3361,6 +3453,103 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    CurrencyCode:
+      type: string
+      enum: [BRL, USD, EUR, GBP, ARS, CAD, CHF, CLP, JPY]
+    ForeignCurrencyCode:
+      type: string
+      enum: [USD, EUR, GBP, ARS, CAD, CHF, CLP, JPY]
+    ExchangeRateValue:
+      type: string
+      pattern: '^\d{1,9}(\.\d{1,10})?$'
+      description: Base-currency units per one unit of the foreign currency, as a decimal string (never a float).
+    OriginalAmount:
+      type: object
+      additionalProperties: false
+      required: [currency, amountMinor, rate, rateSource]
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        amountMinor:
+          type: integer
+          description: In the original currency's minor units.
+        rate:
+          $ref: '#/components/schemas/ExchangeRateValue'
+        rateSource:
+          type: string
+          enum: [manual, provider]
+    ForeignAmount:
+      type: object
+      additionalProperties: false
+      required: [currency, amountMinor]
+      description: >
+        Amount in a foreign currency. The API converts it to the base currency
+        with the given rate, or with the latest recorded rate on or before the
+        financial date (422 EXCHANGE_RATE_REQUIRED when none), rounding half away
+        from zero. Not allowed with installments.
+      properties:
+        currency:
+          $ref: '#/components/schemas/ForeignCurrencyCode'
+        amountMinor:
+          type: integer
+          minimum: 1
+        rate:
+          $ref: '#/components/schemas/ExchangeRateValue'
+    ExchangeRate:
+      type: object
+      additionalProperties: false
+      required: [id, currency, baseCurrency, rateDate, rate, source, recordedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        baseCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        rateDate:
+          type: string
+          format: date
+        rate:
+          $ref: '#/components/schemas/ExchangeRateValue'
+        source:
+          type: string
+          enum: [manual, provider]
+        recordedAt:
+          type: string
+          format: date-time
+    ExchangeRateList:
+      type: object
+      additionalProperties: false
+      required: [baseCurrency, items]
+      properties:
+        baseCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExchangeRate'
+    LatestExchangeRate:
+      type: object
+      additionalProperties: false
+      required: [rate]
+      properties:
+        rate:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/ExchangeRate'
+    RecordExchangeRateRequest:
+      type: object
+      additionalProperties: false
+      required: [currency, rateDate, rate]
+      properties:
+        currency:
+          $ref: '#/components/schemas/ForeignCurrencyCode'
+        rateDate:
+          type: string
+          format: date
+        rate:
+          $ref: '#/components/schemas/ExchangeRateValue'
     PortableBackup:
       type: object
       required: [format, formatVersion, exportedAt, user, spaces, globalGoals, globalGoalProgress]
@@ -4759,10 +4948,11 @@ components:
       required:
         - type
         - description
-        - amountMinor
         - financialDate
         - categoryId
       properties:
+        foreign:
+          $ref: '#/components/schemas/ForeignAmount'
         id:
           type: string
           format: uuid
@@ -4847,7 +5037,16 @@ components:
         - cardPurchase
         - installment
         - tags
+        - original
       properties:
+        original:
+          description: >
+            Original amount, currency, and applied exchange rate when the
+            transaction was recorded in a foreign currency; amountMinor is then
+            the converted base-currency amount (DR-004, DR-098).
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/OriginalAmount'
         id:
           type: string
           format: uuid
@@ -5507,6 +5706,11 @@ components:
       required:
         - version
       properties:
+        foreign:
+          description: A foreign amount to convert, or null to keep only the base amount.
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/ForeignAmount'
         version:
           type: integer
           minimum: 1

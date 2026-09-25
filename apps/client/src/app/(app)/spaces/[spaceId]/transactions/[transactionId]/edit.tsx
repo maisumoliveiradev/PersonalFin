@@ -85,6 +85,7 @@ export default function EditTransactionScreen() {
       : recurrences.data?.find((item) => item.id === current.recurrenceSeriesId);
   const canApplyToFollowing =
     online &&
+    current.original === null &&
     series !== undefined &&
     current.occurrenceDate !== null &&
     current.status === 'pending';
@@ -133,11 +134,15 @@ export default function EditTransactionScreen() {
           version: series.version,
           fromOccurrenceDate: current.occurrenceDate,
           description: request.description,
-          amountMinor: request.amountMinor,
+          amountMinor: request.amountMinor ?? current.amountMinor,
           categoryId: request.categoryId,
           subcategoryId: request.subcategoryId ?? null,
         });
         backToSpace('updated', current.financialDate);
+        return;
+      }
+      if (isOffline() && (request.foreign !== undefined || current.original !== null)) {
+        setScopeError(messages.currencies.offline);
         return;
       }
       if (isOffline()) {

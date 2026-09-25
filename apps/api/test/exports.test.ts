@@ -76,7 +76,7 @@ describe('transaction exports', () => {
     );
     const lines = response.body.replace(/^﻿/, '').trim().split('\r\n');
     expect(lines[0]).toBe(
-      'Data;Tipo;Descrição;Categoria;Subcategoria;Valor;Valor com sinal;Moeda;Situação;Tags;Cartão;Fatura;Parcela;ID',
+      'Data;Tipo;Descrição;Categoria;Subcategoria;Valor;Valor com sinal;Moeda;Situação;Tags;Cartão;Fatura;Parcela;ID;Moeda original;Valor original;Cotação',
     );
     expect(lines).toHaveLength(3);
     expect(lines[1]).toMatch(

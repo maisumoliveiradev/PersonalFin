@@ -5,16 +5,23 @@ import type {
   Tag,
 } from '@personalfin/api-contract';
 import {
+  CURRENCY_CODES,
+  type CurrencyCode,
   candidateInvoiceMonths,
+  convertToBase,
+  DEFAULT_CURRENCY,
   DEFAULT_TRANSACTION_STATUS,
   defaultInvoiceMonth,
   type FinancialDate,
   financialDateFromLocalClock,
   formatDisplayDate,
+  formatMoney,
   formatMonthLabel,
   type Month,
   type NonBusinessDayRule,
+  parseAmountInput,
   parseDisplayDate,
+  parseRateInput,
   type RecurrenceFrequency,
   type TransactionStatus,
   type TransactionType,
@@ -65,6 +72,12 @@ function describeSubmitError(error: Error): string {
   if (error instanceof ApiRequestError && error.code === 'CATEGORY_NOT_AVAILABLE') {
     return messages.transactions.errors.categoryNotAvailable;
   }
+  if (error instanceof ApiRequestError && error.code === 'EXCHANGE_RATE_REQUIRED') {
+    return messages.currencies.errors.rateRequired;
+  }
+  if (error instanceof ApiRequestError && error.code === 'FOREIGN_AMOUNT_REQUIRED') {
+    return messages.currencies.errors.requiresForeign;
+  }
   if (error instanceof ApiRequestError && error.code === 'VERSION_CONFLICT') {
     return messages.transactions.errors.versionConflict;
   }
@@ -84,6 +97,8 @@ export function emptyTransactionFormValues(): TransactionFormValues {
     invoiceMonth: null,
     installments: '1',
     tagIds: [],
+    currency: DEFAULT_CURRENCY,
+    rate: '',
   };
 }
 
@@ -161,6 +176,28 @@ export function TransactionForm({
   const [chosenInvoice, setChosenInvoice] = useState<Month | null>(initialValues.invoiceMonth);
   const [installments, setInstallments] = useState(initialValues.installments);
   const [tagIds, setTagIds] = useState<string[]>(initialValues.tagIds);
+  const [currency, setCurrency] = useState<CurrencyCode>(initialValues.currency);
+  const [rate, setRate] = useState(initialValues.rate);
+  const foreign = currency !== DEFAULT_CURRENCY;
+  const converted = (() => {
+    if (!foreign) {
+      return null;
+    }
+    const parsedAmount = parseAmountInput(amount, currency, 'pt-BR');
+    const parsedRate = parseRateInput(rate, ',');
+    if (!parsedAmount.ok || !parsedRate.ok) {
+      return null;
+    }
+    const result = convertToBase(
+      parsedAmount.amountMinor,
+      currency,
+      parsedRate.rate,
+      DEFAULT_CURRENCY,
+    );
+    return result.ok
+      ? formatMoney({ amountMinor: result.amountMinor, currency: DEFAULT_CURRENCY }, 'pt-BR')
+      : null;
+  })();
   const tagOptions = tags
     .filter((tag) => !tag.archived || initialValues.tagIds.includes(tag.id))
     .map((tag) => ({ value: tag.id, label: tag.name }));
@@ -228,9 +265,15 @@ export function TransactionForm({
       invoiceMonth,
       installments,
       tagIds,
+      currency,
+      rate,
     });
     if (!result.ok) {
       setValidationError(result.error);
+      return;
+    }
+    if (repeat !== NO_REPEAT && foreign) {
+      setValidationError(messages.currencies.errors.noRecurrence);
       return;
     }
     if (repeat === NO_REPEAT) {
@@ -274,14 +317,35 @@ export function TransactionForm({
         onChangeText={setDescription}
         maxLength={140}
       />
+      <OptionGroup
+        label={messages.currencies.label}
+        options={CURRENCY_CODES.map((code) => ({
+          value: code,
+          label: messages.currencies.names[code] ?? code,
+        }))}
+        selected={currency}
+        onSelect={setCurrency}
+      />
       <TextField
-        label={messages.transactions.amountLabel}
+        label={
+          foreign ? messages.currencies.amountLabel(currency) : messages.transactions.amountLabel
+        }
         value={amount}
         onChangeText={setAmount}
         placeholder={messages.transactions.amountPlaceholder}
         inputMode="decimal"
         keyboardType="decimal-pad"
       />
+      {foreign && (
+        <TextField
+          label={messages.currencies.rateLabel(currency)}
+          hint={messages.currencies.rateHint}
+          value={rate}
+          onChangeText={setRate}
+          inputMode="decimal"
+        />
+      )}
+      {converted !== null && <BodyText muted>{messages.currencies.preview(converted)}</BodyText>}
       <TextField
         label={messages.transactions.dateLabel}
         hint={messages.transactions.dateHint}
@@ -334,7 +398,7 @@ export function TransactionForm({
           onSelect={setChosenInvoice}
         />
       )}
-      {isCardPurchase && allowInstallments && (
+      {isCardPurchase && allowInstallments && !foreign && (
         <TextField
           label={messages.cards.installmentsLabel}
           hint={messages.cards.installmentsHint}
@@ -344,7 +408,7 @@ export function TransactionForm({
           maxLength={2}
         />
       )}
-      {allowRecurrence && !isCardPurchase && (
+      {allowRecurrence && !isCardPurchase && !foreign && (
         <OptionGroup
           label={messages.recurrences.repeatLabel}
           options={REPEAT_OPTIONS}

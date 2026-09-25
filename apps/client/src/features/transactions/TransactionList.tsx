@@ -1,4 +1,5 @@
 import type { Transaction } from '@personalfin/api-contract';
+import { formatMoney, formatRate } from '@personalfin/domain';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -86,6 +87,18 @@ export function TransactionRow({
               transaction.tags.length === 0
                 ? null
                 : transaction.tags.map((tag) => `#${tag.name}`).join(' '),
+              transaction.original === null
+                ? null
+                : messages.currencies.original(
+                    formatMoney(
+                      {
+                        amountMinor: transaction.original.amountMinor,
+                        currency: transaction.original.currency,
+                      },
+                      'pt-BR',
+                    ),
+                    formatRate(transaction.original.rate, ','),
+                  ),
             ]
               .filter((part): part is string => part !== null)
               .join(' · ')}

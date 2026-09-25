@@ -5,6 +5,7 @@ export * from './client-version.ts';
 export * from './comparison.ts';
 export * from './dashboard-preferences.ts';
 export * from './debt.ts';
+export * from './exchange-rate.ts';
 export * from './financial-date.ts';
 export * from './goal.ts';
 export * from './import.ts';

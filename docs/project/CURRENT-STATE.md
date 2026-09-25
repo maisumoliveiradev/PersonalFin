@@ -2,10 +2,11 @@
 
 ## Current Version
 
-`v0.9.0`, released on 2026-09-25 (`main`, tag `v0.9.0`). SDD-001 to
-SDD-054 implemented and validated
-(`docs/sdds/v0.9.0/SDD-054-validation-report.md`). Push notifications
-(v0.8.0 roadmap item) are pending an owner decision.
+`v0.10.0`, released on 2026-09-25 (`main`, tag `v0.10.0`). SDD-001 to
+SDD-056 implemented and validated
+(`docs/sdds/v0.10.0/SDD-056-validation-report.md`). Pending owner
+decisions: push notifications (v0.8.0), automatic exchange rates
+(v0.10.0), invitation email (TD-011).
 
 ## Implemented Product Capabilities
 
@@ -147,6 +148,11 @@ SDD-054 implemented and validated
 -   **Portable backup (SDD-053):** a versioned JSON download of all
     accessible data, excluding other people's personal data and imported
     file bytes. There is no restore.
+-   **Multi-currency (SDD-055):** foreign-currency transactions (8
+    currencies) with the original amount, currency, and applied rate
+    preserved, and exact conversion to BRL (ADR-0017, DR-098). Manual
+    append-only rates. There are no automatic rates (pending owner
+    decision), and the base currency is fixed to BRL (TD-013).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -173,7 +179,7 @@ SDD-054 implemented and validated
         month, balance-reminder, business-day, card, comparison, dashboard-preference, and client-version rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
-    checksum verification (ADR-0008), `0001` to `0026`. Tables: Better
+    checksum verification (ADR-0008), `0001` to `0027`. Tables: Better
     Auth `user`, `session`, `account`, `verification`; `financial_space`,
     `financial_space_member`, `space_invitation`, `category`,
     `financial_transaction`, `transaction_tag`, `tag`, `audit_event`,
@@ -181,7 +187,7 @@ SDD-054 implemented and validated
     `card`, `card_limit_change`, `card_invoice`, `card_invoice_payment`,
     `card_installment_purchase`, `dashboard_preference`, `debt`,
     `debt_payment`, `goal`, `goal_progress`, `reminder_setting`,
-    `reminder_dismissal`, `import_batch`, `import_row`; view
+    `reminder_dismissal`, `import_batch`, `import_row`, `exchange_rate`; view
     `card_invoice_balance`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
@@ -197,8 +203,8 @@ SDD-054 implemented and validated
 
 ## Active Target
 
-`v0.10.0` --- Multi-Currency (`docs/product/ROADMAP.md`). No SDD drafted
-yet.
+`v0.11.0` --- Documents and OCR (`docs/product/ROADMAP.md`). No SDD
+drafted yet.
 
 ## Important Constraint
 
@@ -207,8 +213,8 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.10.0 SDDs (Multi-Currency). Owner decisions pending: FX
+Draft the v0.11.0 SDDs (Documents and OCR). Owner decisions pending: FX
 rate provider, push notifications (hosted push service), and invitation
 email delivery (TD-011). Domain decisions taken under delegation await
 owner review (`docs/sdds/v0.2.0/README.md` to
-`docs/sdds/v0.9.0/README.md`, DR-072 to DR-097, ADR-0013 to ADR-0016).
+`docs/sdds/v0.10.0/README.md`, DR-072 to DR-098, ADR-0013 to ADR-0017).

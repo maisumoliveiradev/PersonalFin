@@ -36,6 +36,7 @@ const transaction: Transaction = {
     { id: 'tag-b', name: 'B' },
     { id: 'tag-a', name: 'A' },
   ],
+  original: null,
 };
 
 function entry(id: string, transactionId: string, state: OutboxEntry['state'] = 'pending') {

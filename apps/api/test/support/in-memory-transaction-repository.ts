@@ -43,10 +43,12 @@ export function createInMemoryTransactionRepository(
         cardInvoiceId,
         installment,
         importBatchId: _importBatchId,
+        original,
         ...rest
       } = transaction;
       const created: FinancialTransaction = {
         ...rest,
+        original: original ?? null,
         installment:
           installment === undefined
             ? null
@@ -86,8 +88,29 @@ export function createInMemoryTransactionRepository(
       ) {
         return null;
       }
-      const { categoryId, subcategoryId, cardInvoiceId, ...rest } = fields;
+      const {
+        categoryId,
+        subcategoryId,
+        cardInvoiceId,
+        originalCurrency,
+        originalAmountMinor,
+        fxRate,
+        fxRateSource,
+        ...rest
+      } = fields;
       Object.assign(current, rest, {
+        original:
+          originalCurrency === null ||
+          originalAmountMinor === null ||
+          fxRate === null ||
+          fxRateSource === null
+            ? null
+            : {
+                currency: originalCurrency,
+                amountMinor: originalAmountMinor,
+                rate: fxRate,
+                rateSource: fxRateSource,
+              },
         cardPurchase: cardInvoiceId === null ? null : cardPurchase(cardInvoiceId),
         individuallyModified: current.individuallyModified || current.recurrenceSeriesId !== null,
         category: reference(categoryId),

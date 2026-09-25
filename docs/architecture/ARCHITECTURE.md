@@ -14,7 +14,8 @@ architecture), ADR-0013 (versioned browser journeys), ADR-0014
 model, superseding ADR-0010), ADR-0011
 (money and financial date formats, shared domain package), ADR-0012
 (audit log and optimistic concurrency), ADR-0016 (offline persistence,
-synchronization, and minimum client version).
+synchronization, and minimum client version), ADR-0017 (multi-currency
+representation).
 
 ## Repository structure
 
@@ -343,6 +344,19 @@ their emails, other people's settings) and imported file bytes (only the
 SHA-256 is kept). The table list is a closed constant, so no SQL is
 built from input. Restore is a later roadmap item; a format version
 change must keep older backups readable.
+
+## Multi-currency (ADR-0017, SDD-055)
+
+`financial_transaction.amount_minor` stays in BRL. A foreign transaction
+also stores `original_amount_minor`, `original_currency`, `fx_rate`
+(`numeric(19,10)`), and `fx_rate_source`.
+- `modules/exchange-rates/foreign-amount.ts` resolves the rate: the
+  given one, or the latest in the append-only `exchange_rate` table on
+  or before the date.
+- It converts with the domain function `convertToBase` (BigInt, half
+  away from zero).
+- Rates are decimal strings end to end.
+- Exports add the original currency, amount, and rate columns.
 
 ## Offline reading (ADR-0016, SDD-041)
 

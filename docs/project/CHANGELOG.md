@@ -6,6 +6,28 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.10.0\] --- 2026-09-25
+
+Multi-Currency. Released to `main` and tagged `v0.10.0`; validated in
+SDD-056 (`docs/sdds/v0.10.0/SDD-056-validation-report.md`). Automatic
+rates are pending an owner decision.
+
+### Foreign-Currency Transactions (SDD-055)
+
+-   Transactions can be recorded in USD, EUR, GBP, ARS, CAD, CHF, CLP,
+    or JPY.
+    - The form shows the amount in the chosen currency, an optional rate,
+      and the converted value in reais.
+    - Without a rate, the latest one recorded in "Cotações" up to the
+      date is used. If there is none, the app asks for one.
+-   The original amount, currency, and applied rate are kept and shown
+    on the list. Recording new rates never changes past transactions.
+    Metrics keep using the amount in reais (ADR-0017, DR-098).
+-   "Cotações" keeps an append-only history of manual rates.
+-   Exports include the original amount, currency, and rate.
+-   Migration `0027_multi_currency`. Automatic rates need an owner
+    decision on a provider. The base currency stays BRL (TD-013).
+
 ## \[0.9.0\] --- 2026-09-25
 
 Import, Export, and Data Portability. Released to `main` and tagged
