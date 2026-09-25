@@ -6,6 +6,11 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.6.0\] --- 2026-09-25
+
+Collaboration. Released to `main` and tagged `v0.6.0`; validated in
+SDD-039 (`docs/sdds/v0.6.0/SDD-039-validation-report.md`).
+
 ### Space Audit History (SDD-038)
 
 -   "Histórico de alterações": members with `view_audit` see who created,
