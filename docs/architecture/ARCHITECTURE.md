@@ -32,7 +32,8 @@ apps/
     src/http/        Authentication hook, input validation, error contract
     src/modules/     Domain modules (financial-spaces/, categories/,
                      transactions/, audit/, balance/, dashboard/,
-                     recurrences/, cards/, tags/, analytics/):
+                     recurrences/, cards/, tags/, analytics/,
+                     preferences/):
                      domain types, use cases, repository ports,
                      PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)

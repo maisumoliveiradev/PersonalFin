@@ -1,4 +1,7 @@
-import type { MonthlyDashboard as MonthlyDashboardData } from '@personalfin/api-contract';
+import type {
+  DashboardSections,
+  MonthlyDashboard as MonthlyDashboardData,
+} from '@personalfin/api-contract';
 import {
   formatDisplayDate,
   formatMoney,
@@ -35,9 +38,10 @@ function MetricRow({ label, value, color }: { label: string; value: string; colo
 interface MonthlyDashboardProps {
   spaceId: string;
   month: Month;
+  sections: DashboardSections;
 }
 
-export function MonthlyDashboard({ spaceId, month }: MonthlyDashboardProps) {
+export function MonthlyDashboard({ spaceId, month, sections }: MonthlyDashboardProps) {
   const palette = usePalette();
   const dashboard = useMonthlyDashboard(spaceId, month);
 
@@ -58,111 +62,128 @@ export function MonthlyDashboard({ spaceId, month }: MonthlyDashboardProps) {
       style={[styles.card, { borderColor: palette.border, backgroundColor: palette.surface }]}
     >
       <SectionTitle>{messages.dashboard.title}</SectionTitle>
-      <MetricRow
-        label={messages.dashboard.realizedIncome}
-        value={money(data, data.realizedIncome)}
-        color={palette.success}
-      />
-      <MetricRow
-        label={messages.dashboard.realizedExpenses}
-        value={money(data, data.realizedExpenses)}
-      />
-      <MetricRow
-        label={messages.dashboard.realizedNet}
-        value={money(data, data.realizedNet)}
-        color={data.realizedNet < 0 ? palette.danger : palette.success}
-      />
-      <Text style={[styles.subheading, { color: palette.text }]}>
-        {messages.dashboard.forecastTitle}
-      </Text>
-      <MetricRow
-        label={messages.dashboard.forecastIncome}
-        value={money(data, data.forecastIncome)}
-      />
-      <MetricRow
-        label={messages.dashboard.forecastExpenses}
-        value={money(data, data.forecastExpenses)}
-      />
-      <Text style={[styles.subheading, { color: palette.text }]}>
-        {messages.dashboard.byCategoryTitle}
-      </Text>
-      {data.realizedExpensesByCategory.length === 0 && (
-        <BodyText muted>{messages.dashboard.noExpenses}</BodyText>
+      {sections.realized && (
+        <>
+          <MetricRow
+            label={messages.dashboard.realizedIncome}
+            value={money(data, data.realizedIncome)}
+            color={palette.success}
+          />
+          <MetricRow
+            label={messages.dashboard.realizedExpenses}
+            value={money(data, data.realizedExpenses)}
+          />
+          <MetricRow
+            label={messages.dashboard.realizedNet}
+            value={money(data, data.realizedNet)}
+            color={data.realizedNet < 0 ? palette.danger : palette.success}
+          />
+        </>
       )}
-      {data.realizedExpensesByCategory.map((category) => (
-        <View key={category.categoryId} style={styles.categoryRow}>
-          <MetricRow label={category.name} value={money(data, category.amountMinor)} />
-          <View style={[styles.barTrack, { backgroundColor: palette.background }]}>
-            <View
-              style={[
-                styles.bar,
-                {
-                  backgroundColor: palette.primary,
-                  width: `${largestCategory === 0 ? 0 : (category.amountMinor / largestCategory) * 100}%`,
-                },
-              ]}
-            />
-          </View>
-        </View>
-      ))}
-      {isPastMonth && (
+      {sections.forecast && (
         <>
           <Text style={[styles.subheading, { color: palette.text }]}>
-            {messages.dashboard.monthEndBalance}
+            {messages.dashboard.forecastTitle}
           </Text>
-          {data.observedBalance === null ? (
-            <BodyText muted>{messages.dashboard.noMonthEndBalance}</BodyText>
-          ) : (
-            <MetricRow
-              label={messages.dashboard.monthEndBalanceDate(
-                formatDisplayDate(data.observedBalance.observedOn, 'pt-BR'),
+          <MetricRow
+            label={messages.dashboard.forecastIncome}
+            value={money(data, data.forecastIncome)}
+          />
+          <MetricRow
+            label={messages.dashboard.forecastExpenses}
+            value={money(data, data.forecastExpenses)}
+          />
+        </>
+      )}
+      {sections.realized && (
+        <>
+          <Text style={[styles.subheading, { color: palette.text }]}>
+            {messages.dashboard.byCategoryTitle}
+          </Text>
+          {data.realizedExpensesByCategory.length === 0 && (
+            <BodyText muted>{messages.dashboard.noExpenses}</BodyText>
+          )}
+          {data.realizedExpensesByCategory.map((category) => (
+            <View key={category.categoryId} style={styles.categoryRow}>
+              <MetricRow label={category.name} value={money(data, category.amountMinor)} />
+              <View style={[styles.barTrack, { backgroundColor: palette.background }]}>
+                <View
+                  style={[
+                    styles.bar,
+                    {
+                      backgroundColor: palette.primary,
+                      width: `${largestCategory === 0 ? 0 : (category.amountMinor / largestCategory) * 100}%`,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+          ))}
+          {isPastMonth && (
+            <>
+              <Text style={[styles.subheading, { color: palette.text }]}>
+                {messages.dashboard.monthEndBalance}
+              </Text>
+              {data.observedBalance === null ? (
+                <BodyText muted>{messages.dashboard.noMonthEndBalance}</BodyText>
+              ) : (
+                <MetricRow
+                  label={messages.dashboard.monthEndBalanceDate(
+                    formatDisplayDate(data.observedBalance.observedOn, 'pt-BR'),
+                  )}
+                  value={money(data, data.observedBalance.amountMinor)}
+                />
               )}
-              value={money(data, data.observedBalance.amountMinor)}
-            />
+            </>
           )}
         </>
       )}
-      <Text style={[styles.subheading, { color: palette.text }]}>
-        {messages.dashboard.projectionTitle}
-      </Text>
-      {data.projection === null ? (
-        <BodyText muted>{messages.dashboard.noProjection}</BodyText>
-      ) : (
+      {sections.projection && (
         <>
-          <MetricRow
-            label={messages.dashboard.projectionBase(
-              formatDisplayDate(data.projection.base.observedOn, 'pt-BR'),
-            )}
-            value={money(data, data.projection.base.amountMinor)}
-          />
-          <MetricRow
-            label={messages.dashboard.projectionAfter}
-            value={money(
-              data,
-              data.projection.afterObservation.income - data.projection.afterObservation.expenses,
-            )}
-          />
-          <MetricRow
-            label={messages.dashboard.projectionPending}
-            value={money(
-              data,
-              data.projection.pendingUpToObservation.income -
-                data.projection.pendingUpToObservation.expenses,
-            )}
-          />
-          <MetricRow
-            label={messages.dashboard.projectionInvoices}
-            value={money(data, -data.projection.openInvoices)}
-          />
-          <MetricRow
-            label={messages.dashboard.projectionInvoicePayments}
-            value={money(data, -data.projection.invoicePayments)}
-          />
-          <MetricRow
-            label={messages.dashboard.projectedBalance}
-            value={money(data, data.projection.amountMinor)}
-            color={data.projection.amountMinor < 0 ? palette.danger : palette.primary}
-          />
+          <Text style={[styles.subheading, { color: palette.text }]}>
+            {messages.dashboard.projectionTitle}
+          </Text>
+          {data.projection === null ? (
+            <BodyText muted>{messages.dashboard.noProjection}</BodyText>
+          ) : (
+            <>
+              <MetricRow
+                label={messages.dashboard.projectionBase(
+                  formatDisplayDate(data.projection.base.observedOn, 'pt-BR'),
+                )}
+                value={money(data, data.projection.base.amountMinor)}
+              />
+              <MetricRow
+                label={messages.dashboard.projectionAfter}
+                value={money(
+                  data,
+                  data.projection.afterObservation.income -
+                    data.projection.afterObservation.expenses,
+                )}
+              />
+              <MetricRow
+                label={messages.dashboard.projectionPending}
+                value={money(
+                  data,
+                  data.projection.pendingUpToObservation.income -
+                    data.projection.pendingUpToObservation.expenses,
+                )}
+              />
+              <MetricRow
+                label={messages.dashboard.projectionInvoices}
+                value={money(data, -data.projection.openInvoices)}
+              />
+              <MetricRow
+                label={messages.dashboard.projectionInvoicePayments}
+                value={money(data, -data.projection.invoicePayments)}
+              />
+              <MetricRow
+                label={messages.dashboard.projectedBalance}
+                value={money(data, data.projection.amountMinor)}
+                color={data.projection.amountMinor < 0 ? palette.danger : palette.primary}
+              />
+            </>
+          )}
         </>
       )}
       <BodyText muted>{messages.dashboard.definitionsHint}</BodyText>

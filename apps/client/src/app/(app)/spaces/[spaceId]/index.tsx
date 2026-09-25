@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { useCategories } from '../../../../api/categories';
 import { useFinancialSpace } from '../../../../api/financial-spaces';
+import { ALL_SECTIONS, useDashboardPreferences } from '../../../../api/preferences';
 import { useMaterializeRecurrences } from '../../../../api/recurrences';
 import { useTags } from '../../../../api/tags';
 import { BalanceSummary } from '../../../../features/balance/BalanceSummary';
@@ -42,6 +43,8 @@ export default function FinancialSpaceHomeScreen() {
   const space = useFinancialSpace(spaceId);
   const categories = useCategories(spaceId);
   const tags = useTags(spaceId);
+  const preferences = useDashboardPreferences(spaceId);
+  const sections = preferences.data?.sections ?? ALL_SECTIONS;
   const materializeRecurrences = useMaterializeRecurrences(spaceId);
   const [optionalFilters, setOptionalFilters] = useState<OptionalFilters>({});
   const [showFilters, setShowFilters] = useState(false);
@@ -89,7 +92,7 @@ export default function FinancialSpaceHomeScreen() {
         <StatusMessage>{messages.recurrences.created(Number(params.count ?? 0))}</StatusMessage>
       )}
       <BalanceUpdatePrompt spaceId={space.data.id} />
-      <BalanceSummary spaceId={space.data.id} />
+      {sections.observedBalance && <BalanceSummary spaceId={space.data.id} />}
       <Button
         label={messages.transactions.newAction}
         onPress={() =>
@@ -100,8 +103,10 @@ export default function FinancialSpaceHomeScreen() {
         month={month}
         onChange={(nextMonth) => changeFilters({ ...filters, month: nextMonth })}
       />
-      <MonthlyDashboard spaceId={space.data.id} month={month} />
-      <ProjectionSeries spaceId={space.data.id} fromMonth={month} />
+      {(sections.realized || sections.forecast || sections.projection) && (
+        <MonthlyDashboard spaceId={space.data.id} month={month} sections={sections} />
+      )}
+      {sections.projectionSeries && <ProjectionSeries spaceId={space.data.id} fromMonth={month} />}
       <SectionTitle>{messages.transactions.listTitle}</SectionTitle>
       <Button
         label={
@@ -135,20 +140,24 @@ export default function FinancialSpaceHomeScreen() {
           router.push({ pathname: '/spaces/[spaceId]/trash', params: { spaceId, month } })
         }
       />
-      <Button
-        label={messages.commitments.action}
-        variant="link"
-        onPress={() =>
-          router.push({ pathname: '/spaces/[spaceId]/commitments', params: { spaceId } })
-        }
-      />
-      <Button
-        label={messages.analytics.action}
-        variant="link"
-        onPress={() =>
-          router.push({ pathname: '/spaces/[spaceId]/analytics', params: { spaceId, month } })
-        }
-      />
+      {sections.commitments && (
+        <Button
+          label={messages.commitments.action}
+          variant="link"
+          onPress={() =>
+            router.push({ pathname: '/spaces/[spaceId]/commitments', params: { spaceId } })
+          }
+        />
+      )}
+      {sections.analytics && (
+        <Button
+          label={messages.analytics.action}
+          variant="link"
+          onPress={() =>
+            router.push({ pathname: '/spaces/[spaceId]/analytics', params: { spaceId, month } })
+          }
+        />
+      )}
       <Button
         label={messages.cards.action}
         variant="link"
@@ -159,6 +168,13 @@ export default function FinancialSpaceHomeScreen() {
         variant="link"
         onPress={() =>
           router.push({ pathname: '/spaces/[spaceId]/recurrences', params: { spaceId } })
+        }
+      />
+      <Button
+        label={messages.preferences.action}
+        variant="link"
+        onPress={() =>
+          router.push({ pathname: '/spaces/[spaceId]/dashboard-preferences', params: { spaceId } })
         }
       />
       <Button
