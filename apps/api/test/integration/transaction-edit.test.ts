@@ -118,3 +118,31 @@ describe('transaction edit persistence', () => {
     await expect(pool.query('DELETE FROM audit_event')).rejects.toThrow(/append-only/);
   });
 });
+
+describe('offline sync context persistence', () => {
+  it('stores and returns the sync context of an audited edit', async () => {
+    const { userId, spaceId, transaction } = await setUp();
+
+    await updateTransaction(data, {
+      financialSpaceId: spaceId,
+      transactionId: transaction.id,
+      actorUserId: userId,
+      expectedVersion: 1,
+      changes: { description: 'Supermercado' },
+      syncContext: { source: 'offline_sync', resolution: 'chose_fields', baseVersion: 1 },
+    });
+
+    const [event] = await data.repositories.audit.listForEntity(
+      spaceId,
+      'financial_transaction',
+      transaction.id,
+    );
+    expect(event?.context).toEqual({
+      source: 'offline_sync',
+      resolution: 'chose_fields',
+      baseVersion: 1,
+    });
+    const page = await data.repositories.audit.listForSpace(spaceId, 10, null);
+    expect(page.items[0]?.context).toEqual(event?.context);
+  });
+});

@@ -2,7 +2,7 @@ import type { Month } from '@personalfin/domain';
 
 import type { DataAccess } from '../../database/data-access.ts';
 import { AppError, NotFoundError } from '../../http/errors.ts';
-import { diffFields } from '../audit/audit-event.ts';
+import { type AuditContext, diffFields } from '../audit/audit-event.ts';
 import {
   InvalidCardPurchaseError,
   resolvePurchaseInvoice,
@@ -23,6 +23,7 @@ export interface UpdateTransactionInput {
   changes: Partial<Omit<TransactionFields, 'cardInvoiceId'>>;
   invoiceMonth?: Month;
   tagIds?: readonly string[];
+  syncContext?: AuditContext;
 }
 
 export class TransactionNotFoundError extends NotFoundError {
@@ -137,6 +138,7 @@ export async function updateTransaction(
       action: 'update',
       actorUserId: input.actorUserId,
       changes,
+      context: input.syncContext ?? null,
     });
     if (changes.tagIds === undefined) {
       return updated;

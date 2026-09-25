@@ -67,6 +67,41 @@ export const messages = {
       TRANSACTION_ID_CONFLICT: 'O identificador deste lançamento já está em uso.',
     } as Record<string, string>,
     unknownError: 'O servidor recusou a alteração.',
+    conflict: {
+      fieldsIntro:
+        'Este lançamento foi alterado em outro lugar enquanto você estava sem conexão. Escolha o valor de cada campo:',
+      fieldChoice: (field: string) => `${field}: qual valor manter?`,
+      mine: (value: string) => `Minha versão: ${value}`,
+      theirs: (value: string) => `Versão atual: ${value}`,
+      independentNote: 'Os outros campos que você alterou serão aplicados junto.',
+      applyAction: 'Aplicar escolhas',
+      editDeletedIntro:
+        'Este lançamento foi excluído em outro lugar enquanto você o editava sem conexão.',
+      restoreAction: 'Restaurar e aplicar minha alteração',
+      discardEditAction: 'Descartar minha alteração',
+      deleteEditedIntro:
+        'Este lançamento foi alterado em outro lugar depois que você o excluiu sem conexão:',
+      change: (field: string, before: string, after: string) => `${field}: ${before} → ${after}`,
+      deleteAnywayAction: 'Excluir mesmo assim',
+      keepRecordAction: 'Manter o lançamento',
+      failed: 'Não foi possível resolver agora. Verifique a conexão e tente novamente.',
+      reopened:
+        'O lançamento mudou de novo. Os dados foram atualizados; confira e escolha outra vez.',
+      empty: '—',
+      noTags: 'Nenhuma',
+      fields: {
+        type: 'Tipo',
+        status: 'Situação',
+        description: 'Descrição',
+        amountMinor: 'Valor',
+        financialDate: 'Data',
+        categoryId: 'Categoria',
+        subcategoryId: 'Subcategoria',
+        tagIds: 'Tags',
+        invoiceMonth: 'Fatura',
+      } as Record<string, string>,
+      statuses: { paid: 'Pago/recebido', pending: 'Pendente' } as Record<string, string>,
+    },
   },
   upgrade: {
     title: 'Atualize o PersonalFin',
@@ -497,6 +532,14 @@ export const messages = {
       update: 'alteração',
       delete: 'remoção',
       restore: 'restauração',
+    },
+    syncContext: (resolution: string, baseVersion: number) =>
+      `Sincronização offline: ${resolution} (feita a partir da versão ${baseVersion})`,
+    syncResolutions: {
+      auto_merged: 'mesclado automaticamente',
+      chose_fields: 'valores escolhidos pelo usuário',
+      restored: 'restaurado para aplicar a alteração',
+      deleted_anyway: 'excluído após alteração concorrente',
     },
   },
   members: {

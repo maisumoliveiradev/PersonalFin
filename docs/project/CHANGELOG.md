@@ -6,6 +6,24 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Sync Conflict Resolution (SDD-043)
+
+-   An offline edit that meets a concurrent change is compared with the
+    version the user edited:
+    -   Fields changed on only one side merge automatically.
+    -   A field changed on both sides shows "Minha versão" and "Versão
+        atual" to choose per field.
+    -   An edit of a transaction deleted elsewhere can restore it and
+        apply the edit, or discard the edit.
+    -   A deletion of a transaction edited elsewhere can delete it anyway,
+        or keep it.
+-   Resolutions are audited with their context, and "Histórico de
+    alterações" shows it ("Sincronização offline: mesclado
+    automaticamente", for example).
+-   API: optional sync context on transaction PATCH, DELETE, and restore;
+    audit events return `context`; migration `0022_audit_sync_context`.
+-   Local outbox schema v2 (adds conflict details), migrated from v1.
+
 ### Offline Transaction Changes (SDD-042)
 
 -   With no connection, transactions can be created (including a single

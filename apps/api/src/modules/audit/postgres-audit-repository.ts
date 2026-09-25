@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import type { Queryable } from '../../database/pool.ts';
-import type { AuditAction, AuditEntityType, FieldChange } from './audit-event.ts';
+import type { AuditAction, AuditContext, AuditEntityType, FieldChange } from './audit-event.ts';
 import { type AuditRepository, InvalidAuditCursorError } from './audit-repository.ts';
 
 const CURSOR_PART = /^[0-9A-Za-z:.-]+$/;
@@ -32,14 +32,15 @@ interface AuditEventRow {
   actor_user_id: string;
   occurred_at: Date;
   changes: Record<string, FieldChange>;
+  context: AuditContext | null;
 }
 
 export function createPostgresAuditRepository(db: Queryable): AuditRepository {
   return {
     async record(event) {
       await db.query(
-        `INSERT INTO audit_event (id, financial_space_id, entity_type, entity_id, action, actor_user_id, changes)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        `INSERT INTO audit_event (id, financial_space_id, entity_type, entity_id, action, actor_user_id, changes, context)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [
           randomUUID(),
           event.financialSpaceId,
@@ -48,13 +49,14 @@ export function createPostgresAuditRepository(db: Queryable): AuditRepository {
           event.action,
           event.actorUserId,
           JSON.stringify(event.changes),
+          event.context == null ? null : JSON.stringify(event.context),
         ],
       );
     },
 
     async listForEntity(financialSpaceId, entityType, entityId) {
       const { rows } = await db.query<AuditEventRow>(
-        `SELECT id, financial_space_id, entity_type, entity_id, action, actor_user_id, occurred_at, changes
+        `SELECT id, financial_space_id, entity_type, entity_id, action, actor_user_id, occurred_at, changes, context
          FROM audit_event
          WHERE financial_space_id = $1 AND entity_type = $2 AND entity_id = $3
          ORDER BY occurred_at, id`,
@@ -69,6 +71,7 @@ export function createPostgresAuditRepository(db: Queryable): AuditRepository {
         actorUserId: row.actor_user_id,
         occurredAt: row.occurred_at,
         changes: row.changes,
+        context: row.context,
       }));
     },
 
@@ -83,7 +86,7 @@ export function createPostgresAuditRepository(db: Queryable): AuditRepository {
       values.push(limit + 1);
       const { rows } = await db.query<AuditEventRow & { actor_name: string; cursor_at: string }>(
         `SELECT a.id, a.financial_space_id, a.entity_type, a.entity_id, a.action, a.actor_user_id,
-                a.occurred_at, a.changes, u.name AS actor_name,
+                a.occurred_at, a.changes, a.context, u.name AS actor_name,
                 to_char(a.occurred_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_at
          FROM audit_event a JOIN "user" u ON u.id = a.actor_user_id
          WHERE a.financial_space_id = $1 ${condition}
@@ -104,6 +107,7 @@ export function createPostgresAuditRepository(db: Queryable): AuditRepository {
           actorName: row.actor_name,
           occurredAt: row.occurred_at,
           changes: row.changes,
+          context: row.context,
         })),
         nextCursor:
           rows.length > limit && last !== undefined

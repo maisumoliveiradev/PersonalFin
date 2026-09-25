@@ -1,3 +1,5 @@
+import type { Transaction } from '@personalfin/api-contract';
+import { reconcileEdit, type SyncResolution, serverChanges } from '@personalfin/domain';
 import { onlineManager } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
 import { useSyncExternalStore } from 'react';
@@ -7,6 +9,7 @@ import { queryClient } from '../api/query-client';
 import { loadDocument, removeDocument, saveDocument } from '../local/local-store';
 import {
   addEntry,
+  type ConflictDetail,
   classifyResponse,
   nextPendingEntry,
   type OutboxEntry,
@@ -15,6 +18,11 @@ import {
   type SyncOutcome,
   updateEntry,
 } from './outbox';
+import {
+  changesSyncFields,
+  type TransactionChanges,
+  transactionSyncFields,
+} from './transaction-sync-fields';
 
 export interface SyncSnapshot {
   userId: string | null;
@@ -25,7 +33,10 @@ export interface SyncSnapshot {
   lastSyncedAt: number | null;
 }
 
-export type NewOutboxEntry = Omit<OutboxEntry, 'id' | 'queuedAt' | 'state' | 'errorCode'>;
+export type NewOutboxEntry = Omit<
+  OutboxEntry,
+  'id' | 'queuedAt' | 'state' | 'errorCode' | 'conflict'
+>;
 
 const RETRY_DELAY_MS = 30_000;
 
@@ -82,8 +93,48 @@ function errorCode(error: unknown): string {
   return 'UNKNOWN';
 }
 
+type Step = SyncOutcome | { kind: 'conflict-detail'; detail: ConflictDetail };
+
+function transactionPath(entry: OutboxEntry) {
+  return { spaceId: entry.spaceId, transactionId: entry.transactionId };
+}
+
+async function patchTransaction(
+  entry: OutboxEntry,
+  changes: TransactionChanges,
+  version: number,
+  sync?: { resolution: SyncResolution; baseVersion: number },
+): Promise<SyncOutcome> {
+  const result = await apiClient.PATCH('/financial-spaces/{spaceId}/transactions/{transactionId}', {
+    params: { path: transactionPath(entry) },
+    body: { ...changes, version, ...(sync === undefined ? {} : { sync }) },
+  });
+  return classifyResponse('update', result.response.status, errorCode(result.error));
+}
+
+async function deleteTransaction(
+  entry: OutboxEntry,
+  version: number,
+  sync?: { resolution: SyncResolution; baseVersion: number },
+): Promise<SyncOutcome> {
+  const result = await apiClient.DELETE(
+    '/financial-spaces/{spaceId}/transactions/{transactionId}',
+    {
+      params: {
+        path: transactionPath(entry),
+        query: {
+          version,
+          ...(sync === undefined
+            ? {}
+            : { syncResolution: sync.resolution, syncBaseVersion: sync.baseVersion }),
+        },
+      },
+    },
+  );
+  return classifyResponse('delete', result.response.status, errorCode(result.error));
+}
+
 async function send(entry: OutboxEntry): Promise<SyncOutcome> {
-  const path = { spaceId: entry.spaceId, transactionId: entry.transactionId };
   const { operation } = entry;
   if (operation.kind === 'create') {
     const result = await apiClient.POST('/financial-spaces/{spaceId}/transactions', {
@@ -93,19 +144,92 @@ async function send(entry: OutboxEntry): Promise<SyncOutcome> {
     return classifyResponse('create', result.response.status, errorCode(result.error));
   }
   if (operation.kind === 'update') {
-    const result = await apiClient.PATCH(
-      '/financial-spaces/{spaceId}/transactions/{transactionId}',
-      { params: { path }, body: { ...operation.changes, version: operation.baseVersion } },
-    );
-    return classifyResponse('update', result.response.status, errorCode(result.error));
+    return patchTransaction(entry, operation.changes, operation.baseVersion);
   }
-  const result = await apiClient.DELETE(
-    '/financial-spaces/{spaceId}/transactions/{transactionId}',
-    {
-      params: { path, query: { version: operation.baseVersion } },
-    },
-  );
-  return classifyResponse('delete', result.response.status, errorCode(result.error));
+  return deleteTransaction(entry, operation.baseVersion);
+}
+
+async function fetchCurrent(entry: OutboxEntry): Promise<Transaction | SyncOutcome> {
+  const result = await apiClient.GET('/financial-spaces/{spaceId}/transactions/{transactionId}', {
+    params: { path: transactionPath(entry) },
+  });
+  if (result.data !== undefined) {
+    return result.data;
+  }
+  return classifyResponse('update', result.response.status, errorCode(result.error));
+}
+
+function pick(changes: TransactionChanges, fields: readonly string[]): TransactionChanges {
+  const picked: Record<string, unknown> = {};
+  for (const field of fields) {
+    picked[field] = changes[field as keyof TransactionChanges];
+  }
+  return picked as TransactionChanges;
+}
+
+async function reconcile(entry: OutboxEntry): Promise<Step> {
+  const { operation } = entry;
+  const current = await fetchCurrent(entry);
+  if ('kind' in current) {
+    return current.kind === 'done' ? { kind: 'error', code: 'UNKNOWN' } : current;
+  }
+  if (operation.kind === 'update') {
+    if (current.deletedAt !== null) {
+      return {
+        kind: 'conflict-detail',
+        detail: { kind: 'edit-deleted', serverVersion: current.version },
+      };
+    }
+    const result = reconcileEdit(
+      operation.base,
+      changesSyncFields(operation.changes),
+      transactionSyncFields(current),
+    );
+    if (result.kind === 'conflict') {
+      return {
+        kind: 'conflict-detail',
+        detail: {
+          kind: 'fields',
+          serverVersion: current.version,
+          conflicts: result.conflicts,
+          independent: result.independent,
+        },
+      };
+    }
+    if (result.fields.length === 0) {
+      return { kind: 'done' };
+    }
+    const merged = await patchTransaction(
+      entry,
+      pick(operation.changes, result.fields),
+      current.version,
+      { resolution: 'auto_merged', baseVersion: operation.baseVersion },
+    );
+    return merged.kind === 'conflict' ? { kind: 'retry-later' } : merged;
+  }
+  if (operation.kind === 'delete') {
+    if (current.deletedAt !== null) {
+      return { kind: 'done' };
+    }
+    const changes = serverChanges(operation.base, transactionSyncFields(current));
+    if (changes.length > 0) {
+      return {
+        kind: 'conflict-detail',
+        detail: { kind: 'delete-edited', serverVersion: current.version, changes },
+      };
+    }
+    const deleted = await deleteTransaction(entry, current.version, {
+      resolution: 'auto_merged',
+      baseVersion: operation.baseVersion,
+    });
+    return deleted.kind === 'conflict' ? { kind: 'retry-later' } : deleted;
+  }
+  return { kind: 'error', code: 'UNKNOWN' };
+}
+
+async function processEntry(entry: OutboxEntry): Promise<Step> {
+  const outcome = await send(entry);
+  return outcome.kind === 'conflict' ? reconcile(entry) : outcome;
 }
 
 function scheduleRetry(): void {
@@ -132,21 +256,31 @@ export async function syncNow(): Promise<void> {
         break;
       }
       attempted.add(entry.id);
-      let outcome: SyncOutcome;
+      let outcome: Step;
       try {
-        outcome = await send(entry);
+        outcome = await processEntry(entry);
       } catch {
         break;
       }
       if (outcome.kind === 'done') {
         await change(userId, (entries) => removeEntry({ entries }, entry.id).entries);
         changedSpaces.add(entry.spaceId);
+      } else if (outcome.kind === 'conflict-detail') {
+        const { detail } = outcome;
+        await change(
+          userId,
+          (entries) =>
+            updateEntry({ entries }, entry.id, {
+              state: 'conflict',
+              errorCode: null,
+              conflict: detail,
+            }).entries,
+        );
       } else if (outcome.kind === 'error' || outcome.kind === 'conflict') {
         await change(
           userId,
           (entries) =>
-            updateEntry({ entries }, entry.id, { state: outcome.kind, errorCode: outcome.code })
-              .entries,
+            updateEntry({ entries }, entry.id, { state: 'error', errorCode: outcome.code }).entries,
         );
       } else {
         if (outcome.kind === 'retry-later') {
@@ -220,6 +354,7 @@ export async function enqueue(entry: NewOutboxEntry): Promise<void> {
           queuedAt: new Date().toISOString(),
           state: 'pending',
           errorCode: null,
+          conflict: null,
         },
       ).entries,
   );
@@ -233,9 +368,107 @@ export async function discardEntry(entryId: string): Promise<void> {
 export async function retryEntry(entryId: string): Promise<void> {
   await change(
     currentUserId(),
-    (entries) => updateEntry({ entries }, entryId, { state: 'pending', errorCode: null }).entries,
+    (entries) =>
+      updateEntry({ entries }, entryId, { state: 'pending', errorCode: null, conflict: null })
+        .entries,
   );
   void syncNow();
+}
+
+export type ConflictResolution =
+  | { kind: 'fields'; keepLocal: readonly string[] }
+  | { kind: 'restore' }
+  | { kind: 'delete-anyway' }
+  | { kind: 'discard' };
+
+export type ResolutionResult = 'resolved' | 'reopened' | 'failed';
+
+async function applyResolution(
+  entry: OutboxEntry,
+  conflict: ConflictDetail,
+  resolution: ConflictResolution,
+): Promise<SyncOutcome> {
+  const { operation } = entry;
+  if (resolution.kind === 'discard') {
+    return { kind: 'done' };
+  }
+  if (resolution.kind === 'fields' && conflict.kind === 'fields' && operation.kind === 'update') {
+    const fields = [...conflict.independent, ...resolution.keepLocal];
+    if (fields.length === 0) {
+      return { kind: 'done' };
+    }
+    return patchTransaction(entry, pick(operation.changes, fields), conflict.serverVersion, {
+      resolution: 'chose_fields',
+      baseVersion: operation.baseVersion,
+    });
+  }
+  if (
+    resolution.kind === 'restore' &&
+    conflict.kind === 'edit-deleted' &&
+    operation.kind === 'update'
+  ) {
+    const sync = { resolution: 'restored' as const, baseVersion: operation.baseVersion };
+    const restored = await apiClient.POST(
+      '/financial-spaces/{spaceId}/transactions/{transactionId}/restore',
+      { params: { path: transactionPath(entry) }, body: { version: conflict.serverVersion, sync } },
+    );
+    if (restored.data === undefined) {
+      return classifyResponse('update', restored.response.status, errorCode(restored.error));
+    }
+    return patchTransaction(entry, operation.changes, restored.data.version, sync);
+  }
+  if (resolution.kind === 'delete-anyway' && conflict.kind === 'delete-edited') {
+    return deleteTransaction(entry, conflict.serverVersion, {
+      resolution: 'deleted_anyway',
+      baseVersion: operation.kind === 'delete' ? operation.baseVersion : conflict.serverVersion,
+    });
+  }
+  return { kind: 'error', code: 'UNKNOWN' };
+}
+
+export async function resolveConflict(
+  entryId: string,
+  resolution: ConflictResolution,
+): Promise<ResolutionResult> {
+  const userId = currentUserId();
+  const entry = snapshot.entries.find((item) => item.id === entryId);
+  if (entry === undefined || entry.conflict === null) {
+    return 'failed';
+  }
+  let outcome: SyncOutcome;
+  try {
+    outcome = await applyResolution(entry, entry.conflict, resolution);
+  } catch {
+    return 'failed';
+  }
+  if (outcome.kind === 'done') {
+    await change(userId, (entries) => removeEntry({ entries }, entryId).entries);
+    setSnapshot({ lastSyncedAt: Date.now() });
+    void queryClient.invalidateQueries({ queryKey: ['financial-spaces', entry.spaceId] });
+    return 'resolved';
+  }
+  if (outcome.kind === 'conflict') {
+    await change(
+      userId,
+      (entries) =>
+        updateEntry({ entries }, entryId, { state: 'pending', errorCode: null, conflict: null })
+          .entries,
+    );
+    void syncNow();
+    return 'reopened';
+  }
+  if (outcome.kind === 'error') {
+    await change(
+      userId,
+      (entries) =>
+        updateEntry({ entries }, entryId, {
+          state: 'error',
+          errorCode: outcome.code,
+          conflict: null,
+        }).entries,
+    );
+  }
+  return 'failed';
 }
 
 export async function discardAllEntries(userId: string): Promise<void> {

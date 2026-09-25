@@ -427,6 +427,18 @@ paths:
           schema:
             type: integer
             minimum: 1
+        - name: syncResolution
+          in: query
+          required: false
+          description: Sync context of a deletion that resolves a conflict (with syncBaseVersion).
+          schema:
+            $ref: '#/components/schemas/SyncResolution'
+        - name: syncBaseVersion
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
       responses:
         '200':
           description: The deleted transaction (deletedAt set).
@@ -2375,7 +2387,30 @@ components:
               - entityId
               - action
               - changes
+              - context
             properties:
+              context:
+                description: >
+                  How the change reached the server when it resolved an offline
+                  synchronization conflict (ADR-0016); null otherwise.
+                oneOf:
+                  - type: 'null'
+                  - type: object
+                    additionalProperties: false
+                    required:
+                      - source
+                      - resolution
+                      - baseVersion
+                    properties:
+                      source:
+                        type: string
+                        enum:
+                          - offline_sync
+                      resolution:
+                        $ref: '#/components/schemas/SyncResolution'
+                      baseVersion:
+                        type: integer
+                        minimum: 1
               id:
                 type: string
               occurredAt:
@@ -3441,6 +3476,35 @@ components:
         version:
           type: integer
           minimum: 1
+        sync:
+          $ref: '#/components/schemas/SyncContext'
+    SyncResolution:
+      type: string
+      description: >
+        auto_merged (independent fields merged), chose_fields (the user
+        chose per field), restored (restored to apply an offline edit), or
+        deleted_anyway (deleted after a concurrent edit). DR-089, DR-090.
+      enum:
+        - auto_merged
+        - chose_fields
+        - restored
+        - deleted_anyway
+    SyncContext:
+      type: object
+      additionalProperties: false
+      description: >
+        Sent when a write resolves an offline synchronization conflict; it
+        is recorded in the audit event (ADR-0016).
+      required:
+        - resolution
+        - baseVersion
+      properties:
+        resolution:
+          $ref: '#/components/schemas/SyncResolution'
+        baseVersion:
+          type: integer
+          minimum: 1
+          description: The version the offline change was based on.
     UpdateTransactionRequest:
       type: object
       additionalProperties: false
@@ -3450,6 +3514,8 @@ components:
         version:
           type: integer
           minimum: 1
+        sync:
+          $ref: '#/components/schemas/SyncContext'
           description: The version the client edited.
         type:
           $ref: '#/components/schemas/TransactionType'

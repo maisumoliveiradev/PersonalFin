@@ -358,7 +358,9 @@ choose, per field, between their value and the current value.
 transaction deleted meanwhile asks whether to restore it and apply the
 edit or discard the edit; an offline deletion of a transaction edited
 meanwhile asks whether to delete it anyway or keep it. Every resolution
-is audited with its context.
+that writes to the record is audited with its context (automatic merge,
+per-field choice, restore, or deletion after a concurrent edit); keeping
+the current record writes nothing.
 
 **DR-091** *(SDD-041; decided under delegation.)* Local data belongs to
 one signed-in user. The local cache is removed at sign-out; unsynchronized

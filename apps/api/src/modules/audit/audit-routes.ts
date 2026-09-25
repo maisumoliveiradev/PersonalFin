@@ -37,6 +37,7 @@ export function registerAuditRoutes(server: FastifyInstance, data: DataAccess): 
           entityId: event.entityId,
           action: event.action,
           changes: event.changes,
+          context: event.context ?? null,
         })),
         nextCursor: page.nextCursor,
       };
