@@ -3,9 +3,11 @@ import { type FinancialDate, monthOf } from '@personalfin/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
+import { useCards } from '../../../../../../api/cards';
 import { useCategories } from '../../../../../../api/categories';
 import { useRecurrences, useUpdateRecurrence } from '../../../../../../api/recurrences';
 import { useTransaction, useUpdateTransaction } from '../../../../../../api/transactions';
+import { CancelInstallmentsSection } from '../../../../../../features/cards/CancelInstallmentsSection';
 import { DeleteTransactionSection } from '../../../../../../features/transactions/DeleteTransactionSection';
 import { TransactionForm } from '../../../../../../features/transactions/TransactionForm';
 import { transactionToFormValues } from '../../../../../../features/transactions/transaction-form';
@@ -32,6 +34,7 @@ export default function EditTransactionScreen() {
     transactionId: string;
   }>();
   const categories = useCategories(spaceId);
+  const cards = useCards(spaceId);
   const transaction = useTransaction(spaceId, transactionId);
   const recurrences = useRecurrences(spaceId);
   const updateTransaction = useUpdateTransaction(spaceId, transactionId);
@@ -50,7 +53,7 @@ export default function EditTransactionScreen() {
     });
   }
 
-  if (categories.isPending || transaction.isPending) {
+  if (categories.isPending || transaction.isPending || cards.isPending) {
     return <LoadingScreen />;
   }
 
@@ -95,7 +98,8 @@ export default function EditTransactionScreen() {
         backToSpace('updated', current.financialDate);
         return;
       }
-      const updated = await updateTransaction.mutateAsync({ ...request, version: current.version });
+      const { cardId: _cardId, ...changes } = request;
+      const updated = await updateTransaction.mutateAsync({ ...changes, version: current.version });
       backToSpace('updated', updated.financialDate);
     } catch {
       return;
@@ -121,11 +125,13 @@ export default function EditTransactionScreen() {
         key={current.version}
         categories={categories.data}
         initialValues={transactionToFormValues(current)}
+        cards={cards.data ?? []}
         submitting={updateTransaction.isPending || updateRecurrence.isPending}
         submitError={updateTransaction.error ?? updateRecurrence.error}
         onSubmit={handleSubmit}
         onCancel={() => router.back()}
       />
+      <CancelInstallmentsSection spaceId={spaceId} transaction={current} />
       <DeleteTransactionSection
         spaceId={spaceId}
         transactionId={transactionId}

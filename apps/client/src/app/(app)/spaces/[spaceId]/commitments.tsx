@@ -1,5 +1,10 @@
 import type { Commitments } from '@personalfin/api-contract';
-import { financialDateFromLocalClock, formatDisplayDate, formatMoney } from '@personalfin/domain';
+import {
+  financialDateFromLocalClock,
+  formatDisplayDate,
+  formatMoney,
+  formatMonthLabel,
+} from '@personalfin/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
@@ -12,6 +17,7 @@ import { messages } from '../../../../i18n/messages';
 import { BodyText } from '../../../../ui/BodyText';
 import { Button } from '../../../../ui/Button';
 import { FormError } from '../../../../ui/FormError';
+import { ListItem } from '../../../../ui/ListItem';
 import { LoadingScreen } from '../../../../ui/LoadingScreen';
 import { type Option, OptionGroup } from '../../../../ui/OptionGroup';
 import { Screen } from '../../../../ui/Screen';
@@ -62,12 +68,30 @@ export default function CommitmentsScreen() {
   }
 
   function renderSection(section: Section, emptyMessage: string) {
-    if (section.items.length === 0) {
+    if (section.items.length === 0 && section.invoices.length === 0) {
       return <BodyText muted>{emptyMessage}</BodyText>;
     }
     return (
       <>
         <Totals section={section} />
+        {section.invoices.map((invoice) => (
+          <ListItem
+            key={`${invoice.cardId}-${invoice.referenceMonth}`}
+            title={messages.commitments.invoiceItem(
+              invoice.cardName,
+              formatMonthLabel(invoice.referenceMonth, 'pt-BR'),
+              formatDisplayDate(invoice.dueDate, 'pt-BR'),
+              formatMoney({ amountMinor: invoice.amountMinor, currency: 'BRL' }, 'pt-BR'),
+            )}
+            accessibilityHint={messages.cards.openHint}
+            onPress={() =>
+              router.push({
+                pathname: '/spaces/[spaceId]/cards/invoice',
+                params: { spaceId, cardId: invoice.cardId, month: invoice.referenceMonth },
+              })
+            }
+          />
+        ))}
         {section.items.map((transaction) => (
           <TransactionRow
             key={transaction.id}

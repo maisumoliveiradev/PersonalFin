@@ -10,8 +10,10 @@ describe('computeProjection', () => {
         {
           afterObservation: { income: 1_000, expenses: 250 },
           pendingUpToObservation: { income: 0, expenses: 2_000 },
+          openInvoices: 3_000,
+          invoicePayments: 1_000,
         },
       ).amountMinor,
-    ).toBe(-15_075 + 750 - 2_000);
+    ).toBe(-15_075 + 750 - 2_000 - 3_000 - 1_000);
   });
 });

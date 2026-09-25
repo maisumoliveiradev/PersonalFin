@@ -3,6 +3,8 @@ import {
   type AmountParseError,
   formatDisplayDate,
   formatMoney,
+  isValidInstallmentCount,
+  type Month,
   normalizeTransactionDescription,
   parseAmountInput,
   parseDisplayDate,
@@ -21,6 +23,9 @@ export interface TransactionFormValues {
   categoryId: string | null;
   subcategoryId: string | null;
   status: TransactionStatus;
+  cardId: string | null;
+  invoiceMonth: Month | null;
+  installments: string;
 }
 
 export type TransactionFormResult =
@@ -54,18 +59,42 @@ export function toCreateTransactionRequest(values: TransactionFormValues): Trans
   if (values.categoryId === null) {
     return { ok: false, error: messages.transactions.errors.categoryRequired };
   }
+  const request: CreateTransactionRequest = {
+    type: values.type,
+    description,
+    amountMinor: amount.amountMinor,
+    financialDate,
+    categoryId: values.categoryId,
+    subcategoryId: values.subcategoryId,
+  };
+  if (values.cardId === null) {
+    return { ok: true, request: { ...request, status: values.status } };
+  }
+  const installments = parseInstallments(values.installments);
+  if (installments === null || amount.amountMinor < installments) {
+    return { ok: false, error: messages.cards.errors.installmentsInvalid };
+  }
   return {
     ok: true,
     request: {
-      type: values.type,
-      status: values.status,
-      description,
-      amountMinor: amount.amountMinor,
-      financialDate,
-      categoryId: values.categoryId,
-      subcategoryId: values.subcategoryId,
+      ...request,
+      cardId: values.cardId,
+      ...(values.invoiceMonth === null ? {} : { invoiceMonth: values.invoiceMonth }),
+      ...(installments === 1 ? {} : { installments }),
     },
   };
+}
+
+function parseInstallments(value: string): number | null {
+  const trimmed = value.trim();
+  if (trimmed === '') {
+    return 1;
+  }
+  if (!/^\d{1,2}$/.test(trimmed)) {
+    return null;
+  }
+  const count = Number(trimmed);
+  return count === 1 || isValidInstallmentCount(count) ? count : null;
 }
 
 export function transactionToFormValues(transaction: Transaction): TransactionFormValues {
@@ -81,5 +110,8 @@ export function transactionToFormValues(transaction: Transaction): TransactionFo
     categoryId: transaction.category.id,
     subcategoryId: transaction.subcategory?.id ?? null,
     status: transaction.status,
+    cardId: transaction.cardPurchase?.cardId ?? null,
+    invoiceMonth: transaction.cardPurchase?.invoiceMonth ?? null,
+    installments: '1',
   };
 }

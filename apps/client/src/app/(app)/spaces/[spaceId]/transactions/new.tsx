@@ -3,6 +3,7 @@ import { type FinancialDate, monthOf } from '@personalfin/domain';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 
+import { useCards } from '../../../../../api/cards';
 import { useCategories } from '../../../../../api/categories';
 import { useCreateRecurrence } from '../../../../../api/recurrences';
 import { useCreateTransaction } from '../../../../../api/transactions';
@@ -22,6 +23,7 @@ export default function NewTransactionScreen() {
   const router = useRouter();
   const { spaceId } = useLocalSearchParams<{ spaceId: string }>();
   const categories = useCategories(spaceId);
+  const cards = useCards(spaceId);
   const createTransaction = useCreateTransaction(spaceId);
   const createRecurrence = useCreateRecurrence(spaceId);
   const [initialValues] = useState(emptyTransactionFormValues);
@@ -90,6 +92,8 @@ export default function NewTransactionScreen() {
           submitting={createTransaction.isPending || createRecurrence.isPending}
           submitError={createTransaction.error ?? createRecurrence.error}
           allowRecurrence
+          cards={cards.data ?? []}
+          allowCardChoice
           onSubmit={handleSubmit}
           onCancel={() => router.back()}
         />

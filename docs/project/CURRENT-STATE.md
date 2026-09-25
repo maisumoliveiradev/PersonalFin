@@ -2,9 +2,9 @@
 
 ## Current Version
 
-`v0.3.0`, released on 2026-09-24 (`main`, tag `v0.3.0`). SDD-001 to
-SDD-022 implemented and validated
-(`docs/sdds/v0.3.0/SDD-022-validation-report.md`).
+`v0.4.0`, released on 2026-09-25 (`main`, tag `v0.4.0`). SDD-001 to
+SDD-028 implemented and validated
+(`docs/sdds/v0.4.0/SDD-028-validation-report.md`).
 
 ## Implemented Product Capabilities
 
@@ -62,6 +62,25 @@ SDD-022 implemented and validated
 -   **Future commitments (SDD-020):** overdue and upcoming pending
     income/expenses (7, 30, or 90 days) with exact totals. There are no
     notifications.
+-   **Cards (SDD-023):** cards with name, closing and due days, and an
+    append-only limit history with effective dates (DR-082); archive and
+    reactivate.
+-   **Card purchases and invoices (SDD-024):** expenses paid with a card
+    are assigned to an invoice (suggested from the closing day,
+    changeable, DR-079); invoice screen with dates, total, purchases, and
+    per-invoice date overrides. Card purchases count in their invoice
+    month and have no status of their own; the projection and
+    commitments use open invoices. The status filter "Pendente" still
+    includes card purchases.
+-   **Invoice payment (SDD-026):** full and partial payments per invoice
+    (removable), open amount and state; purchases of paid invoices are
+    realized (DR-081).
+-   **Card limit and summary (SDD-027):** used and available limit per
+    card (DR-082) and invoice totals by month. There are no charts or
+    per-category card analytics.
+-   **Installments (SDD-025):** card purchases split into 2--48
+    installments across consecutive invoices (DR-080); later installments
+    can be cancelled. Installments are edited one at a time.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -85,7 +104,7 @@ SDD-022 implemented and validated
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
     -   `packages/domain` --- shared money, financial date, transaction,
-        month, balance-reminder, and business-day rules (ADR-0011;
+        month, balance-reminder, business-day, and card rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
@@ -104,8 +123,7 @@ SDD-022 implemented and validated
 
 ## Active Target
 
-`v0.4.0` --- Credit Cards (`docs/product/ROADMAP.md`). No SDD drafted
-yet.
+`v0.5.0` --- Analytics (`docs/product/ROADMAP.md`). No SDD drafted yet.
 
 ## Important Constraint
 
@@ -114,6 +132,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.4.0 SDDs (Credit Cards) from the roadmap. Domain decisions
+Draft the v0.5.0 SDDs (Analytics) from the roadmap. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, DR-072 to DR-077).
+`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, DR-072 to
+DR-078).

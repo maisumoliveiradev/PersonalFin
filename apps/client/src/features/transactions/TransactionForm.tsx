@@ -1,9 +1,13 @@
-import type { CategoryTreeItem, CreateTransactionRequest } from '@personalfin/api-contract';
+import type { Card, CategoryTreeItem, CreateTransactionRequest } from '@personalfin/api-contract';
 import {
+  candidateInvoiceMonths,
   DEFAULT_TRANSACTION_STATUS,
+  defaultInvoiceMonth,
   type FinancialDate,
   financialDateFromLocalClock,
   formatDisplayDate,
+  formatMonthLabel,
+  type Month,
   type NonBusinessDayRule,
   parseDisplayDate,
   type RecurrenceFrequency,
@@ -14,6 +18,7 @@ import { useState } from 'react';
 
 import { ApiRequestError } from '../../api/api-client';
 import { messages } from '../../i18n/messages';
+import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
 import { FormError } from '../../ui/FormError';
 import { type Option, OptionGroup } from '../../ui/OptionGroup';
@@ -36,7 +41,15 @@ function statusOptions(type: TransactionType): Option<TransactionStatus>[] {
   ];
 }
 
+const ACCOUNT = 'account';
+
 function describeSubmitError(error: Error): string {
+  if (error instanceof ApiRequestError && error.code === 'CARD_NOT_AVAILABLE') {
+    return messages.cards.errors.cardNotAvailable;
+  }
+  if (error instanceof ApiRequestError && error.code === 'INVALID_CARD_PURCHASE') {
+    return messages.cards.errors.invalidPurchase;
+  }
   if (error instanceof ApiRequestError && error.code === 'CATEGORY_NOT_AVAILABLE') {
     return messages.transactions.errors.categoryNotAvailable;
   }
@@ -55,7 +68,21 @@ export function emptyTransactionFormValues(): TransactionFormValues {
     categoryId: null,
     subcategoryId: null,
     status: DEFAULT_TRANSACTION_STATUS,
+    cardId: null,
+    invoiceMonth: null,
+    installments: '1',
   };
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function invoiceOptions(date: FinancialDate): Option<Month>[] {
+  return candidateInvoiceMonths(date).map((month) => ({
+    value: month,
+    label: capitalize(formatMonthLabel(month, 'pt-BR')),
+  }));
 }
 
 export interface RecurrenceChoice {
@@ -85,6 +112,8 @@ interface TransactionFormProps {
   submitting: boolean;
   submitError: Error | null;
   allowRecurrence?: boolean;
+  cards?: readonly Card[];
+  allowCardChoice?: boolean;
   onSubmit: (request: CreateTransactionRequest, recurrence: RecurrenceChoice | null) => void;
   onCancel: () => void;
 }
@@ -95,6 +124,8 @@ export function TransactionForm({
   submitting,
   submitError: submitFailure,
   allowRecurrence = false,
+  cards = [],
+  allowCardChoice = false,
   onSubmit,
   onCancel,
 }: TransactionFormProps) {
@@ -109,6 +140,25 @@ export function TransactionForm({
   const [repeat, setRepeat] = useState<RecurrenceFrequency | typeof NO_REPEAT>(NO_REPEAT);
   const [endDate, setEndDate] = useState('');
   const [rule, setRule] = useState<NonBusinessDayRule>('keep');
+  const [cardId, setCardId] = useState<string | null>(initialValues.cardId);
+  const [chosenInvoice, setChosenInvoice] = useState<Month | null>(initialValues.invoiceMonth);
+  const [installments, setInstallments] = useState(initialValues.installments);
+
+  const isCardPurchase = cardId !== null;
+  const lockedToCard = initialValues.cardId !== null;
+  const card = cards.find((item) => item.id === cardId);
+  const purchaseDate = parseDisplayDate(date, 'pt-BR');
+  const invoiceChoices = purchaseDate === null ? [] : invoiceOptions(purchaseDate);
+  const suggestedInvoice =
+    card === undefined || purchaseDate === null ? null : defaultInvoiceMonth(purchaseDate, card);
+  const invoiceMonth =
+    chosenInvoice !== null && invoiceChoices.some((option) => option.value === chosenInvoice)
+      ? chosenInvoice
+      : suggestedInvoice;
+  const paymentOptions: Option<string>[] = [
+    { value: ACCOUNT, label: messages.cards.accountPayment },
+    ...cards.filter((item) => !item.archived).map((item) => ({ value: item.id, label: item.name })),
+  ];
 
   const categoriesForType = categories.filter(
     (category) =>
@@ -147,6 +197,9 @@ export function TransactionForm({
       categoryId,
       subcategoryId,
       status,
+      cardId,
+      invoiceMonth,
+      installments,
     });
     if (!result.ok) {
       setValidationError(result.error);
@@ -177,12 +230,16 @@ export function TransactionForm({
 
   return (
     <>
-      <OptionGroup
-        label={messages.transactions.typeLabel}
-        options={TYPE_OPTIONS}
-        selected={type}
-        onSelect={handleTypeChange}
-      />
+      {lockedToCard ? (
+        <BodyText>{messages.cards.purchaseOn(card?.name ?? '')}</BodyText>
+      ) : (
+        <OptionGroup
+          label={messages.transactions.typeLabel}
+          options={TYPE_OPTIONS}
+          selected={type}
+          onSelect={handleTypeChange}
+        />
+      )}
       <TextField
         label={messages.transactions.descriptionLabel}
         value={description}
@@ -222,7 +279,36 @@ export function TransactionForm({
           onSelect={(value) => setSubcategoryId(value === NO_SUBCATEGORY ? null : value)}
         />
       )}
-      {allowRecurrence && (
+      {allowCardChoice &&
+        type === 'expense' &&
+        repeat === NO_REPEAT &&
+        paymentOptions.length > 1 && (
+          <OptionGroup
+            label={messages.cards.paymentLabel}
+            options={paymentOptions}
+            selected={cardId ?? ACCOUNT}
+            onSelect={(value) => setCardId(value === ACCOUNT ? null : value)}
+          />
+        )}
+      {isCardPurchase && invoiceChoices.length > 0 && (
+        <OptionGroup
+          label={messages.cards.invoiceLabel}
+          options={invoiceChoices}
+          selected={invoiceMonth}
+          onSelect={setChosenInvoice}
+        />
+      )}
+      {isCardPurchase && allowCardChoice && (
+        <TextField
+          label={messages.cards.installmentsLabel}
+          hint={messages.cards.installmentsHint}
+          value={installments}
+          onChangeText={setInstallments}
+          inputMode="numeric"
+          maxLength={2}
+        />
+      )}
+      {allowRecurrence && !isCardPurchase && (
         <OptionGroup
           label={messages.recurrences.repeatLabel}
           options={REPEAT_OPTIONS}
@@ -248,7 +334,7 @@ export function TransactionForm({
           />
         </>
       )}
-      {repeat === NO_REPEAT && (
+      {repeat === NO_REPEAT && !isCardPurchase && (
         <OptionGroup
           label={messages.transactions.statusLabel}
           options={statusOptions(type)}

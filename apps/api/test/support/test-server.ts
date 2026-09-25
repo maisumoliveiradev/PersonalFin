@@ -5,9 +5,12 @@ import { buildServer } from '../../src/server.ts';
 import { createInMemoryAuditRepository } from './in-memory-audit-repository.ts';
 import { createInMemoryBalanceReminderRepository } from './in-memory-balance-reminder-repository.ts';
 import { createInMemoryBalanceSnapshotRepository } from './in-memory-balance-snapshot-repository.ts';
+import { createInMemoryCardInvoiceRepository } from './in-memory-card-invoice-repository.ts';
+import { createInMemoryCardRepository } from './in-memory-card-repository.ts';
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
+import { createInMemoryInstallmentRepository } from './in-memory-installment-repository.ts';
 import { createInMemoryRecurrenceRepository } from './in-memory-recurrence-repository.ts';
 import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
 
@@ -37,7 +40,30 @@ const unusedAuthHandler: AuthHandler = async () => new Response(null, { status: 
 
 export function createInMemoryRepositories() {
   const categories = createInMemoryCategoryRepository(() => transactions.transactions);
-  const transactions = createInMemoryTransactionRepository(categories.categories);
+  const cards = createInMemoryCardRepository((financialSpaceId) => {
+    const used = new Map<string, number>();
+    for (const invoice of cardInvoices.invoices) {
+      if (invoice.financialSpaceId === financialSpaceId) {
+        const balance = cardInvoices.balance(invoice.id);
+        used.set(invoice.cardId, (used.get(invoice.cardId) ?? 0) + balance);
+      }
+    }
+    return used;
+  });
+  const cardInvoices = createInMemoryCardInvoiceRepository(
+    cards.cards,
+    () => transactions.transactions,
+  );
+  const transactions = createInMemoryTransactionRepository(
+    categories.categories,
+    (invoiceId) => cardInvoices.cardPurchase(invoiceId),
+    (purchaseId) =>
+      installments.purchases.find((purchase) => purchase.id === purchaseId)?.installmentCount ?? 0,
+  );
+  const installments = createInMemoryInstallmentRepository(
+    () => transactions.transactions,
+    (invoiceId) => cardInvoices.hasPayment(invoiceId),
+  );
   const balanceSnapshots = createInMemoryBalanceSnapshotRepository();
   return {
     financialSpaces: createInMemoryFinancialSpaceRepository(),
@@ -49,8 +75,13 @@ export function createInMemoryRepositories() {
     dashboard: createInMemoryDashboardRepository(
       () => transactions.transactions,
       () => balanceSnapshots.snapshots,
+      (financialSpaceId, observedOn, endExclusive) =>
+        cardInvoices.flows(financialSpaceId, observedOn, endExclusive),
     ),
     balanceReminders: createInMemoryBalanceReminderRepository(),
+    cards,
+    cardInvoices,
+    installments,
   };
 }
 

@@ -5,18 +5,36 @@ import type { FinancialTransaction } from '../../src/modules/transactions/transa
 export function createInMemoryDashboardRepository(
   transactions: () => readonly FinancialTransaction[],
   snapshots: () => readonly BalanceSnapshot[],
+  invoiceFlows: (
+    financialSpaceId: string,
+    observedOn: string,
+    endExclusive: string,
+  ) => { openInvoices: number; invoicePayments: number } = () => ({
+    openInvoices: 0,
+    invoicePayments: 0,
+  }),
 ): DashboardRepository {
   function inRange(
     transaction: FinancialTransaction,
     range: { financialSpaceId: string; start: string; endExclusive: string },
   ) {
+    const metricDate =
+      transaction.cardPurchase === null
+        ? transaction.financialDate
+        : `${transaction.cardPurchase.invoiceMonth}-01`;
     return (
       transaction.financialSpaceId === range.financialSpaceId &&
       transaction.deletedAt === null &&
-      transaction.financialDate >= range.start &&
-      transaction.financialDate < range.endExclusive
+      metricDate >= range.start &&
+      metricDate < range.endExclusive
     );
   }
+  const effectiveStatus = (item: FinancialTransaction) => {
+    if (item.cardPurchase === null) {
+      return item.status;
+    }
+    return item.cardPurchase.invoiceSettled ? 'paid' : 'pending';
+  };
   const sum = (items: readonly FinancialTransaction[]) =>
     items.reduce((total, item) => total + item.amountMinor, 0);
 
@@ -24,7 +42,7 @@ export function createInMemoryDashboardRepository(
     async monthTotals(range) {
       const items = transactions().filter((transaction) => inRange(transaction, range));
       const pick = (type: string, status: string) =>
-        sum(items.filter((item) => item.type === type && item.status === status));
+        sum(items.filter((item) => item.type === type && effectiveStatus(item) === status));
       return {
         realizedIncome: pick('income', 'paid'),
         realizedExpenses: pick('expense', 'paid'),
@@ -35,7 +53,7 @@ export function createInMemoryDashboardRepository(
     async realizedExpensesByCategory(range) {
       const totals = new Map<string, { categoryId: string; name: string; amountMinor: number }>();
       for (const item of transactions()) {
-        if (inRange(item, range) && item.type === 'expense' && item.status === 'paid') {
+        if (inRange(item, range) && item.type === 'expense' && effectiveStatus(item) === 'paid') {
           const current = totals.get(item.category.id) ?? {
             categoryId: item.category.id,
             name: item.category.name,
@@ -50,11 +68,27 @@ export function createInMemoryDashboardRepository(
           right.amountMinor - left.amountMinor || left.name.localeCompare(right.name),
       );
     },
+    async pendingTotals(range) {
+      const items = transactions().filter(
+        (item) =>
+          item.financialSpaceId === range.financialSpaceId &&
+          item.deletedAt === null &&
+          item.status === 'pending' &&
+          item.cardPurchase === null &&
+          item.financialDate >= range.start &&
+          item.financialDate < range.endExclusive,
+      );
+      return {
+        income: sum(items.filter((item) => item.type === 'income')),
+        expenses: sum(items.filter((item) => item.type === 'expense')),
+      };
+    },
     async projectionComponents(financialSpaceId, observedOn, endExclusive) {
       const active = transactions().filter(
         (item) =>
           item.financialSpaceId === financialSpaceId &&
           item.deletedAt === null &&
+          item.cardPurchase === null &&
           item.financialDate < endExclusive,
       );
       const flow = (items: readonly FinancialTransaction[]) => ({
@@ -66,6 +100,7 @@ export function createInMemoryDashboardRepository(
         pendingUpToObservation: flow(
           active.filter((item) => item.financialDate <= observedOn && item.status === 'pending'),
         ),
+        ...invoiceFlows(financialSpaceId, observedOn, endExclusive),
       };
     },
     async observedBalanceBefore(financialSpaceId, endExclusive) {

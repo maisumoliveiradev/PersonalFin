@@ -177,6 +177,51 @@ without changing card defaults.
 
 **DR-039** Partial invoice payment leaves an outstanding invoice amount.
 
+**DR-078** *(SDD-023; decided under delegation.)* A card has a closing
+day and a due day from 1 to 31; in months without that day, the last day
+of the month is used. The card limit is an append-only history of values
+with effective dates: the limit on a date is the latest value effective
+on or before it (ties: latest recorded). Card names are unique per space,
+ignoring case. Cards are archived rather than deleted.
+
+**DR-079** *(SDD-024; decided under delegation.)* An invoice is
+identified by its card and reference month, the month of its due date.
+By default it closes on the card's closing day of the month before when
+the due day is on or before the closing day, otherwise of the reference
+month; it is due on the card's due day of the reference month moved to
+the next business day. A purchase belongs by default to the earliest
+invoice whose closing date is after the purchase date (a purchase on
+the closing date goes to the next invoice); the user may choose an
+invoice from the month before to two months after the purchase. The
+assignment is stored, so later date overrides never move purchases.
+Invoices are created when first needed with the card's days at that
+time. Card purchases are Expense transactions without a status of their
+own; commitments and the cash projection use their invoices instead.
+
+**DR-080** *(SDD-025; decided under delegation.)* An installment
+purchase (2 to 48 installments) keeps its total, count, purchase date,
+and first invoice. The total is split into equal installments in minor
+units with the remainder on the first; installment k is dated k − 1
+months after the purchase (clamped to short months) and belongs to the
+invoice k − 1 months after the first. Each installment is an independent
+card purchase linked to the original purchase. Cancelling future
+installments moves to the trash only the installments whose invoice is
+after a chosen invoice month; earlier installments are kept (DR-043).
+
+**DR-081** *(SDD-026; decided under delegation.)* Invoice payments are
+recorded against one invoice with an amount and a payment date; they
+never create expenses (DR-036) and cannot exceed the invoice's open
+amount. A payment recorded by mistake can be removed (soft delete,
+audited). An invoice is paid when its payments cover its total; its
+purchases then count as Realized. Cancelling installments keeps those in
+invoices that already have a payment.
+
+**DR-082** *(SDD-027; decided under delegation.)* The known used limit
+of a card is the unpaid part of all its invoices: every non-deleted
+purchase, including future installments, minus payments. The available
+limit on a date is the limit effective on that date minus the used
+limit; it may be negative and is unknown when no limit is effective.
+
 **DR-040** Interest/fees may be represented as separate expenses rather
 than inferred automatically.
 

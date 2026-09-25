@@ -1,5 +1,8 @@
 import type { Category } from '../../src/modules/categories/category.ts';
-import type { FinancialTransaction } from '../../src/modules/transactions/transaction.ts';
+import type {
+  CardPurchaseReference,
+  FinancialTransaction,
+} from '../../src/modules/transactions/transaction.ts';
 import {
   InvalidCursorError,
   type TransactionRepository,
@@ -7,6 +10,12 @@ import {
 
 export function createInMemoryTransactionRepository(
   categories: readonly Category[],
+  cardPurchase: (invoiceId: string) => CardPurchaseReference = () => {
+    throw new Error('Card purchases are not configured');
+  },
+  installmentCount: (purchaseId: string) => number = () => {
+    throw new Error('Installments are not configured');
+  },
 ): TransactionRepository & { transactions: FinancialTransaction[] } {
   const transactions: FinancialTransaction[] = [];
 
@@ -28,9 +37,14 @@ export function createInMemoryTransactionRepository(
   return {
     transactions,
     async create(transaction) {
-      const { categoryId, subcategoryId, ...rest } = transaction;
+      const { categoryId, subcategoryId, cardInvoiceId, installment, ...rest } = transaction;
       const created: FinancialTransaction = {
         ...rest,
+        installment:
+          installment === undefined
+            ? null
+            : { ...installment, count: installmentCount(installment.purchaseId) },
+        cardPurchase: cardInvoiceId == null ? null : cardPurchase(cardInvoiceId),
         category: reference(categoryId),
         subcategory: subcategoryId === null ? null : reference(subcategoryId),
         createdAt: new Date(Date.UTC(2026, 0, 1, 12, 0, transactions.length)),
@@ -55,8 +69,9 @@ export function createInMemoryTransactionRepository(
       ) {
         return null;
       }
-      const { categoryId, subcategoryId, ...rest } = fields;
+      const { categoryId, subcategoryId, cardInvoiceId, ...rest } = fields;
       Object.assign(current, rest, {
+        cardPurchase: cardInvoiceId === null ? null : cardPurchase(cardInvoiceId),
         individuallyModified: current.individuallyModified || current.recurrenceSeriesId !== null,
         category: reference(categoryId),
         subcategory: subcategoryId === null ? null : reference(subcategoryId),
@@ -90,6 +105,9 @@ export function createInMemoryTransactionRepository(
             (transaction.financialDate >= query.range.start &&
               transaction.financialDate < query.range.endExclusive)) &&
           (query.type === undefined || transaction.type === query.type) &&
+          (query.cardInvoiceId === undefined ||
+            transaction.cardPurchase?.invoiceId === query.cardInvoiceId) &&
+          (query.excludeCardPurchases !== true || transaction.cardPurchase === null) &&
           (query.status === undefined || transaction.status === query.status) &&
           (query.categoryId === undefined ||
             transaction.category.id === query.categoryId ||

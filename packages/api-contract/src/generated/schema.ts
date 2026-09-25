@@ -384,10 +384,283 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the credit cards of the space */
+        get: operations["listCards"];
+        put?: never;
+        /**
+         * Register a credit card with its initial limit
+         * @description Creates the card and the first entry of its limit history. Audited.
+         */
+        post: operations["createCard"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        /** Get a card with its limit history */
+        get: operations["getCard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Rename, change closing/due days, or archive a card
+         * @description Version-checked and audited.
+         */
+        patch: operations["updateCard"];
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}/limit-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record a new card limit from an effective date
+         * @description Appends to the limit history; earlier values are never changed (FR-051). The current limit on a date is the latest value effective on or before it (ties: latest recorded).
+         */
+        post: operations["recordCardLimit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+            };
+            cookie?: never;
+        };
+        /** Get the invoice of a card for a reference month with its purchases */
+        get: operations["getCardInvoice"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/dates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Override the closing and due dates of one invoice
+         * @description Changes only this invoice (DR-038); the card defaults and the purchases already assigned to it are unchanged. Version-checked and audited.
+         */
+        put: operations["setCardInvoiceDates"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/installment-purchases/{purchaseId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                purchaseId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel the installments of a purchase after an invoice month
+         * @description Moves to the trash the installments whose invoice month is after afterMonth. Earlier installments are kept (DR-043). Audited.
+         */
+        post: operations["cancelInstallments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record a full or partial invoice payment
+         * @description Settles already-recorded card expenses; it never creates an expense (DR-036). The amount cannot exceed the open amount (DR-039). Audited.
+         */
+        post: operations["payCardInvoice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments/{paymentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an invoice payment recorded by mistake
+         * @description Soft-deletes the payment; audited.
+         */
+        delete: operations["removeCardInvoicePayment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/card-limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Known used and available limit of every card on a date
+         * @description usedMinor is the unpaid part of all invoices of the card (every non-deleted purchase, including future installments, minus payments). availableMinor = current limit on the date - usedMinor; it may be negative and is null when no limit is effective yet.
+         */
+        get: operations["getCardLimits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/cards/{cardId}/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        /** Invoice totals of a card for consecutive months */
+        get: operations["listCardInvoices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Day of the month; months without it use their last day. */
+        CardDay: number;
+        CardName: string;
+        CardLimitChange: {
+            /** Format: uuid */
+            id: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            currency: string;
+            effectiveFrom: components["schemas"]["FinancialDate"];
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        Card: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            closingDay: components["schemas"]["CardDay"];
+            dueDay: components["schemas"]["CardDay"];
+            archived: boolean;
+            version: number;
+            /** @description Limit history, latest effective date first (ties, latest recorded first). */
+            limits: components["schemas"]["CardLimitChange"][];
+        };
+        CardList: {
+            items: components["schemas"]["Card"][];
+        };
+        CreateCardRequest: {
+            name: components["schemas"]["CardName"];
+            closingDay: components["schemas"]["CardDay"];
+            dueDay: components["schemas"]["CardDay"];
+            limitMinor: components["schemas"]["AmountMinor"];
+            limitEffectiveFrom: components["schemas"]["FinancialDate"];
+        };
+        UpdateCardRequest: {
+            version: number;
+            name?: components["schemas"]["CardName"];
+            closingDay?: components["schemas"]["CardDay"];
+            dueDay?: components["schemas"]["CardDay"];
+            archived?: boolean;
+        };
+        RecordCardLimitRequest: {
+            amountMinor: components["schemas"]["AmountMinor"];
+            effectiveFrom: components["schemas"]["FinancialDate"];
+        };
         HealthStatus: {
             /** @constant */
             status: "ok";
@@ -504,6 +777,15 @@ export interface components {
              * @description Optional subcategory of categoryId.
              */
             subcategoryId?: string | null;
+            /**
+             * Format: uuid
+             * @description Records a card purchase (expense only, active card of the space). Card purchases have no status of their own; do not send status.
+             */
+            cardId?: string;
+            /** @description Invoice (reference month) for a card purchase, from the month before to two months after financialDate. Defaults to the invoice whose closing date is after financialDate. */
+            invoiceMonth?: string;
+            /** @description Splits a card purchase into this many installments (amountMinor is the total; the remainder cents go to the first). Installment k is dated k - 1 months after financialDate and goes to the invoice k - 1 months after the first. The response is the first installment. */
+            installments?: number;
         };
         Transaction: {
             /** Format: uuid */
@@ -536,6 +818,89 @@ export interface components {
              * @description Scheduled (unadjusted) date of the occurrence; null for one-off entries.
              */
             occurrenceDate: string | null;
+            /** @description The card and invoice of a card purchase; null otherwise. A card purchase counts in the metrics of its invoice month (DR-035). */
+            cardPurchase: components["schemas"]["CardPurchase"] | null;
+            /** @description Installment number and count of an installment purchase; null otherwise. */
+            installment: components["schemas"]["Installment"] | null;
+        };
+        Installment: {
+            /** Format: uuid */
+            purchaseId: string;
+            number: number;
+            count: number;
+        };
+        CardPurchase: {
+            /** Format: uuid */
+            cardId: string;
+            cardName: string;
+            invoiceMonth: string;
+            /** @description True when the invoice is fully paid; the purchase then counts as realized. */
+            invoiceSettled: boolean;
+        };
+        /** @description An invoice of a card for a reference month (the month of its due date). Before any purchase or date change it does not exist yet: version is null and the dates are the card defaults. */
+        CardInvoice: {
+            /** Format: uuid */
+            cardId: string;
+            referenceMonth: string;
+            closingDate: components["schemas"]["FinancialDate"];
+            dueDate: components["schemas"]["FinancialDate"];
+            /** @description Sum of the non-deleted purchases of the invoice. */
+            totalMinor: number;
+            /** @description Sum of the payments of the invoice (never expenses, DR-036). */
+            paidMinor: number;
+            /** @description totalMinor - paidMinor; negative when purchases were removed after payment. */
+            outstandingMinor: number;
+            /** @enum {string} */
+            state: "empty" | "open" | "partially_paid" | "paid";
+            payments: components["schemas"]["InvoicePayment"][];
+            version: number | null;
+            purchases: components["schemas"]["Transaction"][];
+            hasMore: boolean;
+        };
+        CardLimits: {
+            on: components["schemas"]["FinancialDate"];
+            items: {
+                /** Format: uuid */
+                cardId: string;
+                currentLimitMinor: number | null;
+                usedMinor: number;
+                availableMinor: number | null;
+            }[];
+        };
+        CardInvoiceSummaryList: {
+            items: {
+                referenceMonth: string;
+                closingDate: components["schemas"]["FinancialDate"];
+                dueDate: components["schemas"]["FinancialDate"];
+                totalMinor: number;
+                paidMinor: number;
+                outstandingMinor: number;
+                /** @enum {string} */
+                state: "empty" | "open" | "partially_paid" | "paid";
+            }[];
+        };
+        InvoicePayment: {
+            /** Format: uuid */
+            id: string;
+            amountMinor: components["schemas"]["AmountMinor"];
+            paidOn: components["schemas"]["FinancialDate"];
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        InvoiceDatesRequest: {
+            /** @description The invoice version, or null when it does not exist yet. */
+            version: number | null;
+            closingDate: components["schemas"]["FinancialDate"];
+            dueDate: components["schemas"]["FinancialDate"];
+        };
+        CommitmentInvoice: {
+            /** Format: uuid */
+            cardId: string;
+            cardName: string;
+            referenceMonth: string;
+            dueDate: components["schemas"]["FinancialDate"];
+            /** @description Open amount of the invoice. */
+            amountMinor: number;
         };
         VersionRequest: {
             version: number;
@@ -552,6 +917,8 @@ export interface components {
             categoryId?: string;
             /** Format: uuid */
             subcategoryId?: string | null;
+            /** @description Moves a card purchase to another invoice of the same card. */
+            invoiceMonth?: string;
         };
         TransactionList: {
             items: components["schemas"]["Transaction"][];
@@ -687,7 +1054,7 @@ export interface components {
             income: number;
             expenses: number;
         };
-        /** @description M-008. amountMinor = base.amountMinor + (afterObservation.income - afterObservation.expenses) + (pendingUpToObservation.income - pendingUpToObservation.expenses). A calculation, never an observed balance. */
+        /** @description M-008. amountMinor = base.amountMinor + (afterObservation.income - afterObservation.expenses) + (pendingUpToObservation.income - pendingUpToObservation.expenses) - openInvoices - invoicePayments. Card purchases enter only through their invoices. A calculation, never an observed balance. */
         Projection: {
             amountMinor: number;
             base: {
@@ -696,6 +1063,10 @@ export interface components {
             };
             afterObservation: components["schemas"]["FlowTotals"];
             pendingUpToObservation: components["schemas"]["FlowTotals"];
+            /** @description Amount of card invoices due before the end of the month not covered by payments dated before the end of the month. */
+            openInvoices: number;
+            /** @description Invoice payments dated after the observation and before the end of the month. */
+            invoicePayments: number;
         };
         ProjectionSeries: {
             items: {
@@ -704,11 +1075,14 @@ export interface components {
             }[];
         };
         CommitmentSection: {
+            /** @description Pending transactions other than card purchases. */
             items: components["schemas"]["Transaction"][];
+            /** @description Open card invoices due in the section, by due date. */
+            invoices: components["schemas"]["CommitmentInvoice"][];
             hasMore: boolean;
             /** @description Sum of pending income in the section, minor units. */
             income: number;
-            /** @description Sum of pending expenses in the section, minor units. */
+            /** @description Sum of pending expenses and open invoices in the section, minor units. */
             expenses: number;
         };
         Commitments: {
@@ -727,6 +1101,33 @@ export interface components {
         };
     };
     responses: {
+        /** @description CATEGORY_NOT_AVAILABLE (category not usable for the type), CARD_NOT_AVAILABLE (missing or archived card), or INVALID_CARD_PURCHASE (income, status sent, invoice out of range, or invoice change on a non-card transaction). */
+        TransactionRejected: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description The card does not exist in this space (code CARD_NOT_FOUND). */
+        CardNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description VERSION_CONFLICT or CARD_NAME_TAKEN (another card of the space has the name). */
+        CardConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
         /** @description The series does not exist in this space (code RECURRENCE_NOT_FOUND). */
         RecurrenceNotFound: {
             headers: {
@@ -810,6 +1211,8 @@ export interface components {
         };
     };
     parameters: {
+        InvoiceMonth: string;
+        CardId: string;
         SeriesId: string;
         TransactionId: string;
         SpaceId: string;
@@ -1119,7 +1522,7 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["FinancialSpaceNotFound"];
-            422: components["responses"]["CategoryNotAvailable"];
+            422: components["responses"]["TransactionRejected"];
         };
     };
     getTransaction: {
@@ -1205,7 +1608,7 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["TransactionNotFound"];
             409: components["responses"]["StateConflict"];
-            422: components["responses"]["CategoryNotAvailable"];
+            422: components["responses"]["TransactionRejected"];
         };
     };
     restoreTransaction: {
@@ -1583,6 +1986,381 @@ export interface operations {
             400: components["responses"]["ValidationFailed"];
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    listCards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active cards first, then archived, by name. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    createCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCardRequest"];
+            };
+        };
+        responses: {
+            /** @description The created card. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Card"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            409: components["responses"]["CardConflict"];
+        };
+    };
+    getCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Card"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
+        };
+    };
+    updateCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCardRequest"];
+            };
+        };
+        responses: {
+            /** @description The card after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Card"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
+            409: components["responses"]["CardConflict"];
+        };
+    };
+    recordCardLimit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordCardLimitRequest"];
+            };
+        };
+        responses: {
+            /** @description The card with its updated limit history. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Card"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
+        };
+    };
+    getCardInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The invoice. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardInvoice"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
+        };
+    };
+    setCardInvoiceDates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceDatesRequest"];
+            };
+        };
+        responses: {
+            /** @description The invoice after the change. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardInvoice"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
+            409: components["responses"]["StateConflict"];
+        };
+    };
+    cancelInstallments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                purchaseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    afterMonth: string;
+                };
+            };
+        };
+        responses: {
+            /** @description How many installments were cancelled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        cancelled: number;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            /** @description The purchase does not exist in this space (code INSTALLMENT_PURCHASE_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    payCardInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    amountMinor: components["schemas"]["AmountMinor"];
+                    paidOn: components["schemas"]["FinancialDate"];
+                };
+            };
+        };
+        responses: {
+            /** @description The invoice after the payment. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardInvoice"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
+            /** @description The invoice has no open amount this large (code PAYMENT_EXCEEDS_OUTSTANDING). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    removeCardInvoicePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+                month: components["parameters"]["InvoiceMonth"];
+                paymentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The invoice after the removal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardInvoice"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            /** @description CARD_NOT_FOUND or INVOICE_PAYMENT_NOT_FOUND. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getCardLimits: {
+        parameters: {
+            query: {
+                on: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One entry per card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardLimits"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+        };
+    };
+    listCardInvoices: {
+        parameters: {
+            query: {
+                fromMonth: string;
+                months?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                cardId: components["parameters"]["CardId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One entry per month, including months without purchases. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CardInvoiceSummaryList"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            404: components["responses"]["CardNotFound"];
         };
     };
 }

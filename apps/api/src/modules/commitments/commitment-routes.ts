@@ -6,11 +6,14 @@ import { z } from 'zod';
 import type { DataAccess } from '../../database/data-access.ts';
 import { requireAuthenticatedUser } from '../../http/authenticate.ts';
 import { parseInput } from '../../http/validation.ts';
+import { outstandingMinor } from '../cards/card-invoice.ts';
 import { requireAccessibleSpace } from '../financial-spaces/financial-space-access.ts';
 import { toTransactionResponse } from '../transactions/transaction-routes.ts';
 
 const EARLIEST_DATE = '1900-01-01';
 const SECTION_LIMIT = 200;
+
+const EMPTY_SECTION = { items: [], invoices: [], hasMore: false, income: 0, expenses: 0 };
 
 const spaceParamsSchema = z.object({ spaceId: z.string() });
 const commitmentsQuerySchema = z.object({
@@ -32,24 +35,37 @@ export function registerCommitmentRoutes(server: FastifyInstance, data: DataAcce
 
     const [overdue, upcoming] = await Promise.all(
       [sections.overdue, sections.upcoming].map(async (range) => {
-        const [page, totals] = await Promise.all([
+        const [page, totals, invoices] = await Promise.all([
           data.repositories.transactions.list({
             financialSpaceId: space.id,
             state: 'active',
             status: 'pending',
+            excludeCardPurchases: true,
             range,
             limit: SECTION_LIMIT,
             cursor: null,
           }),
-          data.repositories.dashboard.monthTotals({ financialSpaceId: space.id, ...range }),
+          data.repositories.dashboard.pendingTotals({ financialSpaceId: space.id, ...range }),
+          data.repositories.cardInvoices.listOpenDue(space.id, range),
         ]);
+        const invoiceTotal = invoices.reduce(
+          (total, invoice) => total + outstandingMinor(invoice),
+          0,
+        );
         return {
           items: [...page.items]
             .sort((left, right) => left.financialDate.localeCompare(right.financialDate))
             .map(toTransactionResponse),
+          invoices: invoices.map((invoice) => ({
+            cardId: invoice.cardId,
+            cardName: invoice.cardName,
+            referenceMonth: invoice.referenceMonth,
+            dueDate: invoice.dueDate,
+            amountMinor: outstandingMinor(invoice),
+          })),
           hasMore: page.nextCursor !== null,
-          income: totals.forecastIncome,
-          expenses: totals.forecastExpenses,
+          income: totals.income,
+          expenses: totals.expenses + invoiceTotal,
         };
       }),
     );
@@ -57,8 +73,8 @@ export function registerCommitmentRoutes(server: FastifyInstance, data: DataAcce
     return {
       from,
       through,
-      overdue: overdue ?? { items: [], hasMore: false, income: 0, expenses: 0 },
-      upcoming: upcoming ?? { items: [], hasMore: false, income: 0, expenses: 0 },
+      overdue: overdue ?? EMPTY_SECTION,
+      upcoming: upcoming ?? EMPTY_SECTION,
     };
   });
 }

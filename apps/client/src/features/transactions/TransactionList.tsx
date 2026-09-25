@@ -68,9 +68,19 @@ export function TransactionRow({
             {transaction.description}
           </Text>
           <Text style={[styles.meta, { color: palette.textMuted }]}>
-            {transaction.recurrenceSeriesId === null
-              ? `${date} · ${category}`
-              : `${date} · ${category} · ↻ ${messages.recurrences.tag}`}
+            {[
+              date,
+              category,
+              transaction.recurrenceSeriesId === null ? null : `↻ ${messages.recurrences.tag}`,
+              transaction.installment === null
+                ? null
+                : messages.cards.installmentTag(
+                    transaction.installment.number,
+                    transaction.installment.count,
+                  ),
+            ]
+              .filter((part): part is string => part !== null)
+              .join(' · ')}
           </Text>
         </View>
         <View style={styles.trailing}>
@@ -87,16 +97,18 @@ export function TransactionRow({
           </Text>
         </View>
       </Pressable>
-      <Button
-        label={toggle.label}
-        accessibilityLabel={messages.transactions.statusActionLabel(
-          toggle.label,
-          transaction.description,
-        )}
-        variant="link"
-        loading={changingStatus}
-        onPress={onToggleStatus}
-      />
+      {transaction.cardPurchase === null && (
+        <Button
+          label={toggle.label}
+          accessibilityLabel={messages.transactions.statusActionLabel(
+            toggle.label,
+            transaction.description,
+          )}
+          variant="link"
+          loading={changingStatus}
+          onPress={onToggleStatus}
+        />
+      )}
     </View>
   );
 }

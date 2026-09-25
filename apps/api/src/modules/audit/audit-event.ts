@@ -1,4 +1,10 @@
-export type AuditEntityType = 'financial_transaction' | 'category' | 'recurrence_series';
+export type AuditEntityType =
+  | 'financial_transaction'
+  | 'category'
+  | 'recurrence_series'
+  | 'card'
+  | 'card_invoice'
+  | 'card_invoice_payment';
 export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
 
 export type AuditValue = string | number | boolean | null;

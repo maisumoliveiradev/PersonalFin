@@ -148,3 +148,20 @@ implemented yet.
 -   **Impact:** Slower date entry, especially on mobile.
 -   **Resolution:** Adopt a date picker when the Design System adds one.
 -   **Target version:** v0.2.0.
+
+### TD-010 --- Client invoice suggestion ignores per-invoice date overrides
+
+-   **Status:** Open
+-   **Priority:** Low
+-   **Origin:** SDD-024
+-   **Reason:** The expense form suggests the invoice from the card's
+    closing and due days (`defaultInvoiceMonth` in `packages/domain`)
+    without a request per keystroke, and sends the month the user sees.
+    The API applies overridden closing dates only when `invoiceMonth` is
+    omitted.
+-   **Impact:** When an invoice has an overridden closing date, the
+    suggested invoice may differ from the one the override implies; the
+    user can still pick the right invoice, and what is saved is what was
+    shown.
+-   **Resolution:** Expose the resolved default invoice (for example a
+    query endpoint) and use it in the form.

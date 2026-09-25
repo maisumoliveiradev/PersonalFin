@@ -78,6 +78,8 @@ describe('monthly projection (M-008)', () => {
       base: { amountMinor: 100_000, observedOn: '2026-02-10' },
       afterObservation: { income: 50_000, expenses: 20_000 },
       pendingUpToObservation: { income: 0, expenses: 7_000 },
+      openInvoices: 0,
+      invoicePayments: 0,
       amountMinor: 100_000 + (50_000 - 20_000) + (0 - 7_000),
     });
   });

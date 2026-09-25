@@ -6,6 +6,69 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.4.0\] --- 2026-09-25
+
+Credit Cards. Released to `main` and tagged `v0.4.0`; validated in
+SDD-028 (`docs/sdds/v0.4.0/SDD-028-validation-report.md`).
+
+### Card Limit and Summary (SDD-027)
+
+-   The cards screen shows used and available limit per card, counting
+    future installments and payments (DR-082).
+-   The card screen lists its invoices from two months back to three
+    months ahead with total and state, each opening the invoice.
+-   Fixed: the payment confirmation now stays visible after the invoice
+    refreshes.
+-   `GET .../card-limits?on=` and `GET .../cards/{cardId}/invoices`.
+
+### Invoice Payment (SDD-026)
+
+-   "Pagar fatura" on the invoice screen records full or partial
+    payments (never above the open amount); the invoice shows paid, open
+    amount, and state, and payments can be removed (audited, DR-081).
+-   Payments never create expenses (DR-036); purchases of a paid invoice
+    count as realized and show "(paga)".
+-   The projection subtracts the unpaid part of invoices and payments
+    after the observation; commitments list only open amounts.
+-   `POST`/`DELETE .../invoices/{month}/payments`; migration
+    `0016_invoice_payments`.
+
+### Installment Purchases (SDD-025)
+
+-   Card purchases can be split into 2 to 48 installments ("Parcelas"),
+    one per invoice, with exact cents (remainder on the first) and
+    "parcela k/n" in the list (DR-080).
+-   "Cancelar parcelas seguintes" on an installment moves the later
+    installments to the trash, keeping this and earlier ones (audited).
+-   `installments` on transaction creation, `installment` in responses,
+    `POST .../installment-purchases/{purchaseId}/cancel`; migration
+    `0015_installment_purchases`.
+
+### Card Purchases and Invoices (SDD-024)
+
+-   Expenses can be paid with a card ("Pagamento"): the invoice is
+    suggested from the card's closing day and can be changed; card
+    purchases show their card and invoice instead of a status.
+-   Invoice screen per card and month with closing and due dates, total,
+    and purchases; each invoice can have its own dates (DR-038, DR-079).
+-   Card purchases count in the metrics of their invoice month (DR-035);
+    the projection and "Próximos compromissos" use open invoices at
+    their due date instead of individual purchases.
+-   `cardId`/`invoiceMonth` on transactions, `cardPurchase` in responses,
+    `GET .../cards/{cardId}/invoices/{month}`, `PUT .../dates`,
+    `openInvoices` in the projection, and `invoices` in commitments;
+    migration `0014_card_invoices`. Recorded TD-010.
+
+### Cards and Limits (SDD-023)
+
+-   "Cartões" screen per space: register cards with name, closing day,
+    due day, and initial limit; edit days and name; archive/reactivate
+    (audited, version-checked).
+-   The card limit keeps its history: new limits are recorded with an
+    effective date and never overwrite earlier values (DR-078).
+-   `GET`/`POST .../cards`, `GET`/`PATCH .../cards/{cardId}`, and
+    `POST .../cards/{cardId}/limit-changes`; migration `0013_cards`.
+
 ## \[0.3.0\] --- 2026-09-24
 
 Planning and Recurrence. Released to `main` and tagged `v0.3.0`;

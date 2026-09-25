@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: PersonalFin Application API
-  version: 0.3.0
+  version: 0.4.0
   description: >
     Application API contract. Authentication endpoints (sign-up, sign-in,
     sign-out, session) are served by Better Auth under /api/auth and are
@@ -294,7 +294,7 @@ paths:
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
         '422':
-          $ref: '#/components/responses/CategoryNotAvailable'
+          $ref: '#/components/responses/TransactionRejected'
   /financial-spaces/{spaceId}/transactions/{transactionId}:
     parameters:
       - $ref: '#/components/parameters/SpaceId'
@@ -343,7 +343,7 @@ paths:
         '409':
           $ref: '#/components/responses/StateConflict'
         '422':
-          $ref: '#/components/responses/CategoryNotAvailable'
+          $ref: '#/components/responses/TransactionRejected'
     delete:
       operationId: deleteTransaction
       summary: Soft delete a transaction (restorable, audited)
@@ -750,8 +750,384 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/cards:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listCards
+      summary: List the credit cards of the space
+      responses:
+        '200':
+          description: Active cards first, then archived, by name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createCard
+      summary: Register a credit card with its initial limit
+      description: Creates the card and the first entry of its limit history. Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCardRequest'
+      responses:
+        '201':
+          description: The created card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '409':
+          $ref: '#/components/responses/CardConflict'
+  /financial-spaces/{spaceId}/cards/{cardId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+    get:
+      operationId: getCard
+      summary: Get a card with its limit history
+      responses:
+        '200':
+          description: The card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
+    patch:
+      operationId: updateCard
+      summary: Rename, change closing/due days, or archive a card
+      description: Version-checked and audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCardRequest'
+      responses:
+        '200':
+          description: The card after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
+        '409':
+          $ref: '#/components/responses/CardConflict'
+  /financial-spaces/{spaceId}/cards/{cardId}/limit-changes:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+    post:
+      operationId: recordCardLimit
+      summary: Record a new card limit from an effective date
+      description: >
+        Appends to the limit history; earlier values are never changed
+        (FR-051). The current limit on a date is the latest value effective
+        on or before it (ties: latest recorded).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordCardLimitRequest'
+      responses:
+        '201':
+          description: The card with its updated limit history.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
+  /financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+      - $ref: '#/components/parameters/InvoiceMonth'
+    get:
+      operationId: getCardInvoice
+      summary: Get the invoice of a card for a reference month with its purchases
+      responses:
+        '200':
+          description: The invoice.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardInvoice'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
+  /financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/dates:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+      - $ref: '#/components/parameters/InvoiceMonth'
+    put:
+      operationId: setCardInvoiceDates
+      summary: Override the closing and due dates of one invoice
+      description: >
+        Changes only this invoice (DR-038); the card defaults and the
+        purchases already assigned to it are unchanged. Version-checked and
+        audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceDatesRequest'
+      responses:
+        '200':
+          description: The invoice after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardInvoice'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
+        '409':
+          $ref: '#/components/responses/StateConflict'
+  /financial-spaces/{spaceId}/installment-purchases/{purchaseId}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - name: purchaseId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: cancelInstallments
+      summary: Cancel the installments of a purchase after an invoice month
+      description: >
+        Moves to the trash the installments whose invoice month is after
+        afterMonth. Earlier installments are kept (DR-043). Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - afterMonth
+              properties:
+                afterMonth:
+                  type: string
+                  pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+      responses:
+        '200':
+          description: How many installments were cancelled.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - cancelled
+                properties:
+                  cancelled:
+                    type: integer
+                    minimum: 0
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: The purchase does not exist in this space (code INSTALLMENT_PURCHASE_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+      - $ref: '#/components/parameters/InvoiceMonth'
+    post:
+      operationId: payCardInvoice
+      summary: Record a full or partial invoice payment
+      description: >
+        Settles already-recorded card expenses; it never creates an expense
+        (DR-036). The amount cannot exceed the open amount (DR-039). Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - amountMinor
+                - paidOn
+              properties:
+                amountMinor:
+                  $ref: '#/components/schemas/AmountMinor'
+                paidOn:
+                  $ref: '#/components/schemas/FinancialDate'
+      responses:
+        '201':
+          description: The invoice after the payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardInvoice'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
+        '422':
+          description: The invoice has no open amount this large (code PAYMENT_EXCEEDS_OUTSTANDING).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/cards/{cardId}/invoices/{month}/payments/{paymentId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+      - $ref: '#/components/parameters/InvoiceMonth'
+      - name: paymentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: removeCardInvoicePayment
+      summary: Remove an invoice payment recorded by mistake
+      description: Soft-deletes the payment; audited.
+      responses:
+        '200':
+          description: The invoice after the removal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardInvoice'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: CARD_NOT_FOUND or INVOICE_PAYMENT_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/card-limits:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getCardLimits
+      summary: Known used and available limit of every card on a date
+      description: >
+        usedMinor is the unpaid part of all invoices of the card (every
+        non-deleted purchase, including future installments, minus
+        payments). availableMinor = current limit on the date - usedMinor;
+        it may be negative and is null when no limit is effective yet.
+      parameters:
+        - name: 'on'
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: One entry per card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardLimits'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/cards/{cardId}/invoices:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/CardId'
+    get:
+      operationId: listCardInvoices
+      summary: Invoice totals of a card for consecutive months
+      parameters:
+        - name: fromMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        - name: months
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+            default: 6
+      responses:
+        '200':
+          description: One entry per month, including months without purchases.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardInvoiceSummaryList'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/CardNotFound'
 components:
   parameters:
+    InvoiceMonth:
+      name: month
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+    CardId:
+      name: cardId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     SeriesId:
       name: seriesId
       in: path
@@ -782,6 +1158,28 @@ components:
         Session cookie issued by Better Auth. Native clients send the same
         cookie through the Cookie header.
   responses:
+    TransactionRejected:
+      description: >
+        CATEGORY_NOT_AVAILABLE (category not usable for the type),
+        CARD_NOT_AVAILABLE (missing or archived card), or
+        INVALID_CARD_PURCHASE (income, status sent, invoice out of range, or
+        invoice change on a non-card transaction).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    CardNotFound:
+      description: The card does not exist in this space (code CARD_NOT_FOUND).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    CardConflict:
+      description: VERSION_CONFLICT or CARD_NAME_TAKEN (another card of the space has the name).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     RecurrenceNotFound:
       description: The series does not exist in this space (code RECURRENCE_NOT_FOUND).
       content:
@@ -850,6 +1248,127 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    CardDay:
+      type: integer
+      minimum: 1
+      maximum: 31
+      description: Day of the month; months without it use their last day.
+    CardName:
+      type: string
+      minLength: 1
+      maxLength: 60
+    CardLimitChange:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - amountMinor
+        - currency
+        - effectiveFrom
+        - recordedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        effectiveFrom:
+          $ref: '#/components/schemas/FinancialDate'
+        recordedAt:
+          type: string
+          format: date-time
+    Card:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - closingDay
+        - dueDay
+        - archived
+        - version
+        - limits
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        closingDay:
+          $ref: '#/components/schemas/CardDay'
+        dueDay:
+          $ref: '#/components/schemas/CardDay'
+        archived:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
+        limits:
+          type: array
+          description: Limit history, latest effective date first (ties, latest recorded first).
+          items:
+            $ref: '#/components/schemas/CardLimitChange'
+    CardList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Card'
+    CreateCardRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - closingDay
+        - dueDay
+        - limitMinor
+        - limitEffectiveFrom
+      properties:
+        name:
+          $ref: '#/components/schemas/CardName'
+        closingDay:
+          $ref: '#/components/schemas/CardDay'
+        dueDay:
+          $ref: '#/components/schemas/CardDay'
+        limitMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        limitEffectiveFrom:
+          $ref: '#/components/schemas/FinancialDate'
+    UpdateCardRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        name:
+          $ref: '#/components/schemas/CardName'
+        closingDay:
+          $ref: '#/components/schemas/CardDay'
+        dueDay:
+          $ref: '#/components/schemas/CardDay'
+        archived:
+          type: boolean
+    RecordCardLimitRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - amountMinor
+        - effectiveFrom
+      properties:
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        effectiveFrom:
+          $ref: '#/components/schemas/FinancialDate'
     HealthStatus:
       type: object
       additionalProperties: false
@@ -1117,6 +1636,29 @@ components:
             - 'null'
           format: uuid
           description: Optional subcategory of categoryId.
+        cardId:
+          type: string
+          format: uuid
+          description: >
+            Records a card purchase (expense only, active card of the space).
+            Card purchases have no status of their own; do not send status.
+        invoiceMonth:
+          type: string
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+          description: >
+            Invoice (reference month) for a card purchase, from the month
+            before to two months after financialDate. Defaults to the
+            invoice whose closing date is after financialDate.
+        installments:
+          type: integer
+          minimum: 2
+          maximum: 48
+          description: >
+            Splits a card purchase into this many installments (amountMinor
+            is the total; the remainder cents go to the first). Installment
+            k is dated k - 1 months after financialDate and goes to the
+            invoice k - 1 months after the first. The response is the first
+            installment.
     Transaction:
       type: object
       additionalProperties: false
@@ -1135,6 +1677,8 @@ components:
         - deletedAt
         - recurrenceSeriesId
         - occurrenceDate
+        - cardPurchase
+        - installment
       properties:
         id:
           type: string
@@ -1184,6 +1728,248 @@ components:
             - 'null'
           format: date
           description: Scheduled (unadjusted) date of the occurrence; null for one-off entries.
+        cardPurchase:
+          description: >
+            The card and invoice of a card purchase; null otherwise. A card
+            purchase counts in the metrics of its invoice month (DR-035).
+          oneOf:
+            - $ref: '#/components/schemas/CardPurchase'
+            - type: 'null'
+        installment:
+          description: Installment number and count of an installment purchase; null otherwise.
+          oneOf:
+            - $ref: '#/components/schemas/Installment'
+            - type: 'null'
+    Installment:
+      type: object
+      additionalProperties: false
+      required:
+        - purchaseId
+        - number
+        - count
+      properties:
+        purchaseId:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          minimum: 1
+        count:
+          type: integer
+          minimum: 2
+    CardPurchase:
+      type: object
+      additionalProperties: false
+      required:
+        - cardId
+        - cardName
+        - invoiceMonth
+        - invoiceSettled
+      properties:
+        cardId:
+          type: string
+          format: uuid
+        cardName:
+          type: string
+        invoiceMonth:
+          type: string
+        invoiceSettled:
+          type: boolean
+          description: True when the invoice is fully paid; the purchase then counts as realized.
+    CardInvoice:
+      type: object
+      additionalProperties: false
+      description: >
+        An invoice of a card for a reference month (the month of its due
+        date). Before any purchase or date change it does not exist yet:
+        version is null and the dates are the card defaults.
+      required:
+        - cardId
+        - referenceMonth
+        - closingDate
+        - dueDate
+        - totalMinor
+        - paidMinor
+        - outstandingMinor
+        - state
+        - payments
+        - version
+        - purchases
+        - hasMore
+      properties:
+        cardId:
+          type: string
+          format: uuid
+        referenceMonth:
+          type: string
+        closingDate:
+          $ref: '#/components/schemas/FinancialDate'
+        dueDate:
+          $ref: '#/components/schemas/FinancialDate'
+        totalMinor:
+          type: integer
+          minimum: 0
+          description: Sum of the non-deleted purchases of the invoice.
+        paidMinor:
+          type: integer
+          minimum: 0
+          description: Sum of the payments of the invoice (never expenses, DR-036).
+        outstandingMinor:
+          type: integer
+          description: totalMinor - paidMinor; negative when purchases were removed after payment.
+        state:
+          type: string
+          enum:
+            - empty
+            - open
+            - partially_paid
+            - paid
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoicePayment'
+        version:
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+        purchases:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        hasMore:
+          type: boolean
+    CardLimits:
+      type: object
+      additionalProperties: false
+      required:
+        - 'on'
+        - items
+      properties:
+        'on':
+          $ref: '#/components/schemas/FinancialDate'
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - cardId
+              - currentLimitMinor
+              - usedMinor
+              - availableMinor
+            properties:
+              cardId:
+                type: string
+                format: uuid
+              currentLimitMinor:
+                type:
+                  - integer
+                  - 'null'
+              usedMinor:
+                type: integer
+              availableMinor:
+                type:
+                  - integer
+                  - 'null'
+    CardInvoiceSummaryList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - referenceMonth
+              - closingDate
+              - dueDate
+              - totalMinor
+              - paidMinor
+              - outstandingMinor
+              - state
+            properties:
+              referenceMonth:
+                type: string
+              closingDate:
+                $ref: '#/components/schemas/FinancialDate'
+              dueDate:
+                $ref: '#/components/schemas/FinancialDate'
+              totalMinor:
+                type: integer
+              paidMinor:
+                type: integer
+              outstandingMinor:
+                type: integer
+              state:
+                type: string
+                enum:
+                  - empty
+                  - open
+                  - partially_paid
+                  - paid
+    InvoicePayment:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - amountMinor
+        - paidOn
+        - recordedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        amountMinor:
+          $ref: '#/components/schemas/AmountMinor'
+        paidOn:
+          $ref: '#/components/schemas/FinancialDate'
+        recordedAt:
+          type: string
+          format: date-time
+    InvoiceDatesRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+        - closingDate
+        - dueDate
+      properties:
+        version:
+          description: The invoice version, or null when it does not exist yet.
+          type:
+            - integer
+            - 'null'
+          minimum: 1
+        closingDate:
+          $ref: '#/components/schemas/FinancialDate'
+        dueDate:
+          $ref: '#/components/schemas/FinancialDate'
+    CommitmentInvoice:
+      type: object
+      additionalProperties: false
+      required:
+        - cardId
+        - cardName
+        - referenceMonth
+        - dueDate
+        - amountMinor
+      properties:
+        cardId:
+          type: string
+          format: uuid
+        cardName:
+          type: string
+        referenceMonth:
+          type: string
+        dueDate:
+          $ref: '#/components/schemas/FinancialDate'
+        amountMinor:
+          type: integer
+          description: Open amount of the invoice.
     VersionRequest:
       type: object
       additionalProperties: false
@@ -1223,6 +2009,10 @@ components:
             - string
             - 'null'
           format: uuid
+        invoiceMonth:
+          type: string
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+          description: Moves a card purchase to another invoice of the same card.
     TransactionList:
       type: object
       additionalProperties: false
@@ -1607,13 +2397,16 @@ components:
       description: >
         M-008. amountMinor = base.amountMinor + (afterObservation.income -
         afterObservation.expenses) + (pendingUpToObservation.income -
-        pendingUpToObservation.expenses). A calculation, never an observed
+        pendingUpToObservation.expenses) - openInvoices - invoicePayments.
+        Card purchases enter only through their invoices. A calculation, never an observed
         balance.
       required:
         - amountMinor
         - base
         - afterObservation
         - pendingUpToObservation
+        - openInvoices
+        - invoicePayments
       properties:
         amountMinor:
           type: integer
@@ -1632,6 +2425,14 @@ components:
           $ref: '#/components/schemas/FlowTotals'
         pendingUpToObservation:
           $ref: '#/components/schemas/FlowTotals'
+        openInvoices:
+          type: integer
+          description: >
+            Amount of card invoices due before the end of the month not
+            covered by payments dated before the end of the month.
+        invoicePayments:
+          type: integer
+          description: Invoice payments dated after the observation and before the end of the month.
     ProjectionSeries:
       type: object
       additionalProperties: false
@@ -1658,14 +2459,21 @@ components:
       additionalProperties: false
       required:
         - items
+        - invoices
         - hasMore
         - income
         - expenses
       properties:
         items:
           type: array
+          description: Pending transactions other than card purchases.
           items:
             $ref: '#/components/schemas/Transaction'
+        invoices:
+          type: array
+          description: Open card invoices due in the section, by due date.
+          items:
+            $ref: '#/components/schemas/CommitmentInvoice'
         hasMore:
           type: boolean
         income:
@@ -1673,7 +2481,7 @@ components:
           description: Sum of pending income in the section, minor units.
         expenses:
           type: integer
-          description: Sum of pending expenses in the section, minor units.
+          description: Sum of pending expenses and open invoices in the section, minor units.
     Commitments:
       type: object
       additionalProperties: false

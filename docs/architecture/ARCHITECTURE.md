@@ -32,7 +32,7 @@ apps/
     src/http/        Authentication hook, input validation, error contract
     src/modules/     Domain modules (financial-spaces/, categories/,
                      transactions/, audit/, balance/, dashboard/,
-                     recurrences/):
+                     recurrences/, cards/):
                      domain types, use cases, repository ports,
                      PostgreSQL adapters, routes
     src/routes/      Cross-cutting HTTP routes (health, auth, me)
@@ -186,6 +186,21 @@ Observed balances are stored in `balance_snapshot`, append-only at the
 database level. The current balance is the most recent snapshot by
 observed date, then recording instant. Snapshots are never transactions
 and never enter transaction totals.
+
+### Cards and invoices (DR-078, DR-079)
+
+Cards keep an append-only limit history (`card_limit_change`). Invoices
+(`card_invoice`) are created on demand, one per card and reference
+month, with stored closing and due dates. Installment purchases
+(`card_installment_purchase`) keep the original purchase; each
+installment is a card purchase linked to it by number. Invoice payments
+(`card_invoice_payment`) are separate from transactions; the view
+`card_invoice_balance` gives each invoice's total and paid amounts, from
+which the effective status of card purchases is derived. A card purchase is a
+`financial_transaction` linked to an invoice (`card_invoice_id`); the
+database enforces that it is a Pending expense and not a recurrence
+occurrence. Metrics group card purchases by the invoice's reference
+month.
 
 ### Metrics (DR-066, DR-067)
 
