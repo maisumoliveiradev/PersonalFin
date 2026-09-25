@@ -1,3 +1,5 @@
+import type { PlatformAdminRepository } from '../modules/admin/platform-admin.ts';
+import { createPostgresPlatformAdminRepository } from '../modules/admin/postgres-platform-admin-repository.ts';
 import type { AnalyticsRepository } from '../modules/analytics/analytics-repository.ts';
 import { createPostgresAnalyticsRepository } from '../modules/analytics/postgres-analytics-repository.ts';
 import type { AttachmentRepository } from '../modules/attachments/attachment.ts';
@@ -38,6 +40,8 @@ import { createPostgresRecurrenceRepository } from '../modules/recurrences/postg
 import type { RecurrenceRepository } from '../modules/recurrences/recurrence-repository.ts';
 import { createPostgresReminderRepository } from '../modules/reminders/postgres-reminder-repository.ts';
 import type { ReminderRepository } from '../modules/reminders/reminder-repository.ts';
+import { createPostgresSupportGrantRepository } from '../modules/support/postgres-support-grant-repository.ts';
+import type { SupportGrantRepository } from '../modules/support/support-grant.ts';
 import { createPostgresTagRepository } from '../modules/tags/postgres-tag-repository.ts';
 import type { TagRepository } from '../modules/tags/tag-repository.ts';
 import { createPostgresTransactionRepository } from '../modules/transactions/postgres-transaction-repository.ts';
@@ -67,6 +71,8 @@ export interface Repositories {
   backup: BackupRepository;
   exchangeRates: ExchangeRateRepository;
   attachments: AttachmentRepository;
+  platformAdmins: PlatformAdminRepository;
+  supportGrants: SupportGrantRepository;
 }
 
 export interface DataAccess {
@@ -98,6 +104,8 @@ function createPostgresRepositories(db: Queryable): Repositories {
     backup: createPostgresBackupRepository(db),
     exchangeRates: createPostgresExchangeRateRepository(db),
     attachments: createPostgresAttachmentRepository(db),
+    platformAdmins: createPostgresPlatformAdminRepository(db),
+    supportGrants: createPostgresSupportGrantRepository(db),
   };
 }
 

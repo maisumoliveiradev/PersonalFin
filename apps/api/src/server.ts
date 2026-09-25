@@ -8,6 +8,8 @@ import type { DataAccess } from './database/data-access.ts';
 import { createAuthenticationHook } from './http/authenticate.ts';
 import { createClientVersionHook } from './http/client-version.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
+import { requestContextHook } from './http/request-context.ts';
+import { registerAdminRoutes } from './modules/admin/admin-routes.ts';
 import { registerAnalyticsRoutes } from './modules/analytics/analytics-routes.ts';
 import { registerAttachmentRoutes } from './modules/attachments/attachment-routes.ts';
 import { registerAuditRoutes } from './modules/audit/audit-routes.ts';
@@ -31,6 +33,7 @@ import { registerDashboardPreferenceRoutes } from './modules/preferences/dashboa
 import { registerRecurrenceRoutes } from './modules/recurrences/recurrence-routes.ts';
 import { registerReminderRoutes } from './modules/reminders/reminder-routes.ts';
 import { registerReportRoutes } from './modules/reports/report-routes.ts';
+import { registerSupportRoutes } from './modules/support/support-routes.ts';
 import { registerTagRoutes } from './modules/tags/tag-routes.ts';
 import { registerTransactionRoutes } from './modules/transactions/transaction-routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './routes/auth.ts';
@@ -78,8 +81,9 @@ export function buildServer(options: ServerOptions): FastifyInstance {
   registerAuthRoutes(server, options.authHandler);
 
   server.register(async (authenticated) => {
+    authenticated.addHook('onRequest', requestContextHook);
     authenticated.addHook('preHandler', createAuthenticationHook(options.sessionResolver));
-    registerMeRoute(authenticated);
+    registerMeRoute(authenticated, options.data);
     registerFinancialSpaceRoutes(authenticated, options.data);
     registerCategoryRoutes(authenticated, options.data);
     registerTransactionRoutes(authenticated, options.data);
@@ -105,6 +109,8 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerBackupRoutes(authenticated, options.data);
     registerExchangeRateRoutes(authenticated, options.data);
     registerAttachmentRoutes(authenticated, options.data);
+    registerAdminRoutes(authenticated, options.data);
+    registerSupportRoutes(authenticated, options.data);
   });
 
   return server;

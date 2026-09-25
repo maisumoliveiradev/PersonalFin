@@ -22,8 +22,10 @@ import { createInMemoryGoalRepository } from './in-memory-goal-repository.ts';
 import { createInMemoryImportRepository } from './in-memory-import-repository.ts';
 import { createInMemoryInstallmentRepository } from './in-memory-installment-repository.ts';
 import { createInMemoryMemberRepository } from './in-memory-member-repository.ts';
+import { createInMemoryPlatformAdminRepository } from './in-memory-platform-admin-repository.ts';
 import { createInMemoryRecurrenceRepository } from './in-memory-recurrence-repository.ts';
 import { createInMemoryReminderRepository } from './in-memory-reminder-repository.ts';
+import { createInMemorySupportGrantRepository } from './in-memory-support-grant-repository.ts';
 import { createInMemoryTagRepository } from './in-memory-tag-repository.ts';
 import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
 
@@ -78,13 +80,26 @@ export function createInMemoryRepositories() {
     (invoiceId) => cardInvoices.hasPayment(invoiceId),
   );
   const balanceSnapshots = createInMemoryBalanceSnapshotRepository();
-  const financialSpaces = createInMemoryFinancialSpaceRepository();
+  const platformAdmins = createInMemoryPlatformAdminRepository();
+  const audit = createInMemoryAuditRepository();
+  const financialSpaces = createInMemoryFinancialSpaceRepository(
+    platformAdmins.admins,
+    (grantId, userId, spaceId) =>
+      audit.record({
+        financialSpaceId: spaceId,
+        entityType: 'support_grant',
+        entityId: grantId,
+        action: 'access',
+        actorUserId: userId,
+        changes: { permission: { before: null, after: 'view' } },
+      }),
+  );
   return {
     financialSpaces,
     members: createInMemoryMemberRepository(financialSpaces.spaces, financialSpaces.members),
     categories,
     transactions,
-    audit: createInMemoryAuditRepository(),
+    audit,
     balanceSnapshots,
     recurrences: createInMemoryRecurrenceRepository(transactions),
     dashboard: createInMemoryDashboardRepository(
@@ -107,6 +122,12 @@ export function createInMemoryRepositories() {
     backup: createInMemoryBackupRepository(() => transactions.transactions),
     exchangeRates: createInMemoryExchangeRateRepository(),
     attachments: createInMemoryAttachmentRepository(),
+    platformAdmins,
+    supportGrants: createInMemorySupportGrantRepository(
+      financialSpaces.supportGrants,
+      platformAdmins.admins,
+      (spaceId) => financialSpaces.spaces.find((space) => space.id === spaceId)?.name ?? '',
+    ),
   };
 }
 

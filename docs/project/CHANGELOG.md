@@ -6,6 +6,41 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.12.0\] --- 2026-09-25
+
+Platform Administration. Released to `main` and tagged `v0.12.0`;
+validated in SDD-061 (`docs/sdds/v0.12.0/SDD-061-validation-report.md`).
+
+### Authorized Support Access (SDD-060)
+
+-   In "Membros", the Owner can authorize a named platform administrator
+    to view the space.
+    - The access is read-only, needs a reason, and lasts 1, 3, or 7 days.
+    - The list shows each authorization's status and how many times it
+      was used. It can be revoked at any time.
+-   The administrator sees the authorized spaces in "Administração da
+    plataforma" and can only read them. Every access appears in
+    "Histórico de alterações" as "acesso do suporte" (FR-016, DR-101,
+    ADR-0018).
+-   API: `.../support-grants` (create, list, revoke) and
+    `/admin/support-grants`. Migration `0030_support_access`.
+
+### Platform Administration Foundation (SDD-059)
+
+-   Platform administrators are named with
+    `npm run admin -- grant <email>` (also `revoke` and `list`) in
+    `apps/api`. There is no way to become an administrator from the app.
+-   "Administração da plataforma" shows aggregate counts only:
+    - users, spaces, and transactions (total and last 30 days);
+    - active users;
+    - shared spaces;
+    - spaces using each feature;
+    - migrations.
+
+    It gives no access to financial data (FR-100 to FR-102, ADR-0018).
+-   API: `GET /admin/overview`, and `platformAdmin` in `/me`. Migration
+    `0029_platform_admin`.
+
 ## \[0.11.0\] --- 2026-09-25
 
 Documents (attachments). Released to `main` and tagged `v0.11.0`;

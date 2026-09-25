@@ -2,11 +2,13 @@
 
 ## Current Version
 
-`v0.11.0`, released on 2026-09-25 (`main`, tag `v0.11.0`). SDD-001 to
-SDD-058 implemented and validated
-(`docs/sdds/v0.11.0/SDD-058-validation-report.md`). Pending owner
-decisions: push notifications (v0.8.0), automatic exchange rates
-(v0.10.0), OCR/AI extraction (v0.11.0), invitation email (TD-011).
+`v0.12.0`, released on 2026-09-25 (`main`, tag `v0.12.0`). SDD-001 to
+SDD-061 implemented and validated
+(`docs/sdds/v0.12.0/SDD-061-validation-report.md`). All roadmap versions
+up to v0.12.0 are delivered, except the items that need owner decisions
+on external services: push notifications (v0.8.0), automatic exchange
+rates (v0.10.0), OCR/AI extraction (v0.11.0), and invitation email
+(TD-011).
 
 ## Implemented Product Capabilities
 
@@ -157,6 +159,12 @@ decisions: push notifications (v0.8.0), automatic exchange rates
     from files or the camera. The type is checked from the content, and
     access follows space permissions (DR-099). There is no OCR/AI
     extraction (pending owner decision).
+-   **Platform administration (SDD-059):** a Super Admin role granted by
+    an operator command, with an aggregate operations overview and no
+    access to financial spaces (DR-100, ADR-0018).
+-   **Support access (SDD-060):** Owner-authorized, read-only, expiring,
+    revocable access for a named platform administrator. Every access is
+    audited and visible to the Owner (DR-101).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -183,7 +191,7 @@ decisions: push notifications (v0.8.0), automatic exchange rates
         month, balance-reminder, business-day, card, comparison, dashboard-preference, and client-version rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
-    checksum verification (ADR-0008), `0001` to `0028`. Tables: Better
+    checksum verification (ADR-0008), `0001` to `0030`. Tables: Better
     Auth `user`, `session`, `account`, `verification`; `financial_space`,
     `financial_space_member`, `space_invitation`, `category`,
     `financial_transaction`, `transaction_tag`, `tag`, `audit_event`,
@@ -191,7 +199,7 @@ decisions: push notifications (v0.8.0), automatic exchange rates
     `card`, `card_limit_change`, `card_invoice`, `card_invoice_payment`,
     `card_installment_purchase`, `dashboard_preference`, `debt`,
     `debt_payment`, `goal`, `goal_progress`, `reminder_setting`,
-    `reminder_dismissal`, `import_batch`, `import_row`, `exchange_rate`, `attachment`; view
+    `reminder_dismissal`, `import_batch`, `import_row`, `exchange_rate`, `attachment`, `platform_admin`, `support_grant`; view
     `card_invoice_balance`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
@@ -207,8 +215,10 @@ decisions: push notifications (v0.8.0), automatic exchange rates
 
 ## Active Target
 
-`v0.12.0` --- Platform Administration (`docs/product/ROADMAP.md`). No SDD
-drafted yet.
+None planned. The next steps are the owner decisions listed above, the
+"Later evolution" items in `docs/product/ROADMAP.md` (Google and Apple
+sign-in, MFA, custom metrics, OFX, and others), and a production
+deployment, which needs hosting choices.
 
 ## Important Constraint
 
@@ -217,8 +227,13 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.12.0 SDDs (Platform Administration). Owner decisions pending: OCR/AI
-provider, FX rate provider, push notifications (hosted push service), and invitation
-email delivery (TD-011). Domain decisions taken under delegation await
-owner review (`docs/sdds/v0.2.0/README.md` to
-`docs/sdds/v0.11.0/README.md`, DR-072 to DR-099, ADR-0013 to ADR-0017).
+Owner review of the decisions taken under delegation
+(`docs/sdds/v0.2.0/README.md` to `docs/sdds/v0.12.0/README.md`, DR-072 to
+DR-101, ADR-0013 to ADR-0018). Then owner choices on:
+- the push service;
+- the exchange-rate provider;
+- the OCR/AI provider;
+- the email provider;
+- hosting.
+
+Each unblocks a pending item.

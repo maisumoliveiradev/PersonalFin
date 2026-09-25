@@ -15,7 +15,8 @@ model, superseding ADR-0010), ADR-0011
 (money and financial date formats, shared domain package), ADR-0012
 (audit log and optimistic concurrency), ADR-0016 (offline persistence,
 synchronization, and minimum client version), ADR-0017 (multi-currency
-representation).
+representation), ADR-0018 (platform administration and support
+access).
 
 ## Repository structure
 
@@ -373,6 +374,35 @@ soft delete, TD-014).
 
 The client adds files with the shared document picker and photos with
 `expo-image-picker` on native.
+
+## Platform administration (ADR-0018, SDD-059)
+
+`platform_admin` holds platform administrators. They are granted only
+with `npm run admin -- grant|revoke|list` in `apps/api`, using the
+database connection of that environment.
+- `requirePlatformAdmin` guards `/admin/*`.
+- `GET /admin/overview` runs count-only queries: users, sessions active
+  in 30 days, spaces, shared spaces, transactions, spaces per feature,
+  and migrations.
+- `/me` exposes `platformAdmin` so the client can show the area.
+- The role is never consulted by `requireAccessibleSpace`.
+
+## Support access (ADR-0018, SDD-060, DR-101)
+
+`support_grant` records an Owner's authorization for one platform
+administrator: a reason, read-only scope, an expiry of 1 to 7 days
+(check constraint), and revocation.
+- `requireAccessibleSpace` falls back to
+  `FinancialSpaceRepository.findSupportAccess` when the user has no
+  ownership or membership. The grant must be active and the user must
+  still be in `platform_admin`.
+- It then returns `role: support` with only `view`. The access is
+  allowed only for `GET`/`HEAD` requests (method from an
+  `AsyncLocalStorage` request context), so even personal "view" writes
+  are refused.
+- Each allowed access inserts an `access` audit event for the grant.
+- The Owner manages grants under `.../support-grants`. Administrators
+  list theirs at `/admin/support-grants`.
 
 ## Offline reading (ADR-0016, SDD-041)
 

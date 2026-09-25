@@ -1,4 +1,4 @@
-import type { AccessibleSpace } from '../financial-spaces/financial-space.ts';
+import type { AccessibleSpace, FinancialSpaceRole } from '../financial-spaces/financial-space.ts';
 
 export const BACKUP_FORMAT = 'personalfin-backup';
 export const BACKUP_FORMAT_VERSION = 1;
@@ -53,7 +53,7 @@ export interface Backup {
   spaces: {
     id: string;
     name: string;
-    role: 'owner' | 'member';
+    role: FinancialSpaceRole;
     permissions: string[];
     tables: Record<string, BackupRecord[]>;
   }[];

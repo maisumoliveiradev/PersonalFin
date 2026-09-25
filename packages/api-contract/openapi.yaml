@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: PersonalFin Application API
-  version: 0.11.0
+  version: 0.12.0
   description: >
     Application API contract. Authentication endpoints (sign-up, sign-in,
     sign-out, session) are served by Better Auth under /api/auth and are
@@ -3398,6 +3398,148 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /admin/overview:
+    get:
+      operationId: getPlatformOverview
+      summary: Aggregate platform health and adoption (platform administrators only)
+      responses:
+        '200':
+          description: Counts only; no financial values or per-user data (FR-102).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformOverview'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          description: >
+            PLATFORM_ADMIN_REQUIRED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/support-grants:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listSupportGrants
+      summary: List the space's support grants (Owner only)
+      responses:
+        '200':
+          description: Newest first, with access counts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportGrantList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            FINANCIAL_SPACE_NOT_FOUND or SUPPORT_GRANT_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createSupportGrant
+      summary: Authorize a platform administrator to view the space (Owner only, audited)
+      description: >
+        Read-only, with a reason, expiring in 1 to 7 days; every access is recorded in the space audit history (FR-016, DR-101).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSupportGrantRequest'
+      responses:
+        '201':
+          description: The grant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportGrant'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            FINANCIAL_SPACE_NOT_FOUND or SUPPORT_GRANT_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: >
+            SUPPORT_ADMIN_NOT_FOUND (no platform administrator uses this email).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/support-grants/{grantId}/revoke:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - name: grantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: revokeSupportGrant
+      summary: Revoke a support grant immediately (Owner only, audited)
+      responses:
+        '200':
+          description: The revoked grant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportGrant'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            FINANCIAL_SPACE_NOT_FOUND or SUPPORT_GRANT_NOT_FOUND.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /admin/support-grants:
+    get:
+      operationId: listMySupportGrants
+      summary: Active support grants given to the calling administrator
+      responses:
+        '200':
+          description: Active grants.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportGrantList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          description: >
+            PLATFORM_ADMIN_REQUIRED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     AttachmentId:
@@ -3594,6 +3736,137 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    SupportGrant:
+      type: object
+      additionalProperties: false
+      required: [id, spaceId, spaceName, adminName, adminEmail, reason, scope, status, createdAt, expiresAt, revokedAt, lastAccessAt, accessCount]
+      properties:
+        id:
+          type: string
+          format: uuid
+        spaceId:
+          type: string
+          format: uuid
+        spaceName:
+          type: string
+        adminName:
+          type: string
+        adminEmail:
+          type: string
+        reason:
+          type: string
+        scope:
+          type: string
+          enum: [view]
+        status:
+          type: string
+          enum: [active, expired, revoked]
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        revokedAt:
+          type: [string, 'null']
+          format: date-time
+        lastAccessAt:
+          type: [string, 'null']
+          format: date-time
+        accessCount:
+          type: integer
+    SupportGrantList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportGrant'
+    CreateSupportGrantRequest:
+      type: object
+      additionalProperties: false
+      required: [adminEmail, reason, days]
+      properties:
+        adminEmail:
+          type: string
+          format: email
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 500
+        days:
+          type: integer
+          minimum: 1
+          maximum: 7
+    PlatformOverview:
+      type: object
+      additionalProperties: false
+      required: [users, spaces, transactions, featureAdoption, database]
+      properties:
+        users:
+          type: object
+          additionalProperties: false
+          required: [total, createdLast30Days, activeLast30Days]
+          properties:
+            total:
+              type: integer
+            createdLast30Days:
+              type: integer
+            activeLast30Days:
+              type: integer
+        spaces:
+          type: object
+          additionalProperties: false
+          required: [total, shared, createdLast30Days]
+          properties:
+            total:
+              type: integer
+            shared:
+              type: integer
+            createdLast30Days:
+              type: integer
+        transactions:
+          type: object
+          additionalProperties: false
+          required: [total, createdLast30Days]
+          properties:
+            total:
+              type: integer
+            createdLast30Days:
+              type: integer
+        featureAdoption:
+          type: object
+          additionalProperties: false
+          description: Number of spaces using each feature.
+          required: [cards, recurrences, debts, goals, imports, attachments, foreignCurrency, tags]
+          properties:
+            cards:
+              type: integer
+            recurrences:
+              type: integer
+            debts:
+              type: integer
+            goals:
+              type: integer
+            imports:
+              type: integer
+            attachments:
+              type: integer
+            foreignCurrency:
+              type: integer
+            tags:
+              type: integer
+        database:
+          type: object
+          additionalProperties: false
+          required: [migrations, latestMigration]
+          properties:
+            migrations:
+              type: integer
+            latestMigration:
+              type: [string, 'null']
     Attachment:
       type: object
       additionalProperties: false
@@ -4668,7 +4941,11 @@ components:
         - id
         - email
         - name
+        - platformAdmin
       properties:
+        platformAdmin:
+          type: boolean
+          description: Platform (Super Admin) role; never grants access to financial spaces (FR-100, FR-101).
         id:
           type: string
           format: uuid
@@ -4710,10 +4987,13 @@ components:
             - active
         role:
           type: string
-          description: The requesting user's role in the space.
+          description: >
+            The requesting user's role in the space; support is read-only
+            access through an Owner's support grant (ADR-0018).
           enum:
             - owner
             - member
+            - support
         permissions:
           type: array
           description: >
@@ -4802,6 +5082,7 @@ components:
                   - goal
                   - import_batch
                   - attachment
+                  - support_grant
               entityId:
                 type: string
               action:
@@ -4811,6 +5092,7 @@ components:
                   - update
                   - delete
                   - restore
+                  - access
               changes:
                 type: object
                 description: Field name to its value before and after.
