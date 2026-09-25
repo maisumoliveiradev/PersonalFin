@@ -6,8 +6,11 @@ import {
   DEFAULT_TRANSACTION_STATUS,
   isValidAmountMinor,
   isValidFinancialDate,
+  isValidInstallmentCount,
   isValidMonth,
   MAX_AMOUNT_MINOR,
+  MAX_INSTALLMENTS,
+  MIN_INSTALLMENTS,
   monthRange,
   normalizeTransactionDescription,
   TRANSACTION_DESCRIPTION_MAX_LENGTH,
@@ -21,6 +24,7 @@ import type { DataAccess } from '../../database/data-access.ts';
 import { requireAuthenticatedUser } from '../../http/authenticate.ts';
 import { ValidationError } from '../../http/errors.ts';
 import { isUuid, parseInput } from '../../http/validation.ts';
+import { createInstallmentPurchase } from '../cards/card-installment-management.ts';
 import { InvalidCardPurchaseError } from '../cards/card-invoice-management.ts';
 import { requireAccessibleSpace } from '../financial-spaces/financial-space-access.ts';
 import { createTransaction } from './create-transaction.ts';
@@ -44,6 +48,13 @@ const createTransactionSchema = z.strictObject({
   subcategoryId: z.uuid().nullable().optional(),
   cardId: z.uuid().optional(),
   invoiceMonth: z.string().refine(isValidMonth, 'must be a month (YYYY-MM)').optional(),
+  installments: z
+    .number()
+    .refine(
+      isValidInstallmentCount,
+      `must be an integer from ${MIN_INSTALLMENTS} to ${MAX_INSTALLMENTS}`,
+    )
+    .optional(),
 });
 
 const spaceParamsSchema = z.object({ spaceId: z.string() });
@@ -117,6 +128,7 @@ export function toTransactionResponse(transaction: FinancialTransaction): Transa
             cardName: transaction.cardPurchase.cardName,
             invoiceMonth: transaction.cardPurchase.invoiceMonth,
           },
+    installment: transaction.installment,
   };
 }
 
@@ -275,10 +287,13 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
       if (input.cardId === undefined && input.invoiceMonth !== undefined) {
         throw new InvalidCardPurchaseError('invoiceMonth requires cardId');
       }
+      if (input.cardId === undefined && input.installments !== undefined) {
+        throw new InvalidCardPurchaseError('installments require cardId');
+      }
       if (input.cardId !== undefined && input.status !== undefined) {
         throw new InvalidCardPurchaseError('Card purchases have no status; it follows the invoice');
       }
-      const transaction = await createTransaction(data, {
+      const fields = {
         financialSpaceId: space.id,
         createdByUserId: user.id,
         type: input.type,
@@ -288,15 +303,31 @@ export function registerTransactionRoutes(server: FastifyInstance, data: DataAcc
         financialDate: input.financialDate,
         categoryId: input.categoryId,
         subcategoryId: input.subcategoryId ?? null,
-        ...(input.cardId === undefined
-          ? {}
+      };
+      const card =
+        input.cardId === undefined
+          ? undefined
           : {
-              card: {
-                cardId: input.cardId,
-                ...(input.invoiceMonth === undefined ? {} : { invoiceMonth: input.invoiceMonth }),
-              },
-            }),
-      });
+              cardId: input.cardId,
+              ...(input.invoiceMonth === undefined ? {} : { invoiceMonth: input.invoiceMonth }),
+            };
+      let transaction: FinancialTransaction;
+      if (card !== undefined && input.installments !== undefined) {
+        const [first] = await createInstallmentPurchase(data, {
+          ...fields,
+          card,
+          installments: input.installments,
+        });
+        if (first === undefined) {
+          throw new Error('Installment purchase created no installment');
+        }
+        transaction = first;
+      } else {
+        transaction = await createTransaction(data, {
+          ...fields,
+          ...(card === undefined ? {} : { card }),
+        });
+      }
       reply.status(201);
       return toTransactionResponse(transaction);
     },

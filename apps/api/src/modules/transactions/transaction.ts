@@ -18,6 +18,12 @@ export interface CardPurchaseReference {
   invoiceMonth: Month;
 }
 
+export interface InstallmentReference {
+  purchaseId: string;
+  number: number;
+  count: number;
+}
+
 export interface FinancialTransaction {
   id: string;
   financialSpaceId: string;
@@ -37,6 +43,7 @@ export interface FinancialTransaction {
   occurrenceDate: FinancialDate | null;
   individuallyModified: boolean;
   cardPurchase: CardPurchaseReference | null;
+  installment: InstallmentReference | null;
 }
 
 export interface NewFinancialTransaction {
@@ -52,6 +59,7 @@ export interface NewFinancialTransaction {
   subcategoryId: string | null;
   createdByUserId: string;
   cardInvoiceId?: string | null;
+  installment?: { purchaseId: string; number: number };
 }
 
 export interface TransactionFields {

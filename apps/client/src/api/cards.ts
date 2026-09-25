@@ -102,3 +102,21 @@ export function useSetInvoiceDates(spaceId: string, cardId: string, month: strin
       queryClient.invalidateQueries({ queryKey: ['financial-spaces', spaceId, 'transactions'] }),
   });
 }
+
+export function useCancelInstallments(spaceId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { purchaseId: string; afterMonth: string }) =>
+      expectData(
+        await apiClient.POST(
+          '/financial-spaces/{spaceId}/installment-purchases/{purchaseId}/cancel',
+          {
+            params: { path: { spaceId, purchaseId: input.purchaseId } },
+            body: { afterMonth: input.afterMonth },
+          },
+        ),
+      ),
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ['financial-spaces', spaceId, 'transactions'] }),
+  });
+}

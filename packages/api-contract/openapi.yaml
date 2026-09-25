@@ -919,6 +919,58 @@ paths:
           $ref: '#/components/responses/CardNotFound'
         '409':
           $ref: '#/components/responses/StateConflict'
+  /financial-spaces/{spaceId}/installment-purchases/{purchaseId}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - name: purchaseId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: cancelInstallments
+      summary: Cancel the installments of a purchase after an invoice month
+      description: >
+        Moves to the trash the installments whose invoice month is after
+        afterMonth. Earlier installments are kept (DR-043). Audited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - afterMonth
+              properties:
+                afterMonth:
+                  type: string
+                  pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+      responses:
+        '200':
+          description: How many installments were cancelled.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required:
+                  - cancelled
+                properties:
+                  cancelled:
+                    type: integer
+                    minimum: 0
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          description: The purchase does not exist in this space (code INSTALLMENT_PURCHASE_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
     InvoiceMonth:
@@ -1456,6 +1508,16 @@ components:
             Invoice (reference month) for a card purchase, from the month
             before to two months after financialDate. Defaults to the
             invoice whose closing date is after financialDate.
+        installments:
+          type: integer
+          minimum: 2
+          maximum: 48
+          description: >
+            Splits a card purchase into this many installments (amountMinor
+            is the total; the remainder cents go to the first). Installment
+            k is dated k - 1 months after financialDate and goes to the
+            invoice k - 1 months after the first. The response is the first
+            installment.
     Transaction:
       type: object
       additionalProperties: false
@@ -1475,6 +1537,7 @@ components:
         - recurrenceSeriesId
         - occurrenceDate
         - cardPurchase
+        - installment
       properties:
         id:
           type: string
@@ -1531,6 +1594,28 @@ components:
           oneOf:
             - $ref: '#/components/schemas/CardPurchase'
             - type: 'null'
+        installment:
+          description: Installment number and count of an installment purchase; null otherwise.
+          oneOf:
+            - $ref: '#/components/schemas/Installment'
+            - type: 'null'
+    Installment:
+      type: object
+      additionalProperties: false
+      required:
+        - purchaseId
+        - number
+        - count
+      properties:
+        purchaseId:
+          type: string
+          format: uuid
+        number:
+          type: integer
+          minimum: 1
+        count:
+          type: integer
+          minimum: 2
     CardPurchase:
       type: object
       additionalProperties: false

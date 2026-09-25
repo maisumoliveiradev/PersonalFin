@@ -499,6 +499,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/installment-purchases/{purchaseId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                purchaseId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel the installments of a purchase after an invoice month
+         * @description Moves to the trash the installments whose invoice month is after afterMonth. Earlier installments are kept (DR-043). Audited.
+         */
+        post: operations["cancelInstallments"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -670,6 +693,8 @@ export interface components {
             cardId?: string;
             /** @description Invoice (reference month) for a card purchase, from the month before to two months after financialDate. Defaults to the invoice whose closing date is after financialDate. */
             invoiceMonth?: string;
+            /** @description Splits a card purchase into this many installments (amountMinor is the total; the remainder cents go to the first). Installment k is dated k - 1 months after financialDate and goes to the invoice k - 1 months after the first. The response is the first installment. */
+            installments?: number;
         };
         Transaction: {
             /** Format: uuid */
@@ -704,6 +729,14 @@ export interface components {
             occurrenceDate: string | null;
             /** @description The card and invoice of a card purchase; null otherwise. A card purchase counts in the metrics of its invoice month (DR-035). */
             cardPurchase: components["schemas"]["CardPurchase"] | null;
+            /** @description Installment number and count of an installment purchase; null otherwise. */
+            installment: components["schemas"]["Installment"] | null;
+        };
+        Installment: {
+            /** Format: uuid */
+            purchaseId: string;
+            number: number;
+            count: number;
         };
         CardPurchase: {
             /** Format: uuid */
@@ -2020,6 +2053,48 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             404: components["responses"]["CardNotFound"];
             409: components["responses"]["StateConflict"];
+        };
+    };
+    cancelInstallments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                purchaseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    afterMonth: string;
+                };
+            };
+        };
+        responses: {
+            /** @description How many installments were cancelled. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        cancelled: number;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            /** @description The purchase does not exist in this space (code INSTALLMENT_PURCHASE_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
 }

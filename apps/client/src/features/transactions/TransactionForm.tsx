@@ -70,6 +70,7 @@ export function emptyTransactionFormValues(): TransactionFormValues {
     status: DEFAULT_TRANSACTION_STATUS,
     cardId: null,
     invoiceMonth: null,
+    installments: '1',
   };
 }
 
@@ -141,6 +142,7 @@ export function TransactionForm({
   const [rule, setRule] = useState<NonBusinessDayRule>('keep');
   const [cardId, setCardId] = useState<string | null>(initialValues.cardId);
   const [chosenInvoice, setChosenInvoice] = useState<Month | null>(initialValues.invoiceMonth);
+  const [installments, setInstallments] = useState(initialValues.installments);
 
   const isCardPurchase = cardId !== null;
   const lockedToCard = initialValues.cardId !== null;
@@ -197,6 +199,7 @@ export function TransactionForm({
       status,
       cardId,
       invoiceMonth,
+      installments,
     });
     if (!result.ok) {
       setValidationError(result.error);
@@ -293,6 +296,16 @@ export function TransactionForm({
           options={invoiceChoices}
           selected={invoiceMonth}
           onSelect={setChosenInvoice}
+        />
+      )}
+      {isCardPurchase && allowCardChoice && (
+        <TextField
+          label={messages.cards.installmentsLabel}
+          hint={messages.cards.installmentsHint}
+          value={installments}
+          onChangeText={setInstallments}
+          inputMode="numeric"
+          maxLength={2}
         />
       )}
       {allowRecurrence && !isCardPurchase && (

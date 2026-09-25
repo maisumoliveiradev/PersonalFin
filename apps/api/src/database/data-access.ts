@@ -4,10 +4,12 @@ import type { BalanceReminderRepository } from '../modules/balance/balance-remin
 import type { BalanceSnapshotRepository } from '../modules/balance/balance-snapshot-repository.ts';
 import { createPostgresBalanceReminderRepository } from '../modules/balance/postgres-balance-reminder-repository.ts';
 import { createPostgresBalanceSnapshotRepository } from '../modules/balance/postgres-balance-snapshot-repository.ts';
+import type { InstallmentRepository } from '../modules/cards/card-installments.ts';
 import type { CardInvoiceRepository } from '../modules/cards/card-invoice-repository.ts';
 import type { CardRepository } from '../modules/cards/card-repository.ts';
 import { createPostgresCardInvoiceRepository } from '../modules/cards/postgres-card-invoice-repository.ts';
 import { createPostgresCardRepository } from '../modules/cards/postgres-card-repository.ts';
+import { createPostgresInstallmentRepository } from '../modules/cards/postgres-installment-repository.ts';
 import type { CategoryRepository } from '../modules/categories/category-repository.ts';
 import { createPostgresCategoryRepository } from '../modules/categories/postgres-category-repository.ts';
 import type { DashboardRepository } from '../modules/dashboard/dashboard-repository.ts';
@@ -31,6 +33,7 @@ export interface Repositories {
   recurrences: RecurrenceRepository;
   cards: CardRepository;
   cardInvoices: CardInvoiceRepository;
+  installments: InstallmentRepository;
 }
 
 export interface DataAccess {
@@ -50,6 +53,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     recurrences: createPostgresRecurrenceRepository(db),
     cards: createPostgresCardRepository(db),
     cardInvoices: createPostgresCardInvoiceRepository(db),
+    installments: createPostgresInstallmentRepository(db),
   };
 }
 

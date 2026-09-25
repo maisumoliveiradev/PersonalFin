@@ -191,7 +191,9 @@ and never enter transaction totals.
 
 Cards keep an append-only limit history (`card_limit_change`). Invoices
 (`card_invoice`) are created on demand, one per card and reference
-month, with stored closing and due dates. A card purchase is a
+month, with stored closing and due dates. Installment purchases
+(`card_installment_purchase`) keep the original purchase; each
+installment is a card purchase linked to it by number. A card purchase is a
 `financial_transaction` linked to an invoice (`card_invoice_id`); the
 database enforces that it is a Pending expense and not a recurrence
 occurrence. Metrics group card purchases by the invoice's reference

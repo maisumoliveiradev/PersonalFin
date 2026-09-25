@@ -10,6 +10,7 @@ import { createInMemoryCardRepository } from './in-memory-card-repository.ts';
 import { createInMemoryCategoryRepository } from './in-memory-category-repository.ts';
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
+import { createInMemoryInstallmentRepository } from './in-memory-installment-repository.ts';
 import { createInMemoryRecurrenceRepository } from './in-memory-recurrence-repository.ts';
 import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
 
@@ -44,9 +45,13 @@ export function createInMemoryRepositories() {
     cards.cards,
     () => transactions.transactions,
   );
-  const transactions = createInMemoryTransactionRepository(categories.categories, (invoiceId) =>
-    cardInvoices.cardPurchase(invoiceId),
+  const transactions = createInMemoryTransactionRepository(
+    categories.categories,
+    (invoiceId) => cardInvoices.cardPurchase(invoiceId),
+    (purchaseId) =>
+      installments.purchases.find((purchase) => purchase.id === purchaseId)?.installmentCount ?? 0,
   );
+  const installments = createInMemoryInstallmentRepository(() => transactions.transactions);
   const balanceSnapshots = createInMemoryBalanceSnapshotRepository();
   return {
     financialSpaces: createInMemoryFinancialSpaceRepository(),
@@ -64,6 +69,7 @@ export function createInMemoryRepositories() {
     balanceReminders: createInMemoryBalanceReminderRepository(),
     cards,
     cardInvoices,
+    installments,
   };
 }
 
