@@ -51,3 +51,5 @@ export type CardLimits = components['schemas']['CardLimits'];
 export type CardInvoiceSummaryList = components['schemas']['CardInvoiceSummaryList'];
 export type Tag = components['schemas']['Tag'];
 export type TagList = components['schemas']['TagList'];
+export type Evolution = components['schemas']['Evolution'];
+export type Comparison = components['schemas']['Comparison'];

@@ -1233,6 +1233,66 @@ paths:
           $ref: '#/components/responses/TagNotFound'
         '409':
           $ref: '#/components/responses/TagConflict'
+  /financial-spaces/{spaceId}/analytics/evolution:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getEvolution
+      summary: Month-by-month realized metrics and observed balance (M-009)
+      parameters:
+        - name: fromMonth
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        - name: months
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+            default: 12
+      responses:
+        '200':
+          description: One entry per month, oldest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evolution'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/analytics/comparison:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getComparison
+      summary: Compare a month with the previous month and the same month a year earlier (M-010)
+      parameters:
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+      responses:
+        '200':
+          description: The comparison.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comparison'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     InvoiceMonth:
@@ -1888,6 +1948,133 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Installment'
             - type: 'null'
+    Change:
+      type: object
+      additionalProperties: false
+      required:
+        - difference
+        - percentChangeTenths
+      properties:
+        difference:
+          type: integer
+          description: current - base, in minor units.
+        percentChangeTenths:
+          type:
+            - integer
+            - 'null'
+          description: >
+            Percentage change in tenths of a percent (123 = +12.3%), rounded
+            half away from zero; null when the base is zero.
+    MetricSet:
+      type: object
+      additionalProperties: false
+      required:
+        - realizedIncome
+        - realizedExpenses
+        - realizedNet
+        - forecastIncome
+        - forecastExpenses
+      properties:
+        realizedIncome:
+          type: integer
+        realizedExpenses:
+          type: integer
+        realizedNet:
+          type: integer
+        forecastIncome:
+          type: integer
+        forecastExpenses:
+          type: integer
+    MetricChanges:
+      type: object
+      additionalProperties: false
+      required:
+        - realizedIncome
+        - realizedExpenses
+        - realizedNet
+        - forecastIncome
+        - forecastExpenses
+      properties:
+        realizedIncome:
+          $ref: '#/components/schemas/Change'
+        realizedExpenses:
+          $ref: '#/components/schemas/Change'
+        realizedNet:
+          $ref: '#/components/schemas/Change'
+        forecastIncome:
+          $ref: '#/components/schemas/Change'
+        forecastExpenses:
+          $ref: '#/components/schemas/Change'
+    ComparisonPeriod:
+      type: object
+      additionalProperties: false
+      required:
+        - month
+        - values
+        - changes
+      properties:
+        month:
+          type: string
+        values:
+          $ref: '#/components/schemas/MetricSet'
+        changes:
+          $ref: '#/components/schemas/MetricChanges'
+    Comparison:
+      type: object
+      additionalProperties: false
+      required:
+        - month
+        - current
+        - previousMonth
+        - previousYear
+      properties:
+        month:
+          type: string
+        current:
+          $ref: '#/components/schemas/MetricSet'
+        previousMonth:
+          $ref: '#/components/schemas/ComparisonPeriod'
+        previousYear:
+          $ref: '#/components/schemas/ComparisonPeriod'
+    Evolution:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - month
+              - realizedIncome
+              - realizedExpenses
+              - realizedNet
+              - observedBalance
+            properties:
+              month:
+                type: string
+              realizedIncome:
+                type: integer
+              realizedExpenses:
+                type: integer
+              realizedNet:
+                type: integer
+              observedBalance:
+                oneOf:
+                  - type: object
+                    additionalProperties: false
+                    required:
+                      - amountMinor
+                      - observedOn
+                    properties:
+                      amountMinor:
+                        type: integer
+                      observedOn:
+                        $ref: '#/components/schemas/FinancialDate'
+                  - type: 'null'
     Tag:
       type: object
       additionalProperties: false

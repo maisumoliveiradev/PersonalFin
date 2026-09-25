@@ -5,7 +5,7 @@
 `v0.4.0`, released on 2026-09-25 (`main`, tag `v0.4.0`). SDD-001 to
 SDD-028 implemented and validated
 (`docs/sdds/v0.4.0/SDD-028-validation-report.md`). `develop` is building
-v0.5.0: SDD-029 implemented.
+v0.5.0: SDD-029 and SDD-030 implemented.
 
 ## Implemented Product Capabilities
 
@@ -81,6 +81,9 @@ v0.5.0: SDD-029 implemented.
 -   **Installments (SDD-025):** card purchases split into 2--48
     installments across consecutive invoices (DR-080); later installments
     can be cancelled. Installments are edited one at a time.
+-   **Analytics (SDD-030):** month comparison (previous month and previous
+    year) and twelve-month evolution (M-009, M-010). There are no
+    category or tag breakdowns across periods yet.
 -   **Tags (SDD-029):** per-space tags (DR-083) on transactions, shown in
     the list and usable as a filter. There is no tag analytics yet.
 -   **Quick status change (SDD-010):** each list item toggles between
@@ -106,7 +109,7 @@ v0.5.0: SDD-029 implemented.
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
     -   `packages/domain` --- shared money, financial date, transaction,
-        month, balance-reminder, business-day, and card rules (ADR-0011;
+        month, balance-reminder, business-day, card, and comparison rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
     checksum verification (ADR-0008). Tables: Better Auth `user`,
@@ -134,7 +137,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-`docs/sdds/v0.5.0/SDD-030-evolution-and-comparisons.md`. Domain decisions
+`docs/sdds/v0.5.0/SDD-031-category-and-tag-analytics.md`. Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
 `docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, DR-072 to
 DR-078).

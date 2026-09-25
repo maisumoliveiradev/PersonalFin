@@ -1,6 +1,7 @@
 export * from './balance-reminder.ts';
 export * from './business-days.ts';
 export * from './card.ts';
+export * from './comparison.ts';
 export * from './financial-date.ts';
 export * from './money.ts';
 export * from './month.ts';
