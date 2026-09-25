@@ -145,6 +145,12 @@ const ENDPOINTS: Endpoint[] = [
     permission: 'view',
     payload: { profile: 'basic', overrides: {} },
   },
+  { method: 'GET', path: '/debts', permission: 'view' },
+  { method: 'POST', path: '/debts', permission: 'plan', payload: {} },
+  { method: 'GET', path: `/debts/${MISSING}`, permission: 'view' },
+  { method: 'PATCH', path: `/debts/${MISSING}`, permission: 'plan', payload: { version: 1 } },
+  { method: 'POST', path: `/debts/${MISSING}/payments`, permission: 'record', payload: {} },
+  { method: 'DELETE', path: `/debts/${MISSING}/payments/${MISSING}`, permission: 'record' },
 ];
 
 async function shareWith(permissions: SpacePermission[]): Promise<string> {

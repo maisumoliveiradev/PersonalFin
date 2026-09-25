@@ -4,6 +4,7 @@ export * from './card.ts';
 export * from './client-version.ts';
 export * from './comparison.ts';
 export * from './dashboard-preferences.ts';
+export * from './debt.ts';
 export * from './financial-date.ts';
 export * from './money.ts';
 export * from './month.ts';

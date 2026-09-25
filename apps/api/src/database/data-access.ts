@@ -16,6 +16,8 @@ import type { CategoryRepository } from '../modules/categories/category-reposito
 import { createPostgresCategoryRepository } from '../modules/categories/postgres-category-repository.ts';
 import type { DashboardRepository } from '../modules/dashboard/dashboard-repository.ts';
 import { createPostgresDashboardRepository } from '../modules/dashboard/postgres-dashboard-repository.ts';
+import type { DebtRepository } from '../modules/debts/debt-repository.ts';
+import { createPostgresDebtRepository } from '../modules/debts/postgres-debt-repository.ts';
 import type { FinancialSpaceRepository } from '../modules/financial-spaces/financial-space-repository.ts';
 import { createPostgresFinancialSpaceRepository } from '../modules/financial-spaces/postgres-financial-space-repository.ts';
 import type { MemberRepository } from '../modules/members/member-repository.ts';
@@ -46,6 +48,7 @@ export interface Repositories {
   analytics: AnalyticsRepository;
   dashboardPreferences: DashboardPreferenceRepository;
   members: MemberRepository;
+  debts: DebtRepository;
 }
 
 export interface DataAccess {
@@ -70,6 +73,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     analytics: createPostgresAnalyticsRepository(db),
     dashboardPreferences: createPostgresDashboardPreferenceRepository(db),
     members: createPostgresMemberRepository(db),
+    debts: createPostgresDebtRepository(db),
   };
 }
 
