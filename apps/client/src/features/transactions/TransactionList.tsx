@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { useChangeTransactionStatus, useTransactions } from '../../api/transactions';
 import { messages } from '../../i18n/messages';
+import { useSyncSnapshot } from '../../sync/sync-engine';
 import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
 import { FormError } from '../../ui/FormError';
@@ -35,6 +36,8 @@ export function TransactionRow({
 }: TransactionRowProps) {
   const palette = usePalette();
   const router = useRouter();
+  const sync = useSyncSnapshot();
+  const queued = sync.entries.some((entry) => entry.transactionId === transaction.id);
   const amount = transactionAmountLabel(transaction);
   const category = transactionCategoryLabel(transaction);
   const date = transactionDateLabel(transaction);
@@ -54,7 +57,7 @@ export function TransactionRow({
             transaction.recurrenceSeriesId === null
               ? category
               : `${category}, ${messages.recurrences.tag.toLowerCase()}`,
-          status,
+          status: queued ? `${status}, ${messages.sync.rowQueued}` : status,
         })}
         accessibilityHint={messages.transactions.editHint}
         onPress={() =>
@@ -100,9 +103,14 @@ export function TransactionRow({
           <Text style={[styles.status, { color: isPending ? palette.primary : palette.textMuted }]}>
             {status}
           </Text>
+          {queued && (
+            <Text style={[styles.status, { color: palette.warning }]}>
+              {messages.sync.rowQueued}
+            </Text>
+          )}
         </View>
       </Pressable>
-      {canChangeStatus && transaction.cardPurchase === null && (
+      {canChangeStatus && !queued && transaction.cardPurchase === null && (
         <Button
           label={toggle.label}
           accessibilityLabel={messages.transactions.statusActionLabel(
@@ -156,12 +164,11 @@ export function TransactionList({ spaceId, filters, canRecord }: TransactionList
             transaction={transaction}
             canChangeStatus={canRecord}
             changingStatus={
-              changeStatus.isPending && changeStatus.variables?.transactionId === transaction.id
+              changeStatus.isPending && changeStatus.variables?.transaction.id === transaction.id
             }
             onToggleStatus={() =>
               changeStatus.mutate({
-                transactionId: transaction.id,
-                version: transaction.version,
+                transaction,
                 status: statusToggle(transaction).nextStatus,
               })
             }

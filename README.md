@@ -43,6 +43,9 @@ npm run dev:client     # Expo dev server; press w (Web), i (iOS), or a (Android)
 Android emulator use `http://10.0.2.2:3333`, and for a physical device
 use your computer's LAN address (and set `HOST=0.0.0.0` in the API).
 
+`MIN_CLIENT_VERSION` in `apps/api/.env` is optional: when set, the API
+rejects older app versions with `426` (ADR-0016).
+
 ## Validate
 
 ``` sh

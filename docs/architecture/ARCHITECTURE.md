@@ -13,7 +13,8 @@ architecture), ADR-0013 (versioned browser journeys), ADR-0014
 (recurrence materialization), ADR-0015 (shared Financial Space access
 model, superseding ADR-0010), ADR-0011
 (money and financial date formats, shared domain package), ADR-0012
-(audit log and optimistic concurrency).
+(audit log and optimistic concurrency), ADR-0016 (offline persistence,
+synchronization, and minimum client version).
 
 ## Repository structure
 
@@ -232,6 +233,83 @@ scope that resolves the session server-side and rejects missing or
 invalid sessions with `401 UNAUTHENTICATED`. Web clients use an
 `HttpOnly` session cookie; native clients keep the same cookie in
 secure storage.
+
+## Offline reading (ADR-0016, SDD-041)
+
+-   `apps/client/src/local`:
+    -   `local-document.ts` keeps every stored document in a
+        `{ schemaVersion, data }` envelope. It applies ordered migrations
+        on read and does not read documents written by a newer schema.
+    -   `local-store.ts` persists documents in AsyncStorage (Web:
+        `localStorage`) under `personalfin:{schema}:{userId}`.
+-   The TanStack Query cache is restored before signed-in screens render
+    (`LocalPersistenceGate`) and saved at most once per second.
+    -   Only successful queries are saved. Invitation lookups are never
+        saved.
+    -   The saved cache is discarded when the app version changes, after
+        7 days, and at sign-out.
+-   Connectivity comes from `expo-network` and drives TanStack Query's
+    `onlineManager`, so queries pause offline.
+    -   A request that fails at the network level also marks the app
+        offline until `/health` answers again.
+    -   Mutations use `networkMode: 'always'`, so they fail fast instead
+        of hanging.
+-   A global banner tells the user they are seeing saved data.
+
+## Offline transaction changes (ADR-0016, SDD-042)
+
+-   `apps/client/src/sync`:
+    -   `outbox.ts`: pure model, local schema `outbox` v1, response
+        classification.
+    -   `sync-engine.ts`: per-user outbox store, serialized writes,
+        ordered sending.
+    -   `offline-writes.ts`: queueing helpers used by the screens.
+-   A transaction create, edit, status change, or delete is queued when
+    the app is offline, or when the request fails at the network level.
+    Creates always carry a client UUID (`expo-crypto`), and the API
+    returns the existing record on replay (`200`), so a lost response
+    never duplicates a transaction.
+-   Edits and deletes keep the base version and a snapshot of the fields
+    (`transactionSyncFields`). An edit sends only the fields that
+    changed.
+-   The outbox is sent in order when connectivity returns, at startup,
+    after each new entry, and on "Sincronizar agora".
+    -   Success removes the entry and invalidates the space's queries.
+    -   A rejected change becomes `error`. A `409` on edit or delete
+        becomes `conflict` (resolved in SDD-043).
+    -   `5xx` retries after 30 seconds. `401` and `426` stop sending.
+-   Entries leave the outbox only when the server confirms them, or when
+    the user discards them explicitly. Signing out with entries asks for
+    confirmation. A transaction with a queued change cannot be changed
+    again until the change is synchronized (DR-088).
+
+## Sync conflicts (ADR-0016, SDD-043)
+
+-   A `409` on a queued edit or delete makes the client fetch the current
+    transaction and classify the conflict with the domain functions
+    `reconcileEdit` and `serverChanges`:
+    -   Local changes the server already has are dropped. Changes to
+        fields the server did not touch are re-sent against the current
+        version with `sync.resolution = auto_merged` (DR-089).
+    -   A field changed on both sides, an edit of a deleted transaction,
+        or a deletion of an edited transaction is stored in the outbox
+        entry as `conflict` (outbox schema v2, migrated from v1). The
+        "Não sincronizado" list asks the user to decide (DR-090).
+-   Writes that resolve a conflict carry a sync context:
+    -   PATCH and restore: `sync` in the body.
+    -   DELETE: `syncResolution` and `syncBaseVersion` in the query.
+-   The API stores that context in `audit_event.context` (migration
+    `0022`). The audit history returns it and the audit screen shows it.
+
+## Minimum client version (ADR-0016, SDD-040)
+
+Clients send `X-Client-Version` (the app version from `app.json`). When
+`MIN_CLIENT_VERSION` is set, an API `onRequest` hook answers
+`426 CLIENT_UPGRADE_REQUIRED` to older, missing, or invalid versions on
+every route except `/health` and `/api/auth/*`; the client then replaces
+its navigation with an update-required screen. Unset means no check.
+Raise the minimum only when an API change can no longer stay backward
+compatible with installed clients.
 
 ## Financial Space access (ADR-0015)
 

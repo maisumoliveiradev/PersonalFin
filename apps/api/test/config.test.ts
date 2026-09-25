@@ -17,6 +17,7 @@ describe('loadConfig', () => {
       port: 3333,
       logLevel: 'info',
       databaseUrl: required.DATABASE_URL,
+      minClientVersion: null,
       auth: {
         secret: required.BETTER_AUTH_SECRET,
         baseUrl: required.BETTER_AUTH_URL,
@@ -42,6 +43,13 @@ describe('loadConfig', () => {
       logLevel: 'warn',
     });
     expect(config.auth.trustedOrigins).toEqual(['http://localhost:8081', 'personalfin://']);
+  });
+
+  it('reads an optional minimum client version', () => {
+    expect(loadConfig({ ...required, MIN_CLIENT_VERSION: '0.7.0' }).minClientVersion).toEqual([
+      0, 7, 0,
+    ]);
+    expect(() => loadConfig({ ...required, MIN_CLIENT_VERSION: 'latest' })).toThrow(ConfigError);
   });
 
   it('rejects a missing APP_ENV instead of assuming an environment', () => {

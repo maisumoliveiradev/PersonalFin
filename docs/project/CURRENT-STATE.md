@@ -2,9 +2,9 @@
 
 ## Current Version
 
-`v0.6.0`, released on 2026-09-25 (`main`, tag `v0.6.0`). SDD-001 to
-SDD-039 implemented and validated
-(`docs/sdds/v0.6.0/SDD-039-validation-report.md`).
+`v0.7.0`, released on 2026-09-25 (`main`, tag `v0.7.0`). SDD-001 to
+SDD-044 implemented and validated
+(`docs/sdds/v0.7.0/SDD-044-validation-report.md`).
 
 ## Implemented Product Capabilities
 
@@ -96,6 +96,30 @@ SDD-039 implemented and validated
     onboarding recommendation or section reordering.
 -   **Tags (SDD-029):** per-space tags (DR-083) on transactions, shown in
     the list and usable as a filter. There is no tag analytics yet.
+-   **Minimum client version (SDD-040):** clients send
+    `X-Client-Version`; with `MIN_CLIENT_VERSION` configured the API
+    answers 426 to older clients, which show an update screen
+    (ADR-0016).
+-   **Offline reading (SDD-041):** screens already loaded keep working
+    without a connection or when the API is unreachable, with a banner.
+    The query cache is persisted per user in a versioned local store
+    (ADR-0016). It is cleared at sign-out and expires after 7 days or on
+    an app version change. The Web app cannot be opened offline (no
+    service worker). No offline writes yet.
+-   **Offline transaction changes (SDD-042):** transactions can be
+    created, edited, have their status changed, or be deleted offline.
+    Changes go to a per-user outbox and are sent when the connection
+    returns.
+    -   Creates carry a client UUID and replays are idempotent.
+    -   Sync states and a "Não sincronizado" list appear on the space
+        screen.
+    -   Conflicts are resolved as described in SDD-043.
+    -   Other writes need a connection (DR-088).
+-   **Sync conflicts (SDD-043):** independent offline and online changes
+    merge automatically. Same-field, edit-versus-delete, and
+    delete-versus-edit conflicts wait for the user's choice in "Não
+    sincronizado" (DR-089, DR-090). Resolutions are audited in
+    `audit_event.context` and shown in the audit history.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -119,12 +143,17 @@ SDD-039 implemented and validated
     -   `packages/api-contract` --- OpenAPI 3.1 contract and generated
         TypeScript types.
     -   `packages/domain` --- shared money, financial date, transaction,
-        month, balance-reminder, business-day, card, comparison, and dashboard-preference rules (ADR-0011;
+        month, balance-reminder, business-day, card, comparison, dashboard-preference, and client-version rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
-    checksum verification (ADR-0008). Tables: Better Auth `user`,
-    `session`, `account`, `verification`; `financial_space`, `category`, `financial_transaction`, `audit_event`,
-    `balance_snapshot`, `balance_reminder_setting`, `recurrence_series`.
+    checksum verification (ADR-0008), `0001` to `0022`. Tables: Better
+    Auth `user`, `session`, `account`, `verification`; `financial_space`,
+    `financial_space_member`, `space_invitation`, `category`,
+    `financial_transaction`, `transaction_tag`, `tag`, `audit_event`,
+    `balance_snapshot`, `balance_reminder_setting`, `recurrence_series`,
+    `card`, `card_limit_change`, `card_invoice`, `card_invoice_payment`,
+    `card_installment_purchase`, `dashboard_preference`; view
+    `card_invoice_balance`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
 -   Local CI: `npm run validate` enforced by a `pre-push` git hook. No
@@ -134,12 +163,13 @@ SDD-039 implemented and validated
 ## Not Yet Present
 
 -   Localization beyond pt-BR (TD-004); user-selectable theme (TD-005).
--   Client (React Native) test runner.
+-   React Native component test runner (the client has Vitest unit tests
+    for pure modules only).
 
 ## Active Target
 
-`v0.7.0` --- Mobile Resilience (`docs/product/ROADMAP.md`). No SDD
-drafted yet.
+`v0.8.0` --- Debts, Goals, and Reminders (`docs/product/ROADMAP.md`). No
+SDD drafted yet.
 
 ## Important Constraint
 
@@ -148,8 +178,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Owner decision pending on invitation email delivery (TD-011). Then draft
-the v0.7.0 SDDs (Mobile Resilience). Domain decisions
-taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, DR-072 to
-DR-078).
+Draft the v0.8.0 SDDs (Debts, Goals, and Reminders). Owner decision
+pending on invitation email delivery (TD-011). Domain decisions taken
+under delegation await owner review (`docs/sdds/v0.2.0/README.md` to
+`docs/sdds/v0.7.0/README.md`, DR-072 to DR-091, ADR-0013 to ADR-0016).

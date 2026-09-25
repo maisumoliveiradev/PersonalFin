@@ -23,9 +23,14 @@ platform before the product needs it.
     client, then run `npm run test:e2e` (or `npm run test:e2e -- dashboard`
     for one journey). Required before merging client or API changes and
     in release validation; not part of `validate`.
--   `apps/client` has no test runner yet. React Native component tests
-    will need a React Native-capable runner (for example `jest-expo`)
-    when the first UI test is justified (ADR-0006).
+-   `apps/client` runs Vitest unit tests (`apps/client/test`) for pure
+    modules that do not import React Native, such as the versioned local
+    storage and offline sync logic (SDD-041). React Native component
+    tests would need a React Native-capable runner (for example
+    `jest-expo`) when the first UI test is justified (ADR-0006).
+-   Offline behavior is exercised by journeys that cut the browser's
+    network (`context.setOffline`) or make the API unreachable
+    (`page.route(...).abort`); Web and native share the client code.
 -   `npm run test` runs every workspace's tests; `npm run validate`
     includes them.
 -   **Integration tests** (`apps/api/test/integration`) run against the

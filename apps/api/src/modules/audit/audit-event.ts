@@ -1,3 +1,5 @@
+import type { SyncResolution } from '@personalfin/domain';
+
 export type AuditEntityType =
   | 'financial_transaction'
   | 'category'
@@ -10,6 +12,12 @@ export type AuditEntityType =
   | 'financial_space_member'
   | 'space_invitation';
 export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
+
+export interface AuditContext {
+  source: 'offline_sync';
+  resolution: SyncResolution;
+  baseVersion: number;
+}
 
 export type AuditValue = string | number | boolean | null;
 
@@ -25,6 +33,7 @@ export interface NewAuditEvent {
   action: AuditAction;
   actorUserId: string;
   changes: Record<string, FieldChange>;
+  context?: AuditContext | null;
 }
 
 export interface AuditEvent extends NewAuditEvent {

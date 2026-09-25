@@ -340,6 +340,32 @@ application becomes the official source of truth.
 **DR-065** Synchronization must not silently discard meaningful
 financial changes.
 
+**DR-088** *(SDD-042; decided under delegation.)* Offline, users can view
+data already loaded and create, edit, change the status of, or delete
+transactions (including a single card purchase). Every other change
+needs a connection. Offline changes are listed as not synchronized and
+do not change metrics until the server accepts them (DR-066). A
+transaction with a pending offline change cannot be changed again until
+that change is synchronized or discarded.
+
+**DR-089** *(SDD-043; decided under delegation.)* When an offline edit
+meets a concurrent change, fields are compared against the version the
+user edited: fields changed on only one side merge automatically; a
+field changed on both sides to different values requires the user to
+choose, per field, between their value and the current value.
+
+**DR-090** *(SDD-043; decided under delegation.)* An offline edit of a
+transaction deleted meanwhile asks whether to restore it and apply the
+edit or discard the edit; an offline deletion of a transaction edited
+meanwhile asks whether to delete it anyway or keep it. Every resolution
+that writes to the record is audited with its context (automatic merge,
+per-field choice, restore, or deletion after a concurrent edit); keeping
+the current record writes nothing.
+
+**DR-091** *(SDD-041; decided under delegation.)* Local data belongs to
+one signed-in user. The local cache is removed at sign-out; unsynchronized
+changes are only discarded after explicit confirmation.
+
 ## Metrics
 
 **DR-066** Each built-in metric has one canonical definition.

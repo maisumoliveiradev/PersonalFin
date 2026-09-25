@@ -1,10 +1,12 @@
 import cors from '@fastify/cors';
+import type { ClientVersion } from '@personalfin/domain';
 import Fastify, { type FastifyInstance } from 'fastify';
 
 import type { SessionResolver } from './auth/authenticated-user.ts';
 import type { AppEnvironment, LogLevel } from './config.ts';
 import type { DataAccess } from './database/data-access.ts';
 import { createAuthenticationHook } from './http/authenticate.ts';
+import { createClientVersionHook } from './http/client-version.ts';
 import { handleError, handleNotFound } from './http/errors.ts';
 import { registerAnalyticsRoutes } from './modules/analytics/analytics-routes.ts';
 import { registerAuditRoutes } from './modules/audit/audit-routes.ts';
@@ -33,6 +35,7 @@ export interface ServerOptions {
   sessionResolver: SessionResolver;
   authHandler: AuthHandler;
   data: DataAccess;
+  minClientVersion?: ClientVersion | null;
 }
 
 const REDACTED_LOG_PATHS = ['req.headers.authorization', 'req.headers.cookie'];
@@ -52,6 +55,9 @@ export function buildServer(options: ServerOptions): FastifyInstance {
   server.setErrorHandler(handleError);
   server.setNotFoundHandler(handleNotFound);
   server.decorateRequest('authenticatedUser', null);
+  if (options.minClientVersion) {
+    server.addHook('onRequest', createClientVersionHook(options.minClientVersion));
+  }
 
   server.register(cors, {
     origin: options.corsOrigins,

@@ -2,9 +2,8 @@ import type { FinancialSpace } from '@personalfin/api-contract';
 import { useRouter } from 'expo-router';
 
 import { useFinancialSpaces } from '../../api/financial-spaces';
-import { queryClient } from '../../api/query-client';
 import { useCurrentUser } from '../../api/use-current-user';
-import { authClient } from '../../auth/auth-client';
+import { SignOutButton } from '../../features/auth/SignOutButton';
 import { CreateFinancialSpaceForm } from '../../features/financial-spaces/CreateFinancialSpaceForm';
 import { roleLabel } from '../../features/financial-spaces/permissions';
 import { messages } from '../../i18n/messages';
@@ -25,18 +24,11 @@ export default function FinancialSpacesScreen() {
     router.push({ pathname: '/spaces/[spaceId]', params: { spaceId: space.id } });
   }
 
-  async function handleSignOut(): Promise<void> {
-    await authClient.signOut();
-    queryClient.clear();
-  }
-
   if (spaces.isPending || currentUser.isPending) {
     return <LoadingScreen />;
   }
 
-  const signOutButton = (
-    <Button label={messages.auth.signOutAction} variant="link" onPress={handleSignOut} />
-  );
+  const signOutButton = <SignOutButton />;
 
   if (spaces.isError || currentUser.isError) {
     return (

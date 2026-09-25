@@ -6,6 +6,68 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.7.0\] --- 2026-09-25
+
+Mobile Resilience. Released to `main` and tagged `v0.7.0`; validated in
+SDD-044 (`docs/sdds/v0.7.0/SDD-044-validation-report.md`).
+
+### Sync Conflict Resolution (SDD-043)
+
+-   An offline edit that meets a concurrent change is compared with the
+    version the user edited:
+    -   Fields changed on only one side merge automatically.
+    -   A field changed on both sides shows "Minha versão" and "Versão
+        atual" to choose per field.
+    -   An edit of a transaction deleted elsewhere can restore it and
+        apply the edit, or discard the edit.
+    -   A deletion of a transaction edited elsewhere can delete it anyway,
+        or keep it.
+-   Resolutions are audited with their context, and "Histórico de
+    alterações" shows it ("Sincronização offline: mesclado
+    automaticamente", for example).
+-   API: optional sync context on transaction PATCH, DELETE, and restore;
+    audit events return `context`; migration `0022_audit_sync_context`.
+-   Local outbox schema v2 (adds conflict details), migrated from v1.
+
+### Offline Transaction Changes (SDD-042)
+
+-   With no connection, transactions can be created (including a single
+    card purchase), edited, marked paid or pending, and deleted. Each
+    change is saved on the device and sent when the connection returns.
+    Changes whose request fails at the network level are saved the same
+    way.
+-   The space shows the sync state (offline, pending, syncing,
+    synchronized, attention needed) and a "Não sincronizado" list. Items
+    in the list can be retried or discarded after confirmation. Rows with
+    a pending change are marked, and signing out with pending changes
+    asks for confirmation.
+-   API: `POST .../transactions` accepts an optional client `id`. A
+    replay by the same author returns the existing transaction (`200`);
+    other reuse returns `409 TRANSACTION_ID_CONFLICT`.
+-   Recurrence, installments, "Este e os próximos", and non-transaction
+    actions still need a connection (DR-088).
+
+### Offline Reading (SDD-041)
+
+-   Data already viewed stays available without a connection or when the
+    server cannot be reached. A banner shows "Sem conexão. Mostrando os
+    dados salvos neste aparelho."
+-   The local copy is saved per user with a versioned local schema
+    (FR-097). It is removed at sign-out and discarded after 7 days or
+    when the app version changes.
+-   New dependency `@react-native-async-storage/async-storage`. Client
+    unit tests (Vitest) for local storage logic. TD-012 (local data is
+    not encrypted by the app).
+
+### Minimum Supported Client Version (SDD-040)
+
+-   Clients send their version (`X-Client-Version`). When the operator
+    sets `MIN_CLIENT_VERSION`, older or unversioned clients receive
+    `426 CLIENT_UPGRADE_REQUIRED` and the app shows "Atualize o
+    PersonalFin". Nothing is blocked by default.
+-   ADR-0016 (offline persistence and synchronization) and the v0.7.0
+    SDDs (SDD-040 to SDD-044); DR-088 to DR-091.
+
 ## \[0.6.0\] --- 2026-09-25
 
 Collaboration. Released to `main` and tagged `v0.6.0`; validated in

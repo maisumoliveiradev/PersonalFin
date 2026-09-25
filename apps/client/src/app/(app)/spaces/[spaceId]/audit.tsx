@@ -42,7 +42,17 @@ function AuditRow({ item }: { item: AuditItem }) {
     messages.audit.entities[item.entityType],
     messages.audit.actions[item.action],
   );
-  const details = describeChanges(item);
+  const details = [
+    item.context === null
+      ? ''
+      : messages.audit.syncContext(
+          messages.audit.syncResolutions[item.context.resolution],
+          item.context.baseVersion,
+        ),
+    describeChanges(item),
+  ]
+    .filter((part) => part !== '')
+    .join('. ');
   return (
     <View
       style={[styles.row, { borderColor: palette.border }]}

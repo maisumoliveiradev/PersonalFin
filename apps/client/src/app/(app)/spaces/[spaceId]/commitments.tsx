@@ -102,12 +102,11 @@ export default function CommitmentsScreen() {
             transaction={transaction}
             canChangeStatus={can(space.data, 'record')}
             changingStatus={
-              changeStatus.isPending && changeStatus.variables?.transactionId === transaction.id
+              changeStatus.isPending && changeStatus.variables?.transaction.id === transaction.id
             }
             onToggleStatus={() =>
               changeStatus.mutate({
-                transactionId: transaction.id,
-                version: transaction.version,
+                transaction,
                 status: statusToggle(transaction).nextStatus,
               })
             }

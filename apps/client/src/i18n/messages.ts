@@ -5,6 +5,109 @@ export const messages = {
     retry: 'Tentar novamente',
     permissionDenied: 'Você não tem permissão para esta ação neste espaço.',
   },
+  offline: {
+    banner: 'Sem conexão. Mostrando os dados salvos neste aparelho.',
+  },
+  sync: {
+    queued: {
+      create: 'Lançamento salvo neste aparelho. Ele será enviado quando a conexão voltar.',
+      update: 'Alteração salva neste aparelho. Ela será enviada quando a conexão voltar.',
+      delete: 'Exclusão salva neste aparelho. Ela será enviada quando a conexão voltar.',
+    },
+    changes: (count: number) => (count === 1 ? '1 alteração' : `${count} alterações`),
+    statusOffline: (changes: string) => `Sem conexão. ${changes} aguardando envio.`,
+    statusPending: (changes: string) => `${changes} aguardando envio.`,
+    statusSyncing: 'Sincronizando alterações…',
+    statusSynced: 'Tudo sincronizado.',
+    statusAttention: (count: number) =>
+      count === 1
+        ? '1 alteração precisa da sua atenção.'
+        : `${count} alterações precisam da sua atenção.`,
+    syncNowAction: 'Sincronizar agora',
+    pendingTitle: 'Não sincronizado',
+    kinds: { create: 'Novo lançamento', update: 'Alteração', delete: 'Exclusão' },
+    states: {
+      pending: 'Aguardando envio',
+      error: 'Não foi possível enviar',
+      conflict: 'Conflito: precisa da sua decisão',
+    },
+    entryLabel: (kind: string, description: string, amount: string, date: string, state: string) =>
+      `${kind}: ${description}, ${amount}, ${date}. ${state}`,
+    retryAction: (description: string) => `Tentar enviar de novo: ${description}`,
+    retryLabel: 'Tentar de novo',
+    discardAction: (description: string) => `Descartar: ${description}`,
+    discardLabel: 'Descartar',
+    discardConfirmation: 'Descartar esta alteração? Ela ainda não foi enviada e será perdida.',
+    confirmDiscardAction: 'Sim, descartar',
+    keepAction: 'Manter',
+    rowQueued: 'Alteração não sincronizada',
+    lockedHint:
+      'Este lançamento tem uma alteração aguardando envio. Aguarde a sincronização ou descarte a alteração em "Não sincronizado".',
+    offlineFormHint:
+      'Sem conexão: recorrência e parcelamento ficam disponíveis quando a conexão voltar.',
+    offlineOnlyTransactions:
+      'Sem conexão: só é possível registrar, editar e excluir lançamentos. As demais ações precisam de conexão.',
+    blocked:
+      'As alterações salvas neste aparelho são de uma versão mais nova do app. Alterações sem conexão estão desativadas.',
+    signOutWarning: (count: number) =>
+      count === 1
+        ? 'Há 1 alteração neste aparelho que ainda não foi enviada. Sair agora descarta essa alteração.'
+        : `Há ${count} alterações neste aparelho que ainda não foram enviadas. Sair agora descarta essas alterações.`,
+    confirmSignOutAction: 'Sair e descartar',
+    cancelSignOutAction: 'Continuar conectado',
+    errors: {
+      CATEGORY_NOT_AVAILABLE: 'A categoria não está mais disponível.',
+      TAG_NOT_AVAILABLE: 'Uma das tags não está mais disponível.',
+      CARD_NOT_AVAILABLE: 'O cartão não está mais disponível.',
+      INVALID_CARD_PURCHASE: 'A compra no cartão não é mais válida.',
+      PERMISSION_DENIED: 'Você não tem mais permissão para esta ação.',
+      TRANSACTION_NOT_FOUND: 'O lançamento não existe mais.',
+      FINANCIAL_SPACE_NOT_FOUND: 'Você não tem mais acesso a este espaço.',
+      VALIDATION_FAILED: 'Os dados não foram aceitos pelo servidor.',
+      TRANSACTION_ID_CONFLICT: 'O identificador deste lançamento já está em uso.',
+    } as Record<string, string>,
+    unknownError: 'O servidor recusou a alteração.',
+    conflict: {
+      fieldsIntro:
+        'Este lançamento foi alterado em outro lugar enquanto você estava sem conexão. Escolha o valor de cada campo:',
+      fieldChoice: (field: string) => `${field}: qual valor manter?`,
+      mine: (value: string) => `Minha versão: ${value}`,
+      theirs: (value: string) => `Versão atual: ${value}`,
+      independentNote: 'Os outros campos que você alterou serão aplicados junto.',
+      applyAction: 'Aplicar escolhas',
+      editDeletedIntro:
+        'Este lançamento foi excluído em outro lugar enquanto você o editava sem conexão.',
+      restoreAction: 'Restaurar e aplicar minha alteração',
+      discardEditAction: 'Descartar minha alteração',
+      deleteEditedIntro:
+        'Este lançamento foi alterado em outro lugar depois que você o excluiu sem conexão:',
+      change: (field: string, before: string, after: string) => `${field}: ${before} → ${after}`,
+      deleteAnywayAction: 'Excluir mesmo assim',
+      keepRecordAction: 'Manter o lançamento',
+      failed: 'Não foi possível resolver agora. Verifique a conexão e tente novamente.',
+      reopened:
+        'O lançamento mudou de novo. Os dados foram atualizados; confira e escolha outra vez.',
+      empty: '—',
+      noTags: 'Nenhuma',
+      fields: {
+        type: 'Tipo',
+        status: 'Situação',
+        description: 'Descrição',
+        amountMinor: 'Valor',
+        financialDate: 'Data',
+        categoryId: 'Categoria',
+        subcategoryId: 'Subcategoria',
+        tagIds: 'Tags',
+        invoiceMonth: 'Fatura',
+      } as Record<string, string>,
+      statuses: { paid: 'Pago/recebido', pending: 'Pendente' } as Record<string, string>,
+    },
+  },
+  upgrade: {
+    title: 'Atualize o PersonalFin',
+    body: 'Esta versão do aplicativo não é mais compatível com o servidor. Atualize o aplicativo (ou recarregue a página, na Web) para continuar.',
+    version: (version: string) => `Versão instalada: ${version}`,
+  },
   auth: {
     signInTitle: 'Entrar',
     signUpTitle: 'Criar conta',
@@ -429,6 +532,14 @@ export const messages = {
       update: 'alteração',
       delete: 'remoção',
       restore: 'restauração',
+    },
+    syncContext: (resolution: string, baseVersion: number) =>
+      `Sincronização offline: ${resolution} (feita a partir da versão ${baseVersion})`,
+    syncResolutions: {
+      auto_merged: 'mesclado automaticamente',
+      chose_fields: 'valores escolhidos pelo usuário',
+      restored: 'restaurado para aplicar a alteração',
+      deleted_anyway: 'excluído após alteração concorrente',
     },
   },
   members: {
