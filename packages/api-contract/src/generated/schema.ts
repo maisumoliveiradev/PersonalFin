@@ -1231,10 +1231,317 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** List the space's imports (discarded drafts excluded) */
+        get: operations["listImports"];
+        put?: never;
+        /**
+         * Read a CSV or Excel file into a draft import
+         * @description Read step of Read → Validate → Preview → Resolve → Confirm → Import (DR-059). The original file is kept for traceability. At most 5 MB.
+         */
+        post: operations["createImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/imports/{importId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        /** Get an import with its mapping and counts */
+        get: operations["getImport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/imports/{importId}/rows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        /** Preview rows with their parsed values, errors, and duplicate candidates */
+        get: operations["listImportRows"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/imports/{importId}/mapping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Map columns and validate every row (resets duplicate decisions)
+         * @description Date order, decimal separator, sign convention, and fallback categories are chosen explicitly; nothing ambiguous is guessed (DR-058). Suspected duplicates (same type, date, and amount as an existing transaction or an earlier row) need a decision (DR-060).
+         */
+        put: operations["mapImport"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/imports/{importId}/decisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Decide whether suspected duplicates are imported or skipped */
+        put: operations["decideImportDuplicates"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/imports/{importId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create the transactions of every importable row (audited) */
+        post: operations["confirmImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/imports/{importId}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Move every transaction of a confirmed import to the trash (audited) */
+        post: operations["undoImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/imports/{importId}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Discard a draft import */
+        post: operations["discardImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        ImportStatus: "draft" | "imported" | "undone" | "discarded";
+        ImportMapping: {
+            hasHeader: boolean;
+            /** @description Zero-based column indexes. */
+            columns: {
+                date: number;
+                description: number;
+                amount: number;
+                type: number | null;
+                category: number | null;
+                subcategory: number | null;
+                status: number | null;
+            };
+            /**
+             * @description Order of day, month, and year in text dates; ISO dates are always accepted.
+             * @enum {string}
+             */
+            dateFormat: "DMY" | "YMD";
+            /** @enum {string} */
+            decimalSeparator: "," | ".";
+            /** @enum {string} */
+            amountSign: "type_column" | "negative_is_expense" | "all_expenses" | "all_income";
+            fallbackCategoryIds: {
+                /** Format: uuid */
+                expense: string | null;
+                /** Format: uuid */
+                income: string | null;
+            };
+            defaultStatus: components["schemas"]["TransactionStatus"];
+        };
+        ImportCounts: {
+            total: number;
+            valid: number;
+            /** @description Includes the header row when there is one. */
+            invalid: number;
+            duplicates: number;
+            undecidedDuplicates: number;
+            toImport: number;
+        };
+        ImportSummary: {
+            /** Format: uuid */
+            id: string;
+            fileName: string;
+            /** @enum {string} */
+            format: "csv" | "xlsx";
+            status: components["schemas"]["ImportStatus"];
+            rowCount: number;
+            importedCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            confirmedAt: string | null;
+            /** Format: date-time */
+            undoneAt: string | null;
+            version: number;
+        };
+        ImportDetail: {
+            /** Format: uuid */
+            id: string;
+            fileName: string;
+            /** @enum {string} */
+            format: "csv" | "xlsx";
+            status: components["schemas"]["ImportStatus"];
+            rowCount: number;
+            importedCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            confirmedAt: string | null;
+            /** Format: date-time */
+            undoneAt: string | null;
+            version: number;
+            mapping: null | components["schemas"]["ImportMapping"];
+            counts: null | components["schemas"]["ImportCounts"];
+            firstRows: string[][];
+        };
+        ImportList: {
+            items: components["schemas"]["ImportSummary"][];
+        };
+        ImportRow: {
+            rowNumber: number;
+            cells: string[];
+            parsed: null | {
+                type: components["schemas"]["TransactionType"];
+                status: components["schemas"]["TransactionStatus"];
+                description: string;
+                amountMinor: number;
+                /** Format: date */
+                financialDate: string;
+                /** Format: uuid */
+                categoryId: string;
+                /** Format: uuid */
+                subcategoryId: string | null;
+                warnings: ("category_fallback" | "subcategory_ignored")[];
+            };
+            /** @description header, date_invalid, description_empty, description_too_long, amount_empty, amount_invalid, amount_too_many_decimals, amount_zero, amount_too_large, amount_negative_ambiguous, type_unknown, status_unknown, category_unmatched. */
+            errors: string[];
+            duplicateOf: null | {
+                /** @enum {string} */
+                kind: "transaction";
+                /** Format: uuid */
+                transactionId: string;
+                description: string;
+            } | {
+                /** @enum {string} */
+                kind: "row";
+                rowNumber: number;
+            };
+            /** @enum {string|null} */
+            decision: "import" | "skip" | null;
+            /** Format: uuid */
+            transactionId: string | null;
+        };
+        ImportRowPage: {
+            items: components["schemas"]["ImportRow"][];
+            hasMore: boolean;
+        };
+        CreateImportRequest: {
+            fileName: string;
+            /** @enum {string} */
+            format: "csv" | "xlsx";
+            /** @description The file bytes in base64 (at most 5 MB decoded). */
+            contentBase64: string;
+        };
+        ImportMappingRequest: {
+            version: number;
+            mapping: components["schemas"]["ImportMapping"];
+        };
+        ImportDecisionsRequest: {
+            version: number;
+            decisions: {
+                rowNumber: number;
+                /** @enum {string} */
+                decision: "import" | "skip";
+            }[];
+        } | {
+            version: number;
+            /** @enum {string} */
+            all: "import" | "skip";
+        };
         /** @enum {string} */
         ReminderStage: "overdue" | "before-0" | "before-1" | "before-3" | "before-7";
         ReminderSettings: {
@@ -1529,7 +1836,7 @@ export interface components {
                 occurredAt: string;
                 actorName: string;
                 /** @enum {string} */
-                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation" | "debt" | "debt_payment" | "goal";
+                entityType: "financial_transaction" | "category" | "recurrence_series" | "card" | "card_invoice" | "card_invoice_payment" | "tag" | "financial_space" | "financial_space_member" | "space_invitation" | "debt" | "debt_payment" | "goal" | "import_batch";
                 entityId: string;
                 /** @enum {string} */
                 action: "create" | "update" | "delete" | "restore";
@@ -2278,6 +2585,7 @@ export interface components {
         };
     };
     parameters: {
+        ImportId: string;
         GoalId: string;
         DebtId: string;
         InvoiceMonth: string;
@@ -5073,6 +5381,392 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listImports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportList"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    createImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateImportRequest"];
+            };
+        };
+        responses: {
+            /** @description The draft with its first rows for mapping. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            /** @description IMPORT_FILE_UNREADABLE, IMPORT_FILE_EMPTY, or IMPORT_TOO_MANY_ROWS (more than 5000 rows). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The import. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportDetail"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listImportRows: {
+        parameters: {
+            query?: {
+                filter?: "all" | "invalid" | "duplicates" | "importable";
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of rows. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportRowPage"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    mapImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportMappingRequest"];
+            };
+        };
+        responses: {
+            /** @description The import with its counts. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    decideImportDuplicates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportDecisionsRequest"];
+            };
+        };
+        responses: {
+            /** @description The import with its counts. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    confirmImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description The imported batch. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    undoImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description The undone batch. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    discardImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+                importId: components["parameters"]["ImportId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionRequest"];
+            };
+        };
+        responses: {
+            /** @description The discarded draft. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportDetail"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            /** @description The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND). */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             426: components["responses"]["ClientUpgradeRequired"];
         };
     };

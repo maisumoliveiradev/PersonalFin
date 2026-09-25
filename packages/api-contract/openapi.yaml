@@ -2695,8 +2695,359 @@ paths:
           $ref: '#/components/responses/PermissionDenied'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/imports:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listImports
+      summary: List the space's imports (discarded drafts excluded)
+      responses:
+        '200':
+          description: Newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createImport
+      summary: Read a CSV or Excel file into a draft import
+      description: >
+        Read step of Read → Validate → Preview → Resolve → Confirm → Import (DR-059). The original file is kept for traceability. At most 5 MB.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateImportRequest'
+      responses:
+        '201':
+          description: The draft with its first rows for mapping.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '422':
+          description: >
+            IMPORT_FILE_UNREADABLE, IMPORT_FILE_EMPTY, or IMPORT_TOO_MANY_ROWS (more than 5000 rows).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/imports/{importId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/ImportId'
+    get:
+      operationId: getImport
+      summary: Get an import with its mapping and counts
+      responses:
+        '200':
+          description: The import.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/imports/{importId}/rows:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/ImportId'
+    get:
+      operationId: listImportRows
+      summary: Preview rows with their parsed values, errors, and duplicate candidates
+      parameters:
+        - name: filter
+          in: query
+          schema:
+            type: string
+            enum: [all, invalid, duplicates, importable]
+            default: all
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        '200':
+          description: A page of rows.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportRowPage'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/imports/{importId}/mapping:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/ImportId'
+    put:
+      operationId: mapImport
+      summary: Map columns and validate every row (resets duplicate decisions)
+      description: >
+        Date order, decimal separator, sign convention, and fallback categories are chosen explicitly; nothing ambiguous is guessed (DR-058). Suspected duplicates (same type, date, and amount as an existing transaction or an earlier row) need a decision (DR-060).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportMappingRequest'
+      responses:
+        '200':
+          description: The import with its counts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/imports/{importId}/decisions:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/ImportId'
+    put:
+      operationId: decideImportDuplicates
+      summary: Decide whether suspected duplicates are imported or skipped
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportDecisionsRequest'
+      responses:
+        '200':
+          description: The import with its counts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/imports/{importId}/confirm:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/ImportId'
+    post:
+      operationId: confirmImport
+      summary: Create the transactions of every importable row (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+      responses:
+        '200':
+          description: The imported batch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/imports/{importId}/undo:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/ImportId'
+    post:
+      operationId: undoImport
+      summary: Move every transaction of a confirmed import to the trash (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+      responses:
+        '200':
+          description: The undone batch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/imports/{importId}/discard:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/ImportId'
+    post:
+      operationId: discardImport
+      summary: Discard a draft import
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionRequest'
+      responses:
+        '200':
+          description: The discarded draft.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The space or the import does not exist (FINANCIAL_SPACE_NOT_FOUND, IMPORT_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT, IMPORT_NOT_DRAFT, IMPORT_NOT_MAPPED, IMPORT_DUPLICATES_UNDECIDED, IMPORT_NOTHING_TO_IMPORT, IMPORT_CATEGORY_CHANGED, or IMPORT_NOT_IMPORTED.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
+    ImportId:
+      name: importId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     GoalId:
       name: goalId
       in: path
@@ -2874,6 +3225,314 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    ImportStatus:
+      type: string
+      enum: [draft, imported, undone, discarded]
+    ImportMapping:
+      type: object
+      additionalProperties: false
+      required: [hasHeader, columns, dateFormat, decimalSeparator, amountSign, fallbackCategoryIds, defaultStatus]
+      properties:
+        hasHeader:
+          type: boolean
+        columns:
+          type: object
+          additionalProperties: false
+          description: Zero-based column indexes.
+          required: [date, description, amount, type, category, subcategory, status]
+          properties:
+            date:
+              type: integer
+              minimum: 0
+            description:
+              type: integer
+              minimum: 0
+            amount:
+              type: integer
+              minimum: 0
+            type:
+              type: [integer, 'null']
+              minimum: 0
+            category:
+              type: [integer, 'null']
+              minimum: 0
+            subcategory:
+              type: [integer, 'null']
+              minimum: 0
+            status:
+              type: [integer, 'null']
+              minimum: 0
+        dateFormat:
+          type: string
+          enum: [DMY, YMD]
+          description: Order of day, month, and year in text dates; ISO dates are always accepted.
+        decimalSeparator:
+          type: string
+          enum: [',', '.']
+        amountSign:
+          type: string
+          enum: [type_column, negative_is_expense, all_expenses, all_income]
+        fallbackCategoryIds:
+          type: object
+          additionalProperties: false
+          required: [expense, income]
+          properties:
+            expense:
+              type: [string, 'null']
+              format: uuid
+            income:
+              type: [string, 'null']
+              format: uuid
+        defaultStatus:
+          $ref: '#/components/schemas/TransactionStatus'
+    ImportCounts:
+      type: object
+      additionalProperties: false
+      required: [total, valid, invalid, duplicates, undecidedDuplicates, toImport]
+      properties:
+        total:
+          type: integer
+        valid:
+          type: integer
+        invalid:
+          type: integer
+          description: Includes the header row when there is one.
+        duplicates:
+          type: integer
+        undecidedDuplicates:
+          type: integer
+        toImport:
+          type: integer
+    ImportSummary:
+      type: object
+      additionalProperties: false
+      required: [id, fileName, format, status, rowCount, importedCount, createdAt, confirmedAt, undoneAt, version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        format:
+          type: string
+          enum: [csv, xlsx]
+        status:
+          $ref: '#/components/schemas/ImportStatus'
+        rowCount:
+          type: integer
+        importedCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        confirmedAt:
+          type: [string, 'null']
+          format: date-time
+        undoneAt:
+          type: [string, 'null']
+          format: date-time
+        version:
+          type: integer
+    ImportDetail:
+      type: object
+      additionalProperties: false
+      required: [id, fileName, format, status, rowCount, importedCount, createdAt, confirmedAt, undoneAt, version, mapping, counts, firstRows]
+      properties:
+        id:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        format:
+          type: string
+          enum: [csv, xlsx]
+        status:
+          $ref: '#/components/schemas/ImportStatus'
+        rowCount:
+          type: integer
+        importedCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        confirmedAt:
+          type: [string, 'null']
+          format: date-time
+        undoneAt:
+          type: [string, 'null']
+          format: date-time
+        version:
+          type: integer
+        mapping:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/ImportMapping'
+        counts:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/ImportCounts'
+        firstRows:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+    ImportList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportSummary'
+    ImportRow:
+      type: object
+      additionalProperties: false
+      required: [rowNumber, cells, parsed, errors, duplicateOf, decision, transactionId]
+      properties:
+        rowNumber:
+          type: integer
+        cells:
+          type: array
+          items:
+            type: string
+        parsed:
+          oneOf:
+            - type: 'null'
+            - type: object
+              additionalProperties: false
+              required: [type, status, description, amountMinor, financialDate, categoryId, subcategoryId, warnings]
+              properties:
+                type:
+                  $ref: '#/components/schemas/TransactionType'
+                status:
+                  $ref: '#/components/schemas/TransactionStatus'
+                description:
+                  type: string
+                amountMinor:
+                  type: integer
+                financialDate:
+                  type: string
+                  format: date
+                categoryId:
+                  type: string
+                  format: uuid
+                subcategoryId:
+                  type: [string, 'null']
+                  format: uuid
+                warnings:
+                  type: array
+                  items:
+                    type: string
+                    enum: [category_fallback, subcategory_ignored]
+        errors:
+          type: array
+          description: >
+            header, date_invalid, description_empty, description_too_long, amount_empty,
+            amount_invalid, amount_too_many_decimals, amount_zero, amount_too_large,
+            amount_negative_ambiguous, type_unknown, status_unknown, category_unmatched.
+          items:
+            type: string
+        duplicateOf:
+          oneOf:
+            - type: 'null'
+            - type: object
+              additionalProperties: false
+              required: [kind, transactionId, description]
+              properties:
+                kind:
+                  type: string
+                  enum: [transaction]
+                transactionId:
+                  type: string
+                  format: uuid
+                description:
+                  type: string
+            - type: object
+              additionalProperties: false
+              required: [kind, rowNumber]
+              properties:
+                kind:
+                  type: string
+                  enum: [row]
+                rowNumber:
+                  type: integer
+        decision:
+          type: [string, 'null']
+          enum: [import, skip, null]
+        transactionId:
+          type: [string, 'null']
+          format: uuid
+    ImportRowPage:
+      type: object
+      additionalProperties: false
+      required: [items, hasMore]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportRow'
+        hasMore:
+          type: boolean
+    CreateImportRequest:
+      type: object
+      additionalProperties: false
+      required: [fileName, format, contentBase64]
+      properties:
+        fileName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        format:
+          type: string
+          enum: [csv, xlsx]
+        contentBase64:
+          type: string
+          description: The file bytes in base64 (at most 5 MB decoded).
+    ImportMappingRequest:
+      type: object
+      additionalProperties: false
+      required: [version, mapping]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        mapping:
+          $ref: '#/components/schemas/ImportMapping'
+    ImportDecisionsRequest:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [version, decisions]
+          properties:
+            version:
+              type: integer
+              minimum: 1
+            decisions:
+              type: array
+              minItems: 1
+              items:
+                type: object
+                additionalProperties: false
+                required: [rowNumber, decision]
+                properties:
+                  rowNumber:
+                    type: integer
+                    minimum: 1
+                  decision:
+                    type: string
+                    enum: [import, skip]
+        - type: object
+          additionalProperties: false
+          required: [version, all]
+          properties:
+            version:
+              type: integer
+              minimum: 1
+            all:
+              type: string
+              enum: [import, skip]
     ReminderStage:
       type: string
       enum: [overdue, before-0, before-1, before-3, before-7]
@@ -3573,6 +4232,7 @@ components:
                   - debt
                   - debt_payment
                   - goal
+                  - import_batch
               entityId:
                 type: string
               action:

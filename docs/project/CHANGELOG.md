@@ -6,6 +6,25 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### CSV/Excel Import (SDD-050)
+
+-   "Importar planilha" reads a CSV (UTF-8 or Latin-1, detected
+    separator) or an Excel file of up to 5 MB and 5,000 rows. The file is
+    stored for traceability.
+-   You map the columns: date, description, amount, and optionally type,
+    category, subcategory, and status. You also choose the date order,
+    the decimal separator, how to tell income from expense, and fallback
+    categories. Nothing ambiguous is guessed (DR-058, DR-096).
+-   The preview lists invalid rows with their reasons and the suspected
+    duplicates (the same as an existing transaction or another row). Each
+    duplicate must be imported or skipped explicitly.
+-   Importing creates the transactions in one step. An import can be
+    undone (the transactions go to the trash) or discarded while in
+    review. Every action is audited.
+-   Dependencies: `csv-parse` and `read-excel-file` (API);
+    `expo-document-picker` and `expo-file-system` (client). Migration
+    `0026_imports`.
+
 ## \[0.8.0\] --- 2026-09-25
 
 Debts, Goals, and Reminders. Released to `main` and tagged `v0.8.0`;

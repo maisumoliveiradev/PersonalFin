@@ -283,6 +283,29 @@ reflect current data.
 Push delivery is not implemented: it needs the owner to authorize a
 hosted push service. It will reuse this computation.
 
+## Imports (SDD-050, DR-096)
+
+`modules/imports` implements Read → Validate → Preview → Resolve →
+Confirm → Import:
+- **Read:** `import-file.ts` reads CSV with `csv-parse`. The delimiter
+  (`;`, `,`, or tab) and the encoding (UTF-8, falling back to Latin-1)
+  are detected. XLSX is read with `read-excel-file`, numbers as text so
+  they are never floating point, and dates as ISO strings. The original
+  bytes and their SHA-256 are stored in `import_batch`; each row's cells
+  go to `import_row`.
+- **Validate and preview:** `import-mapping.ts` evaluates every row
+  against the user's explicit mapping with the pure domain parsers
+  (`parseImportDate`, `parseImportAmount`). It marks suspected
+  duplicates: same type, date, and amount as an active transaction or an
+  earlier row. Results are written in bulk (`jsonb_to_recordset`).
+- **Resolve, confirm, undo:** duplicate decisions are required before
+  confirmation. Confirmation creates the transactions in one database
+  transaction, with `import_batch_id`, and records an `import_batch`
+  audit event. Undo soft-deletes them with a normal delete audit event
+  for each.
+- Bodies of up to about 7 MB are accepted on the create route only
+  (base64 of 5 MB).
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:

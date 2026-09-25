@@ -13,7 +13,8 @@ export type AuditEntityType =
   | 'space_invitation'
   | 'debt'
   | 'debt_payment'
-  | 'goal';
+  | 'goal'
+  | 'import_batch';
 export type AuditAction = 'create' | 'update' | 'delete' | 'restore';
 
 export interface AuditContext {

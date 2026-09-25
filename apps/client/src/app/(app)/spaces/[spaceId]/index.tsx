@@ -151,6 +151,15 @@ export default function FinancialSpaceHomeScreen() {
         filters={filters}
         canRecord={can(space.data, 'record')}
       />
+      {can(space.data, 'record') && (
+        <Button
+          label={messages.imports.action}
+          variant="link"
+          onPress={() =>
+            router.push({ pathname: '/spaces/[spaceId]/imports', params: { spaceId } })
+          }
+        />
+      )}
       <Button
         label={messages.transactions.trashAction}
         variant="link"
