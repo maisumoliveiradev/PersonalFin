@@ -18,6 +18,14 @@ import type { TransactionFilters } from '../features/transactions/transaction-fi
 import { isNetworkFailure, isOffline, queueUpdate } from '../sync/offline-writes';
 
 import { apiClient, expectData } from './api-client';
+import { reminderKeys } from './reminders';
+
+function invalidateSpaceActivity(queryClient: QueryClient, spaceId: string) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) }),
+    queryClient.invalidateQueries({ queryKey: reminderKeys.list(spaceId) }),
+  ]);
+}
 
 export const transactionKeys = {
   forSpace: (spaceId: string) => ['financial-spaces', spaceId, 'transactions'] as const,
@@ -48,7 +56,7 @@ export function useDeleteTransaction(spaceId: string, transactionId: string) {
         }),
       ),
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+      await invalidateSpaceActivity(queryClient, spaceId);
     },
   });
 }
@@ -64,7 +72,7 @@ export function useRestoreTransaction(spaceId: string) {
         }),
       ),
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+      await invalidateSpaceActivity(queryClient, spaceId);
     },
   });
 }
@@ -114,7 +122,7 @@ export function useUpdateTransaction(spaceId: string, transactionId: string) {
         }),
       ),
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+      await invalidateSpaceActivity(queryClient, spaceId);
     },
   });
 }
@@ -153,7 +161,7 @@ export function useCreateTransaction(spaceId: string) {
         }),
       ),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+      await invalidateSpaceActivity(queryClient, spaceId);
     },
   });
 }
@@ -189,7 +197,7 @@ export function useChangeTransactionStatus(spaceId: string) {
       }
     },
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: transactionKeys.forSpace(spaceId) });
+      await invalidateSpaceActivity(queryClient, spaceId);
     },
   });
 }

@@ -2590,6 +2590,111 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/reminders:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listReminders
+      summary: Current in-app reminders of the caller for a date
+      description: >
+        Personal: pending transactions, open card invoices, debt installments, and a negative projected month-end balance, filtered by the caller's reminder settings and dismissals.
+      parameters:
+        - name: today
+          in: query
+          required: true
+          description: The caller's local calendar date.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Overdue reminders first, then by due date (DR-095).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/reminders/dismissals:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    post:
+      operationId: dismissReminder
+      summary: Dismiss a reminder until its next stage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderDismissalRequest'
+      responses:
+        '204':
+          description: Dismissed.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/reminder-settings:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: getReminderSettings
+      summary: The caller's reminder settings for the space (defaults when never saved)
+      responses:
+        '200':
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderSettings'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    put:
+      operationId: saveReminderSettings
+      summary: Save the caller's reminder settings for the space
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReminderSettings'
+      responses:
+        '200':
+          description: The saved settings (deduplicated and ordered).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReminderSettings'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
 components:
   parameters:
     GoalId:
@@ -2769,6 +2874,76 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    ReminderStage:
+      type: string
+      enum: [overdue, before-0, before-1, before-3, before-7]
+    ReminderSettings:
+      type: object
+      additionalProperties: false
+      required: [offsets, kinds]
+      properties:
+        offsets:
+          type: array
+          maxItems: 4
+          description: Days before the due date to remind (0 = on the day).
+          items:
+            type: integer
+            enum: [0, 1, 3, 7]
+        kinds:
+          type: array
+          items:
+            type: string
+            enum: [transactions, invoices, debts, projection]
+    ReminderDismissalRequest:
+      type: object
+      additionalProperties: false
+      required: [key, stage]
+      properties:
+        key:
+          type: string
+          minLength: 1
+          maxLength: 200
+        stage:
+          $ref: '#/components/schemas/ReminderStage'
+    Reminder:
+      type: object
+      additionalProperties: false
+      required: [key, kind, stage, dueDate, daysUntilDue, description, amountMinor, transactionType]
+      properties:
+        key:
+          type: string
+        kind:
+          type: string
+          enum: [transactions, invoices, debts, projection]
+        stage:
+          $ref: '#/components/schemas/ReminderStage'
+        dueDate:
+          type: string
+          format: date
+        daysUntilDue:
+          type: integer
+        description:
+          type: string
+          description: Transaction description, card name, debt name, or the month (YYYY-MM) for projection.
+        amountMinor:
+          type: integer
+          description: Amount due; the projected balance (negative) for projection reminders.
+        transactionType:
+          oneOf:
+            - type: 'null'
+            - $ref: '#/components/schemas/TransactionType'
+    ReminderList:
+      type: object
+      additionalProperties: false
+      required: [today, items]
+      properties:
+        today:
+          type: string
+          format: date
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reminder'
     GoalSummary:
       type: object
       additionalProperties: false

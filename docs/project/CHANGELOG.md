@@ -6,6 +6,22 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### In-App Reminders (SDD-048)
+
+-   A "Lembretes" section on the space screen covers:
+    - pending income and expenses;
+    - card invoices;
+    - debt installments due soon or overdue;
+    - a negative projected balance for the month.
+
+    Each reminder can be dismissed and comes back at its next offset.
+-   "Configurar lembretes" is personal. You choose when to be reminded
+    (on the day, 1, 3, or 7 days before; default on the day and 3 days
+    before) and about what (DR-095).
+-   API: `.../reminders`, `.../reminders/dismissals`,
+    `.../reminder-settings`; migration `0025_reminders`.
+-   Push notifications are not included and need an owner decision.
+
 ### Financial Goals (SDD-047)
 
 -   "Metas" per space (shared with members) and "Minhas metas" (global,

@@ -28,6 +28,8 @@ import type { DashboardPreferenceRepository } from '../modules/preferences/dashb
 import { createPostgresDashboardPreferenceRepository } from '../modules/preferences/postgres-dashboard-preference-repository.ts';
 import { createPostgresRecurrenceRepository } from '../modules/recurrences/postgres-recurrence-repository.ts';
 import type { RecurrenceRepository } from '../modules/recurrences/recurrence-repository.ts';
+import { createPostgresReminderRepository } from '../modules/reminders/postgres-reminder-repository.ts';
+import type { ReminderRepository } from '../modules/reminders/reminder-repository.ts';
 import { createPostgresTagRepository } from '../modules/tags/postgres-tag-repository.ts';
 import type { TagRepository } from '../modules/tags/tag-repository.ts';
 import { createPostgresTransactionRepository } from '../modules/transactions/postgres-transaction-repository.ts';
@@ -52,6 +54,7 @@ export interface Repositories {
   members: MemberRepository;
   debts: DebtRepository;
   goals: GoalRepository;
+  reminders: ReminderRepository;
 }
 
 export interface DataAccess {
@@ -78,6 +81,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     members: createPostgresMemberRepository(db),
     debts: createPostgresDebtRepository(db),
     goals: createPostgresGoalRepository(db),
+    reminders: createPostgresReminderRepository(db),
   };
 }
 

@@ -1170,10 +1170,101 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/financial-spaces/{spaceId}/reminders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Current in-app reminders of the caller for a date
+         * @description Personal: pending transactions, open card invoices, debt installments, and a negative projected month-end balance, filtered by the caller's reminder settings and dismissals.
+         */
+        get: operations["listReminders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/reminders/dismissals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dismiss a reminder until its next stage */
+        post: operations["dismissReminder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/financial-spaces/{spaceId}/reminder-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        /** The caller's reminder settings for the space (defaults when never saved) */
+        get: operations["getReminderSettings"];
+        /** Save the caller's reminder settings for the space */
+        put: operations["saveReminderSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @enum {string} */
+        ReminderStage: "overdue" | "before-0" | "before-1" | "before-3" | "before-7";
+        ReminderSettings: {
+            /** @description Days before the due date to remind (0 = on the day). */
+            offsets: (0 | 1 | 3 | 7)[];
+            kinds: ("transactions" | "invoices" | "debts" | "projection")[];
+        };
+        ReminderDismissalRequest: {
+            key: string;
+            stage: components["schemas"]["ReminderStage"];
+        };
+        Reminder: {
+            key: string;
+            /** @enum {string} */
+            kind: "transactions" | "invoices" | "debts" | "projection";
+            stage: components["schemas"]["ReminderStage"];
+            /** Format: date */
+            dueDate: string;
+            daysUntilDue: number;
+            /** @description Transaction description, card name, debt name, or the month (YYYY-MM) for projection. */
+            description: string;
+            /** @description Amount due; the projected balance (negative) for projection reminders. */
+            amountMinor: number;
+            transactionType: null | components["schemas"]["TransactionType"];
+        };
+        ReminderList: {
+            /** Format: date */
+            today: string;
+            items: components["schemas"]["Reminder"][];
+        };
         GoalSummary: {
             remainingMinor: number;
             /** @description Accumulated share of the target in tenths of a percent, rounded down and capped at 1000. */
@@ -4866,6 +4957,122 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    listReminders: {
+        parameters: {
+            query: {
+                /** @description The caller's local calendar date. */
+                today: string;
+            };
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Overdue reminders first, then by due date (DR-095). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderList"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    dismissReminder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReminderDismissalRequest"];
+            };
+        };
+        responses: {
+            /** @description Dismissed. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    getReminderSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderSettings"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    saveReminderSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                spaceId: components["parameters"]["SpaceId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReminderSettings"];
+            };
+        };
+        responses: {
+            /** @description The saved settings (deduplicated and ordered). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReminderSettings"];
+                };
+            };
+            400: components["responses"]["ValidationFailed"];
+            401: components["responses"]["Unauthenticated"];
+            403: components["responses"]["PermissionDenied"];
+            404: components["responses"]["FinancialSpaceNotFound"];
             426: components["responses"]["ClientUpgradeRequired"];
         };
     };

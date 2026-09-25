@@ -315,6 +315,23 @@ visible to members and changed with `plan`; global goals are visible
 only to their owner. Each accumulated-amount update is kept in an
 append-only progress history.
 
+## Reminders
+
+**DR-095** *(SDD-048; decided under delegation.)* In-app reminders are
+personal per user and space:
+- **Offsets:** chosen from on the day, 1, 3, and 7 days before. The
+  default is on the day and 3 days before.
+- **Kinds:** pending income and expenses, open card invoices, debt
+  installments, and a negative projected month-end balance for the
+  current month.
+- **Stages:** a reminder appears at the largest chosen offset that
+  covers the days left and moves to smaller offsets as the due date
+  approaches. Past-due pending items are reminded as overdue (up to 90
+  days back).
+- **Dismissal:** dismissing hides the reminder until its next stage.
+
+Reminders never change financial data.
+
 ## Dates and time
 
 **DR-051** Financial dates are calendar dates and must not shift across

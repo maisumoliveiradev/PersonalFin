@@ -24,6 +24,7 @@ import { registerInvitationRoutes } from './modules/members/invitation-routes.ts
 import { registerMemberRoutes } from './modules/members/member-routes.ts';
 import { registerDashboardPreferenceRoutes } from './modules/preferences/dashboard-preference-routes.ts';
 import { registerRecurrenceRoutes } from './modules/recurrences/recurrence-routes.ts';
+import { registerReminderRoutes } from './modules/reminders/reminder-routes.ts';
 import { registerTagRoutes } from './modules/tags/tag-routes.ts';
 import { registerTransactionRoutes } from './modules/transactions/transaction-routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './routes/auth.ts';
@@ -91,6 +92,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerAuditRoutes(authenticated, options.data);
     registerDebtRoutes(authenticated, options.data);
     registerGoalRoutes(authenticated, options.data);
+    registerReminderRoutes(authenticated, options.data);
   });
 
   return server;
