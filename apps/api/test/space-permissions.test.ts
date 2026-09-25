@@ -182,6 +182,7 @@ const ENDPOINTS: Endpoint[] = [
   { method: 'POST', path: `/imports/${MISSING}/undo`, permission: 'record', payload: {} },
   { method: 'POST', path: `/imports/${MISSING}/discard`, permission: 'record', payload: {} },
   { method: 'GET', path: '/exports/transactions?format=csv', permission: 'view' },
+  { method: 'GET', path: '/reports/monthly?month=2026-10', permission: 'view' },
 ];
 
 async function shareWith(permissions: SpacePermission[]): Promise<string> {

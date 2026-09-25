@@ -15,6 +15,8 @@ export const messages = {
     xlsxAction: 'Exportar Excel',
     csvLabel: 'Exportar os lançamentos filtrados em CSV',
     xlsxLabel: 'Exportar os lançamentos filtrados em Excel',
+    pdfAction: 'Relatório do mês (PDF)',
+    pdfLabel: 'Gerar o relatório do mês em PDF',
     done: (fileName: string) => `Arquivo ${fileName} gerado.`,
     failed: 'Não foi possível gerar o arquivo. Tente novamente.',
   },

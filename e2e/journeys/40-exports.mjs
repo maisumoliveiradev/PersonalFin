@@ -55,4 +55,14 @@ export default async function exportsJourney({ browser, step }) {
       throw new Error(`${xlsx.name} is not an xlsx file`);
     }
   });
+
+  const pdf = await download(page, 'Gerar o relatório do mês em PDF');
+  await step('the monthly report is a PDF file', async () => {
+    if (
+      !/^relatorio-\d{4}-\d{2}\.pdf$/.test(pdf.name) ||
+      pdf.bytes.subarray(0, 5).toString() !== '%PDF-'
+    ) {
+      throw new Error(`${pdf.name} is not a PDF`);
+    }
+  });
 }
