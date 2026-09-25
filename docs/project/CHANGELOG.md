@@ -6,6 +6,11 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.7.0\] --- 2026-09-25
+
+Mobile Resilience. Released to `main` and tagged `v0.7.0`; validated in
+SDD-044 (`docs/sdds/v0.7.0/SDD-044-validation-report.md`).
+
 ### Sync Conflict Resolution (SDD-043)
 
 -   An offline edit that meets a concurrent change is compared with the
