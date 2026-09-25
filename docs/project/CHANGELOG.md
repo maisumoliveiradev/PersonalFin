@@ -6,6 +6,19 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Financial Goals (SDD-047)
+
+-   "Metas" per space (shared with members) and "Minhas metas" (global,
+    visible only to you).
+-   Each goal has a name, a target, and an optional target date.
+-   The accumulated amount is updated manually and every update is kept
+    in the history. Progress and the remaining amount are shown, and a
+    goal is marked "Meta atingida" once reached.
+-   Goals never change balances, the dashboard, or projections (DR-050,
+    DR-094). Space goal changes are audited.
+-   API: `/goals` and `/financial-spaces/{id}/goals`; migration
+    `0024_goals`.
+
 ### Early-Amortization Simulation (SDD-046)
 
 -   "Simular amortização" on a debt compares today with the result of a

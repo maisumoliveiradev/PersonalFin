@@ -2296,8 +2296,309 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /goals:
+    get:
+      operationId: listGoals
+      summary: List the callers global goals
+      responses:
+        '200':
+          description: Goals in creation order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+    post:
+      operationId: createGoal
+      summary: Create a global goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGoalRequest'
+      responses:
+        '201':
+          description: The created goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+  /goals/{goalId}:
+    parameters:
+      - $ref: '#/components/parameters/GoalId'
+    get:
+      operationId: getGoal
+      summary: Get a goal with its progress history
+      responses:
+        '200':
+          description: The goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: updateGoal
+      summary: Edit or archive a goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGoalRequest'
+      responses:
+        '200':
+          description: The updated goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /goals/{goalId}/progress:
+    parameters:
+      - $ref: '#/components/parameters/GoalId'
+    post:
+      operationId: recordGoalProgress
+      summary: Set the accumulated amount (kept in the progress history)
+      description: >
+        Goals are manually maintained and never change projections (DR-049, DR-050).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalProgressRequest'
+      responses:
+        '200':
+          description: The goal with the new progress.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND); global goals of other users are never visible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/goals:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listSpaceGoals
+      summary: List the space goals
+      responses:
+        '200':
+          description: Goals in creation order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createSpaceGoal
+      summary: Create a space goal (audited)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGoalRequest'
+      responses:
+        '201':
+          description: The created goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+  /financial-spaces/{spaceId}/goals/{goalId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/GoalId'
+    get:
+      operationId: getSpaceGoal
+      summary: Get a goal with its progress history
+      responses:
+        '200':
+          description: The goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      operationId: updateSpaceGoal
+      summary: Edit or archive a goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGoalRequest'
+      responses:
+        '200':
+          description: The updated goal.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /financial-spaces/{spaceId}/goals/{goalId}/progress:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - $ref: '#/components/parameters/GoalId'
+    post:
+      operationId: recordSpaceGoalProgress
+      summary: Set the accumulated amount (kept in the progress history)
+      description: >
+        Goals are manually maintained and never change projections (DR-049, DR-050).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoalProgressRequest'
+      responses:
+        '200':
+          description: The goal with the new progress.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalDetail'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '403':
+          $ref: '#/components/responses/PermissionDenied'
+        '404':
+          description: >
+            The goal does not exist in this scope (GOAL_NOT_FOUND), or the space is not accessible (FINANCIAL_SPACE_NOT_FOUND).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >
+            VERSION_CONFLICT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   parameters:
+    GoalId:
+      name: goalId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     DebtId:
       name: debtId
       in: path
@@ -2468,6 +2769,142 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    GoalSummary:
+      type: object
+      additionalProperties: false
+      required: [remainingMinor, progressTenths, reached]
+      properties:
+        remainingMinor:
+          type: integer
+        progressTenths:
+          type: integer
+          description: Accumulated share of the target in tenths of a percent, rounded down and capped at 1000.
+        reached:
+          type: boolean
+    Goal:
+      type: object
+      additionalProperties: false
+      required: [id, scope, name, targetAmountMinor, accumulatedMinor, currency, targetDate, archived, version, summary]
+      properties:
+        id:
+          type: string
+          format: uuid
+        scope:
+          type: string
+          enum: [global, space]
+        name:
+          type: string
+        targetAmountMinor:
+          type: integer
+        accumulatedMinor:
+          type: integer
+        currency:
+          type: string
+        targetDate:
+          type: [string, 'null']
+          format: date
+        archived:
+          type: boolean
+        version:
+          type: integer
+        summary:
+          $ref: '#/components/schemas/GoalSummary'
+    GoalDetail:
+      type: object
+      additionalProperties: false
+      required: [id, scope, name, targetAmountMinor, accumulatedMinor, currency, targetDate, archived, version, summary, progress]
+      properties:
+        id:
+          type: string
+          format: uuid
+        scope:
+          type: string
+          enum: [global, space]
+        name:
+          type: string
+        targetAmountMinor:
+          type: integer
+        accumulatedMinor:
+          type: integer
+        currency:
+          type: string
+        targetDate:
+          type: [string, 'null']
+          format: date
+        archived:
+          type: boolean
+        version:
+          type: integer
+        summary:
+          $ref: '#/components/schemas/GoalSummary'
+        progress:
+          type: array
+          description: Accumulated-amount updates, newest first.
+          items:
+            type: object
+            additionalProperties: false
+            required: [accumulatedMinor, recordedAt]
+            properties:
+              accumulatedMinor:
+                type: integer
+              recordedAt:
+                type: string
+                format: date-time
+    GoalList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Goal'
+    CreateGoalRequest:
+      type: object
+      additionalProperties: false
+      required: [name, targetAmountMinor]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        targetAmountMinor:
+          type: integer
+          minimum: 1
+        targetDate:
+          type: [string, 'null']
+          format: date
+    UpdateGoalRequest:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        targetAmountMinor:
+          type: integer
+          minimum: 1
+        targetDate:
+          type: [string, 'null']
+          format: date
+        archived:
+          type: boolean
+    GoalProgressRequest:
+      type: object
+      additionalProperties: false
+      required: [version, accumulatedMinor]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        accumulatedMinor:
+          type: integer
+          minimum: 0
     PrepaymentMode:
       type: string
       enum: [reduce_term, reduce_installment]
@@ -2960,6 +3397,7 @@ components:
                   - space_invitation
                   - debt
                   - debt_payment
+                  - goal
               entityId:
                 type: string
               action:

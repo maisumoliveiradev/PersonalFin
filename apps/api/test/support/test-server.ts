@@ -15,6 +15,7 @@ import { createInMemoryDashboardPreferenceRepository } from './in-memory-dashboa
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryDebtRepository } from './in-memory-debt-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
+import { createInMemoryGoalRepository } from './in-memory-goal-repository.ts';
 import { createInMemoryInstallmentRepository } from './in-memory-installment-repository.ts';
 import { createInMemoryMemberRepository } from './in-memory-member-repository.ts';
 import { createInMemoryRecurrenceRepository } from './in-memory-recurrence-repository.ts';
@@ -95,6 +96,7 @@ export function createInMemoryRepositories() {
     analytics: createInMemoryAnalyticsRepository(() => transactions.transactions),
     dashboardPreferences: createInMemoryDashboardPreferenceRepository(),
     debts: createInMemoryDebtRepository(),
+    goals: createInMemoryGoalRepository(),
   };
 }
 

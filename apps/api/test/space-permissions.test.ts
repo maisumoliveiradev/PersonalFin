@@ -153,6 +153,11 @@ const ENDPOINTS: Endpoint[] = [
   { method: 'DELETE', path: `/debts/${MISSING}/payments/${MISSING}`, permission: 'record' },
   { method: 'POST', path: `/debts/${MISSING}/simulations`, permission: 'view', payload: {} },
   { method: 'POST', path: `/debts/${MISSING}/prepayments`, permission: 'record', payload: {} },
+  { method: 'GET', path: '/goals', permission: 'view' },
+  { method: 'POST', path: '/goals', permission: 'plan', payload: {} },
+  { method: 'GET', path: `/goals/${MISSING}`, permission: 'view' },
+  { method: 'PATCH', path: `/goals/${MISSING}`, permission: 'plan', payload: { version: 1 } },
+  { method: 'POST', path: `/goals/${MISSING}/progress`, permission: 'plan', payload: {} },
 ];
 
 async function shareWith(permissions: SpacePermission[]): Promise<string> {
