@@ -6,6 +6,12 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.8.0\] --- 2026-09-25
+
+Debts, Goals, and Reminders. Released to `main` and tagged `v0.8.0`;
+validated in SDD-049 (`docs/sdds/v0.8.0/SDD-049-validation-report.md`).
+Push notifications are pending an owner decision.
+
 ### In-App Reminders (SDD-048)
 
 -   A "Lembretes" section on the space screen covers:

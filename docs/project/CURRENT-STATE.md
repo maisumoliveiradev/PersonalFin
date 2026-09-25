@@ -2,9 +2,10 @@
 
 ## Current Version
 
-`v0.7.0`, released on 2026-09-25 (`main`, tag `v0.7.0`). SDD-001 to
-SDD-044 implemented and validated
-(`docs/sdds/v0.7.0/SDD-044-validation-report.md`).
+`v0.8.0`, released on 2026-09-25 (`main`, tag `v0.8.0`). SDD-001 to
+SDD-049 implemented and validated
+(`docs/sdds/v0.8.0/SDD-049-validation-report.md`). Push notifications
+from the v0.8.0 roadmap item are pending an owner decision.
 
 ## Implemented Product Capabilities
 
@@ -184,8 +185,8 @@ SDD-044 implemented and validated
 
 ## Active Target
 
-`v0.8.0` --- Debts, Goals, and Reminders (`docs/sdds/v0.8.0/README.md`,
-SDD-045 to SDD-049). SDD-045 to SDD-048 implemented.
+`v0.9.0` --- Import, Export, and Data Portability
+(`docs/product/ROADMAP.md`). No SDD drafted yet.
 
 ## Important Constraint
 
@@ -194,7 +195,8 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Run SDD-049 (v0.8.0 release validation). Owner decision
-pending on invitation email delivery (TD-011). Domain decisions taken
-under delegation await owner review (`docs/sdds/v0.2.0/README.md` to
+Draft the v0.9.0 SDDs (Import, Export, and Data Portability). Owner
+decisions pending: push notifications (hosted push service) and
+invitation email delivery (TD-011). Domain decisions taken under
+delegation await owner review (`docs/sdds/v0.2.0/README.md` to
 `docs/sdds/v0.8.0/README.md`, DR-072 to DR-095, ADR-0013 to ADR-0016).
