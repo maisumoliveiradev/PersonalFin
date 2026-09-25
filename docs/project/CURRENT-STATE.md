@@ -144,6 +144,9 @@ from the v0.8.0 roadmap item are pending an owner decision.
     sheet on native (DR-097).
 -   **Monthly PDF report (SDD-052):** metrics, expenses by category, and
     transactions of a month, using the dashboard's definitions.
+-   **Portable backup (SDD-053):** a versioned JSON download of all
+    accessible data, excluding other people's personal data and imported
+    file bytes. There is no restore.
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -195,7 +198,7 @@ from the v0.8.0 roadmap item are pending an owner decision.
 ## Active Target
 
 `v0.9.0` --- Import, Export, and Data Portability
-(`docs/sdds/v0.9.0/README.md`, SDD-050 to SDD-054). SDD-050 to SDD-052 implemented.
+(`docs/sdds/v0.9.0/README.md`, SDD-050 to SDD-054). SDD-050 to SDD-053 implemented.
 
 ## Important Constraint
 
@@ -204,7 +207,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Implement SDD-053 (portable backup). Owner
+Run SDD-054 (v0.9.0 release validation). Owner
 decisions pending: push notifications (hosted push service) and
 invitation email delivery (TD-011). Domain decisions taken under
 delegation await owner review (`docs/sdds/v0.2.0/README.md` to

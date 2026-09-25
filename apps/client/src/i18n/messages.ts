@@ -8,6 +8,12 @@ export const messages = {
   offline: {
     banner: 'Sem conexão. Mostrando os dados salvos neste aparelho.',
   },
+  backup: {
+    action: 'Baixar backup dos meus dados',
+    hint: 'Uma cópia completa, em JSON, de todos os espaços que você acessa (inclusive lançamentos excluídos) e das suas metas. Guarde em local seguro.',
+    done: (fileName: string) => `Backup ${fileName} gerado.`,
+    failed: 'Não foi possível gerar o backup. Tente novamente.',
+  },
   exports: {
     title: 'Exportar',
     hint: 'Exporta os lançamentos do mês com os filtros aplicados. Para uma cópia completa dos seus dados, use o backup.',

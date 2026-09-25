@@ -6,6 +6,16 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Portable Backup (SDD-053)
+
+-   "Baixar backup dos meus dados" on the home screen downloads a
+    versioned JSON with every space you can access (deleted transactions
+    and audit history included), your personal settings, and your global
+    goals.
+-   The backup is distinct from the reports (DR-097). Restore is not
+    available yet.
+-   API: `GET /me/backup`.
+
 ### Monthly PDF Report (SDD-052)
 
 -   "Relatório do mês (PDF)" on the space screen generates the month's

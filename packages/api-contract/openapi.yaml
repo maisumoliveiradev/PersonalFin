@@ -3158,6 +3158,23 @@ paths:
           $ref: '#/components/responses/PermissionDenied'
         '404':
           $ref: '#/components/responses/FinancialSpaceNotFound'
+  /me/backup:
+    get:
+      operationId: downloadBackup
+      summary: Download a portable backup of the caller's data
+      description: >
+        Every record of every accessible space (deleted transactions included), the caller's personal settings, and the caller's global goals. Other users' personal data, invitations, and imported file contents are excluded. Distinct from reports (DR-097); restore is not available yet.
+      responses:
+        '200':
+          description: The backup as a JSON attachment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortableBackup'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '426':
+          $ref: '#/components/responses/ClientUpgradeRequired'
 components:
   parameters:
     ImportId:
@@ -3344,6 +3361,64 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
   schemas:
+    PortableBackup:
+      type: object
+      required: [format, formatVersion, exportedAt, user, spaces, globalGoals, globalGoalProgress]
+      properties:
+        format:
+          type: string
+          enum: [personalfin-backup]
+        formatVersion:
+          type: integer
+          enum: [1]
+        exportedAt:
+          type: string
+          format: date-time
+        user:
+          type: object
+          required: [id, name, email]
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            email:
+              type: string
+        spaces:
+          type: array
+          items:
+            type: object
+            required: [id, name, role, permissions, tables]
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              role:
+                type: string
+                enum: [owner, member]
+              permissions:
+                type: array
+                items:
+                  type: string
+              tables:
+                type: object
+                description: Database rows by table name, with snake_case columns.
+                additionalProperties:
+                  type: array
+                  items:
+                    type: object
+                    additionalProperties: true
+        globalGoals:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        globalGoalProgress:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
     ImportStatus:
       type: string
       enum: [draft, imported, undone, discarded]

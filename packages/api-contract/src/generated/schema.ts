@@ -1441,10 +1441,62 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/backup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download a portable backup of the caller's data
+         * @description Every record of every accessible space (deleted transactions included), the caller's personal settings, and the caller's global goals. Other users' personal data, invitations, and imported file contents are excluded. Distinct from reports (DR-097); restore is not available yet.
+         */
+        get: operations["downloadBackup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        PortableBackup: {
+            /** @enum {string} */
+            format: "personalfin-backup";
+            /** @enum {integer} */
+            formatVersion: 1;
+            /** Format: date-time */
+            exportedAt: string;
+            user: {
+                id: string;
+                name: string;
+                email: string;
+            };
+            spaces: {
+                id: string;
+                name: string;
+                /** @enum {string} */
+                role: "owner" | "member";
+                permissions: string[];
+                /** @description Database rows by table name, with snake_case columns. */
+                tables: {
+                    [key: string]: {
+                        [key: string]: unknown;
+                    }[];
+                };
+            }[];
+            globalGoals: {
+                [key: string]: unknown;
+            }[];
+            globalGoalProgress: {
+                [key: string]: unknown;
+            }[];
+        };
         /** @enum {string} */
         ImportStatus: "draft" | "imported" | "undone" | "discarded";
         ImportMapping: {
@@ -5888,6 +5940,28 @@ export interface operations {
             401: components["responses"]["Unauthenticated"];
             403: components["responses"]["PermissionDenied"];
             404: components["responses"]["FinancialSpaceNotFound"];
+            426: components["responses"]["ClientUpgradeRequired"];
+        };
+    };
+    downloadBackup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The backup as a JSON attachment. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PortableBackup"];
+                };
+            };
+            401: components["responses"]["Unauthenticated"];
             426: components["responses"]["ClientUpgradeRequired"];
         };
     };

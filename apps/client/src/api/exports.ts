@@ -53,3 +53,17 @@ export function useMonthlyReport(spaceId: string) {
     },
   });
 }
+
+export function useDownloadBackup() {
+  return useMutation({
+    mutationFn: async () => {
+      const result = await apiClient.GET('/me/backup', { parseAs: 'arrayBuffer' });
+      if (!result.response.ok || result.data === undefined) {
+        throw new ApiRequestError(result.response.status, 'BACKUP_FAILED');
+      }
+      const disposition = result.response.headers.get('content-disposition') ?? '';
+      const fileName = /filename="([^"]+)"/.exec(disposition)?.[1] ?? 'personalfin-backup.json';
+      return { bytes: result.data as ArrayBuffer, fileName, mimeType: 'application/json' };
+    },
+  });
+}

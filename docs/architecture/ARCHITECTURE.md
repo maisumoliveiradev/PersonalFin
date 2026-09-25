@@ -330,6 +330,20 @@ the dashboard, so the report and the app never disagree (DR-066,
 DR-067). The transaction list uses the same query as the month list and
 continues on new pages.
 
+## Portable backup (SDD-053, DR-097)
+
+`GET /me/backup` builds a `personalfin-backup` document, format
+version 1, from `modules/backup`. For each accessible space it includes
+every row of the space tables (`row_to_json`, snake_case columns,
+deleted records included) and the caller's own personal settings. It
+also includes the caller's global goals.
+
+It excludes other users' personal data (memberships, invitations and
+their emails, other people's settings) and imported file bytes (only the
+SHA-256 is kept). The table list is a closed constant, so no SQL is
+built from input. Restore is a later roadmap item; a format version
+change must keep older backups readable.
+
 ## Offline reading (ADR-0016, SDD-041)
 
 -   `apps/client/src/local`:
