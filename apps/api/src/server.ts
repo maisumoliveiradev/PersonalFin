@@ -15,6 +15,7 @@ import { registerCommitmentRoutes } from './modules/commitments/commitment-route
 import { registerDashboardRoutes } from './modules/dashboard/dashboard-routes.ts';
 import { registerFinancialSpaceRoutes } from './modules/financial-spaces/financial-space-routes.ts';
 import { registerRecurrenceRoutes } from './modules/recurrences/recurrence-routes.ts';
+import { registerTagRoutes } from './modules/tags/tag-routes.ts';
 import { registerTransactionRoutes } from './modules/transactions/transaction-routes.ts';
 import { type AuthHandler, registerAuthRoutes } from './routes/auth.ts';
 import { registerHealthRoute } from './routes/health.ts';
@@ -69,6 +70,7 @@ export function buildServer(options: ServerOptions): FastifyInstance {
     registerCardRoutes(authenticated, options.data);
     registerCardInvoiceRoutes(authenticated, options.data);
     registerCardInstallmentRoutes(authenticated, options.data);
+    registerTagRoutes(authenticated, options.data);
   });
 
   return server;

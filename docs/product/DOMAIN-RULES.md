@@ -47,6 +47,13 @@ subcategory.
 
 **DR-013** Tags are many-to-many labels and do not split monetary value.
 
+**DR-083** *(SDD-029; decided under delegation.)* Tags belong to a
+space and have unique names ignoring case (1 to 40 characters). A
+transaction has at most 10 tags. Used tags are archived instead of
+deleted; archived tags stay on their transactions and are not offered
+for new ones. Tag changes on a transaction are audited. Installment
+purchases and recurrence series do not carry tags yet.
+
 **DR-014** Split transactions are outside the initial model.
 
 **DR-015** A transaction uses one primary financial calendar date. The

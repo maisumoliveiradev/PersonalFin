@@ -11,6 +11,7 @@ export interface TransactionFilters {
   type?: TransactionType;
   status?: TransactionStatus;
   categoryId?: string;
+  tagId?: string;
   q?: string;
 }
 
@@ -27,6 +28,7 @@ export function hasOptionalFilters(filters: TransactionFilters): boolean {
     filters.type !== undefined ||
     filters.status !== undefined ||
     filters.categoryId !== undefined ||
+    filters.tagId !== undefined ||
     filters.q !== undefined
   );
 }

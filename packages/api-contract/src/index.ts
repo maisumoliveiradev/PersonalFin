@@ -49,3 +49,5 @@ export type Installment = components['schemas']['Installment'];
 export type InvoicePayment = components['schemas']['InvoicePayment'];
 export type CardLimits = components['schemas']['CardLimits'];
 export type CardInvoiceSummaryList = components['schemas']['CardInvoiceSummaryList'];
+export type Tag = components['schemas']['Tag'];
+export type TagList = components['schemas']['TagList'];

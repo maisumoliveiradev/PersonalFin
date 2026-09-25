@@ -45,6 +45,7 @@ export interface FinancialTransaction {
   individuallyModified: boolean;
   cardPurchase: CardPurchaseReference | null;
   installment: InstallmentReference | null;
+  tags: CategoryReference[];
 }
 
 export interface NewFinancialTransaction {

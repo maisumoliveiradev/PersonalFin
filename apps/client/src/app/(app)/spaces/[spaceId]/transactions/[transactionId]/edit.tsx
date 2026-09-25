@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useCards } from '../../../../../../api/cards';
 import { useCategories } from '../../../../../../api/categories';
 import { useRecurrences, useUpdateRecurrence } from '../../../../../../api/recurrences';
+import { useTags } from '../../../../../../api/tags';
 import { useTransaction, useUpdateTransaction } from '../../../../../../api/transactions';
 import { CancelInstallmentsSection } from '../../../../../../features/cards/CancelInstallmentsSection';
 import { DeleteTransactionSection } from '../../../../../../features/transactions/DeleteTransactionSection';
@@ -34,6 +35,7 @@ export default function EditTransactionScreen() {
     transactionId: string;
   }>();
   const categories = useCategories(spaceId);
+  const tags = useTags(spaceId);
   const cards = useCards(spaceId);
   const transaction = useTransaction(spaceId, transactionId);
   const recurrences = useRecurrences(spaceId);
@@ -126,6 +128,7 @@ export default function EditTransactionScreen() {
         categories={categories.data}
         initialValues={transactionToFormValues(current)}
         cards={cards.data ?? []}
+        tags={tags.data ?? []}
         submitting={updateTransaction.isPending || updateRecurrence.isPending}
         submitError={updateTransaction.error ?? updateRecurrence.error}
         onSubmit={handleSubmit}

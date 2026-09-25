@@ -18,6 +18,8 @@ import type { FinancialSpaceRepository } from '../modules/financial-spaces/finan
 import { createPostgresFinancialSpaceRepository } from '../modules/financial-spaces/postgres-financial-space-repository.ts';
 import { createPostgresRecurrenceRepository } from '../modules/recurrences/postgres-recurrence-repository.ts';
 import type { RecurrenceRepository } from '../modules/recurrences/recurrence-repository.ts';
+import { createPostgresTagRepository } from '../modules/tags/postgres-tag-repository.ts';
+import type { TagRepository } from '../modules/tags/tag-repository.ts';
 import { createPostgresTransactionRepository } from '../modules/transactions/postgres-transaction-repository.ts';
 import type { TransactionRepository } from '../modules/transactions/transaction-repository.ts';
 import { type DatabasePool, type Queryable, withTransaction } from './pool.ts';
@@ -34,6 +36,7 @@ export interface Repositories {
   cards: CardRepository;
   cardInvoices: CardInvoiceRepository;
   installments: InstallmentRepository;
+  tags: TagRepository;
 }
 
 export interface DataAccess {
@@ -54,6 +57,7 @@ function createPostgresRepositories(db: Queryable): Repositories {
     cards: createPostgresCardRepository(db),
     cardInvoices: createPostgresCardInvoiceRepository(db),
     installments: createPostgresInstallmentRepository(db),
+    tags: createPostgresTagRepository(db),
   };
 }
 

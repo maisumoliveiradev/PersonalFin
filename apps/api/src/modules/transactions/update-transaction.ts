@@ -7,6 +7,7 @@ import {
   InvalidCardPurchaseError,
   resolvePurchaseInvoice,
 } from '../cards/card-invoice-management.ts';
+import { assertTagSelection } from '../tags/tag-management.ts';
 import { assertCategorySelection } from './category-selection.ts';
 import {
   type FinancialTransaction,
@@ -21,6 +22,7 @@ export interface UpdateTransactionInput {
   expectedVersion: number;
   changes: Partial<Omit<TransactionFields, 'cardInvoiceId'>>;
   invoiceMonth?: Month;
+  tagIds?: readonly string[];
 }
 
 export class TransactionNotFoundError extends NotFoundError {
@@ -93,7 +95,15 @@ export async function updateTransaction(
         after.cardInvoiceId = invoice.id;
       }
     }
-    const changes = diffFields({ ...before }, { ...after });
+    const tagsBefore = current.tags.map((tag) => tag.id).sort();
+    const tagsAfter = input.tagIds === undefined ? tagsBefore : [...new Set(input.tagIds)].sort();
+    if (input.tagIds !== undefined) {
+      await assertTagSelection(repositories, input.financialSpaceId, tagsAfter, tagsBefore);
+    }
+    const changes = diffFields(
+      { ...before, tagIds: tagsBefore.join(',') },
+      { ...after, tagIds: tagsAfter.join(',') },
+    );
     if (Object.keys(changes).length === 0) {
       return current;
     }
@@ -113,6 +123,13 @@ export async function updateTransaction(
     if (updated === null) {
       throw new VersionConflictError();
     }
+    if (changes.tagIds !== undefined) {
+      await repositories.tags.setForTransaction(
+        input.financialSpaceId,
+        input.transactionId,
+        tagsAfter,
+      );
+    }
     await audit.record({
       financialSpaceId: input.financialSpaceId,
       entityType: 'financial_transaction',
@@ -121,6 +138,9 @@ export async function updateTransaction(
       actorUserId: input.actorUserId,
       changes,
     });
-    return updated;
+    if (changes.tagIds === undefined) {
+      return updated;
+    }
+    return (await transactions.findInSpace(input.financialSpaceId, input.transactionId)) ?? updated;
   });
 }

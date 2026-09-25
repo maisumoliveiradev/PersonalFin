@@ -244,6 +244,13 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: tagId
+          in: query
+          required: false
+          description: Transactions carrying this tag.
+          schema:
+            type: string
+            format: uuid
         - name: q
           in: query
           required: false
@@ -1112,6 +1119,120 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '404':
           $ref: '#/components/responses/CardNotFound'
+  /financial-spaces/{spaceId}/tags:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+    get:
+      operationId: listTags
+      summary: List the tags of the space
+      responses:
+        '200':
+          description: Active tags first, then archived, by name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagList'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+    post:
+      operationId: createTag
+      summary: Create a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 40
+      responses:
+        '201':
+          description: The created tag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/FinancialSpaceNotFound'
+        '409':
+          $ref: '#/components/responses/TagConflict'
+  /financial-spaces/{spaceId}/tags/{tagId}:
+    parameters:
+      - $ref: '#/components/parameters/SpaceId'
+      - name: tagId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      operationId: updateTag
+      summary: Rename, archive, or unarchive a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - version
+              properties:
+                version:
+                  type: integer
+                  minimum: 1
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 40
+                archived:
+                  type: boolean
+      responses:
+        '200':
+          description: The tag after the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TagNotFound'
+        '409':
+          $ref: '#/components/responses/TagConflict'
+    delete:
+      operationId: deleteTag
+      summary: Permanently delete a never-used tag
+      parameters:
+        - name: version
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '204':
+          description: Deleted.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '404':
+          $ref: '#/components/responses/TagNotFound'
+        '409':
+          $ref: '#/components/responses/TagConflict'
 components:
   parameters:
     InvoiceMonth:
@@ -1158,9 +1279,22 @@ components:
         Session cookie issued by Better Auth. Native clients send the same
         cookie through the Cookie header.
   responses:
+    TagNotFound:
+      description: The tag does not exist in this space (code TAG_NOT_FOUND).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TagConflict:
+      description: VERSION_CONFLICT, TAG_NAME_TAKEN, or TAG_IN_USE (archive instead).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
     TransactionRejected:
       description: >
         CATEGORY_NOT_AVAILABLE (category not usable for the type),
+        TAG_NOT_AVAILABLE (tag missing or archived),
         CARD_NOT_AVAILABLE (missing or archived card), or
         INVALID_CARD_PURCHASE (income, status sent, invoice out of range, or
         invoice change on a non-card transaction).
@@ -1649,6 +1783,14 @@ components:
             Invoice (reference month) for a card purchase, from the month
             before to two months after financialDate. Defaults to the
             invoice whose closing date is after financialDate.
+        tagIds:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          description: Active tags of the space; tags never change amounts (DR-013).
+          items:
+            type: string
+            format: uuid
         installments:
           type: integer
           minimum: 2
@@ -1679,6 +1821,7 @@ components:
         - occurrenceDate
         - cardPurchase
         - installment
+        - tags
       properties:
         id:
           type: string
@@ -1735,11 +1878,45 @@ components:
           oneOf:
             - $ref: '#/components/schemas/CardPurchase'
             - type: 'null'
+        tags:
+          type: array
+          description: Tags of the transaction, by name.
+          items:
+            $ref: '#/components/schemas/CategoryReference'
         installment:
           description: Installment number and count of an installment purchase; null otherwise.
           oneOf:
             - $ref: '#/components/schemas/Installment'
             - type: 'null'
+    Tag:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - archived
+        - version
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        archived:
+          type: boolean
+        version:
+          type: integer
+          minimum: 1
+    TagList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
     Installment:
       type: object
       additionalProperties: false
@@ -2013,6 +2190,14 @@ components:
           type: string
           pattern: '^\d{4}-(0[1-9]|1[0-2])$'
           description: Moves a card purchase to another invoice of the same card.
+        tagIds:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          description: Replaces the tags; tags already on the transaction may be archived; tags never change amounts (DR-013).
+          items:
+            type: string
+            format: uuid
     TransactionList:
       type: object
       additionalProperties: false

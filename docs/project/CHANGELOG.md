@@ -6,6 +6,17 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+### Tags (SDD-029)
+
+-   "Tags" screen per space: create, rename, archive/reactivate, and
+    delete never-used tags (audited, DR-083).
+-   Transactions take up to 10 tags in the form, show them as `#tag`
+    in the list, and can be filtered by tag; tags never change amounts
+    (DR-013).
+-   `GET`/`POST .../tags`, `PATCH`/`DELETE .../tags/{tagId}`, `tagIds`
+    on transactions, `tags` in responses, `tagId` filter; migration
+    `0017_tags`.
+
 ## \[0.4.0\] --- 2026-09-25
 
 Credit Cards. Released to `main` and tagged `v0.4.0`; validated in

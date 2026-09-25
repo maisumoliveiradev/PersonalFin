@@ -78,6 +78,9 @@ export function TransactionRow({
                     transaction.installment.number,
                     transaction.installment.count,
                   ),
+              transaction.tags.length === 0
+                ? null
+                : transaction.tags.map((tag) => `#${tag.name}`).join(' '),
             ]
               .filter((part): part is string => part !== null)
               .join(' · ')}

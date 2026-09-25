@@ -41,6 +41,7 @@ interface TransactionRow {
   installment_purchase_id: string | null;
   installment_number: number | null;
   installment_count: number | null;
+  tags: { id: string; name: string }[];
 }
 
 interface CursorKeys {
@@ -57,7 +58,12 @@ const COLUMNS = `t.id, t.financial_space_id, t.type, t.status, t.description, t.
          t.individually_modified, t.card_invoice_id, ci.card_id, cd.name AS card_name,
          ci.reference_month AS invoice_month, t.installment_purchase_id, t.installment_number,
          ip.installment_count,
-         COALESCE(cb.total_minor > 0 AND cb.paid_minor >= cb.total_minor, false) AS invoice_settled`;
+         COALESCE(cb.total_minor > 0 AND cb.paid_minor >= cb.total_minor, false) AS invoice_settled,
+         COALESCE((
+           SELECT json_agg(json_build_object('id', tg.id, 'name', tg.name) ORDER BY lower(tg.name))
+           FROM transaction_tag tt JOIN tag tg ON tg.id = tt.tag_id
+           WHERE tt.transaction_id = t.id
+         ), '[]'::json) AS tags`;
 
 const CURSOR_KEY_COLUMNS = `to_char(t.created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS created_at_key,
          to_char(t.deleted_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS deleted_at_key`;
@@ -128,6 +134,7 @@ function toTransaction(row: TransactionRow): FinancialTransaction {
             number: row.installment_number,
             count: row.installment_count,
           },
+    tags: row.tags,
   };
 }
 
@@ -277,6 +284,11 @@ export function createPostgresTransactionRepository(db: Queryable): TransactionR
       if (query.categoryId !== undefined) {
         const category = param(query.categoryId);
         conditions.push(`(t.category_id = ${category} OR t.subcategory_id = ${category})`);
+      }
+      if (query.tagId !== undefined) {
+        conditions.push(
+          `EXISTS (SELECT 1 FROM transaction_tag tt WHERE tt.transaction_id = t.id AND tt.tag_id = ${param(query.tagId)})`,
+        );
       }
       if (query.cardInvoiceId !== undefined) {
         conditions.push(`t.card_invoice_id = ${param(query.cardInvoiceId)}`);
