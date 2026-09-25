@@ -5,4 +5,6 @@ export interface FinancialSpaceRepository {
   listAccessibleTo(userId: string): Promise<AccessibleSpace[]>;
   findAccessibleTo(userId: string, spaceId: string): Promise<AccessibleSpace | null>;
   transferOwnership(spaceId: string, fromUserId: string, toUserId: string): Promise<boolean>;
+  findSupportAccess(userId: string, spaceId: string): Promise<AccessibleSpace | null>;
+  recordSupportAccess(grantId: string, userId: string, spaceId: string): Promise<void>;
 }

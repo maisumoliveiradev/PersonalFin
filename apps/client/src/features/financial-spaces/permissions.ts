@@ -7,5 +7,8 @@ export function can(space: FinancialSpace | undefined, permission: SpacePermissi
 }
 
 export function roleLabel(space: FinancialSpace): string {
-  return space.role === 'owner' ? messages.spaces.ownerRole : messages.spaces.memberRole;
+  if (space.role === 'owner') {
+    return messages.spaces.ownerRole;
+  }
+  return space.role === 'support' ? messages.spaces.supportRole : messages.spaces.memberRole;
 }

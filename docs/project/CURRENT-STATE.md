@@ -160,6 +160,9 @@ decisions: push notifications (v0.8.0), automatic exchange rates
 -   **Platform administration (SDD-059):** a Super Admin role granted by
     an operator command, with an aggregate operations overview and no
     access to financial spaces (DR-100, ADR-0018).
+-   **Support access (SDD-060):** Owner-authorized, read-only, expiring,
+    revocable access for a named platform administrator. Every access is
+    audited and visible to the Owner (DR-101).
 -   **Quick status change (SDD-010):** each list item toggles between
     Paid/Received and Pending (audited, version-checked).
 -   **Transaction list (SDD-006, SDD-012):** the space screen lists
@@ -186,7 +189,7 @@ decisions: push notifications (v0.8.0), automatic exchange rates
         month, balance-reminder, business-day, card, comparison, dashboard-preference, and client-version rules (ADR-0011;
         national holidays in `docs/product/BUSINESS-DAYS.md`).
 -   PostgreSQL 17 via Docker Compose; versioned SQL migrations with
-    checksum verification (ADR-0008), `0001` to `0029`. Tables: Better
+    checksum verification (ADR-0008), `0001` to `0030`. Tables: Better
     Auth `user`, `session`, `account`, `verification`; `financial_space`,
     `financial_space_member`, `space_invitation`, `category`,
     `financial_transaction`, `transaction_tag`, `tag`, `audit_event`,
@@ -194,7 +197,7 @@ decisions: push notifications (v0.8.0), automatic exchange rates
     `card`, `card_limit_change`, `card_invoice`, `card_invoice_payment`,
     `card_installment_purchase`, `dashboard_preference`, `debt`,
     `debt_payment`, `goal`, `goal_progress`, `reminder_setting`,
-    `reminder_dismissal`, `import_batch`, `import_row`, `exchange_rate`, `attachment`, `platform_admin`; view
+    `reminder_dismissal`, `import_batch`, `import_row`, `exchange_rate`, `attachment`, `platform_admin`, `support_grant`; view
     `card_invoice_balance`.
 -   Strict TypeScript, Biome, Vitest unit tests, and PostgreSQL
     integration tests (`npm run test:integration`).
@@ -211,7 +214,7 @@ decisions: push notifications (v0.8.0), automatic exchange rates
 ## Active Target
 
 `v0.12.0` --- Platform Administration (`docs/sdds/v0.12.0/README.md`).
-SDD-059 implemented.
+SDD-059 and SDD-060 implemented.
 
 ## Important Constraint
 
@@ -220,7 +223,7 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Implement SDD-060 (support access). Owner decisions pending: OCR/AI
+Run SDD-061 (v0.12.0 release validation). Owner decisions pending: OCR/AI
 provider, FX rate provider, push notifications (hosted push service), and invitation
 email delivery (TD-011). Domain decisions taken under delegation await
 owner review (`docs/sdds/v0.2.0/README.md` to

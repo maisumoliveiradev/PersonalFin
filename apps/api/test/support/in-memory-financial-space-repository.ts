@@ -17,12 +17,33 @@ export interface InMemoryMember {
   version?: number;
 }
 
-export function createInMemoryFinancialSpaceRepository(): FinancialSpaceRepository & {
+export interface InMemorySupportGrant {
+  id: string;
+  financialSpaceId: string;
+  grantedByUserId: string;
+  adminUserId: string;
+  reason: string;
+  createdAt: Date;
+  expiresAt: Date;
+  revokedAt: Date | null;
+  accesses: Date[];
+}
+
+export function createInMemoryFinancialSpaceRepository(
+  admins: ReadonlySet<string> = new Set(),
+  onSupportAccess: (
+    grantId: string,
+    userId: string,
+    spaceId: string,
+  ) => Promise<void> = async () => {},
+): FinancialSpaceRepository & {
   spaces: FinancialSpace[];
   members: InMemoryMember[];
+  supportGrants: InMemorySupportGrant[];
 } {
   const spaces: FinancialSpace[] = [];
   const members: InMemoryMember[] = [];
+  const supportGrants: InMemorySupportGrant[] = [];
 
   function accessible(userId: string, space: FinancialSpace): AccessibleSpace | null {
     if (space.ownerUserId === userId) {
@@ -42,6 +63,7 @@ export function createInMemoryFinancialSpaceRepository(): FinancialSpaceReposito
   return {
     spaces,
     members,
+    supportGrants,
     async create(space) {
       const created: FinancialSpace = {
         ...space,
@@ -59,6 +81,27 @@ export function createInMemoryFinancialSpaceRepository(): FinancialSpaceReposito
     async findAccessibleTo(userId, spaceId) {
       const space = spaces.find((candidate) => candidate.id === spaceId);
       return space === undefined ? null : accessible(userId, space);
+    },
+    async findSupportAccess(userId, spaceId) {
+      const space = spaces.find((candidate) => candidate.id === spaceId);
+      const grant = supportGrants.find(
+        (candidate) =>
+          candidate.financialSpaceId === spaceId &&
+          candidate.adminUserId === userId &&
+          candidate.revokedAt === null &&
+          candidate.expiresAt.getTime() > Date.now(),
+      );
+      if (space === undefined || grant === undefined || !admins.has(userId)) {
+        return null;
+      }
+      return {
+        ...space,
+        access: { role: 'support', permissions: ['view'], supportGrantId: grant.id },
+      };
+    },
+    async recordSupportAccess(grantId, userId, spaceId) {
+      supportGrants.find((grant) => grant.id === grantId)?.accesses.push(new Date());
+      await onSupportAccess(grantId, userId, spaceId);
     },
     async transferOwnership(spaceId, fromUserId, toUserId) {
       const space = spaces.find(

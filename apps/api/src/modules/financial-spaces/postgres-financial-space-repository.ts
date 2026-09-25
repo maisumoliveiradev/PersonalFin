@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import type { SpacePermission } from '@personalfin/domain';
 
 import type { Queryable } from '../../database/pool.ts';
@@ -79,6 +81,41 @@ export function createPostgresFinancialSpaceRepository(db: Queryable): Financial
       ]);
       const [row] = rows;
       return row === undefined ? null : toAccessibleSpace(row, userId);
+    },
+
+    async findSupportAccess(userId, spaceId) {
+      const { rows } = await db.query<FinancialSpaceRow & { grant_id: string }>(
+        `SELECT s.id, s.name, s.owner_user_id, s.lifecycle_state, s.created_at, g.id AS grant_id
+         FROM support_grant g
+         JOIN financial_space s ON s.id = g.financial_space_id
+         JOIN platform_admin a ON a.user_id = g.admin_user_id
+         WHERE g.admin_user_id = $1 AND g.financial_space_id = $2
+           AND g.revoked_at IS NULL AND g.expires_at > now()
+         ORDER BY g.expires_at DESC LIMIT 1`,
+        [userId, spaceId],
+      );
+      const [row] = rows;
+      return row === undefined
+        ? null
+        : {
+            ...toFinancialSpace(row),
+            access: { role: 'support', permissions: ['view'], supportGrantId: row.grant_id },
+          };
+    },
+
+    async recordSupportAccess(grantId, userId, spaceId) {
+      await db.query(
+        `INSERT INTO audit_event (id, financial_space_id, entity_type, entity_id, action,
+           actor_user_id, changes)
+         VALUES ($1, $2, 'support_grant', $3, 'access', $4, $5)`,
+        [
+          randomUUID(),
+          spaceId,
+          grantId,
+          userId,
+          JSON.stringify({ permission: { before: null, after: 'view' } }),
+        ],
+      );
     },
 
     async transferOwnership(spaceId, fromUserId, toUserId) {
