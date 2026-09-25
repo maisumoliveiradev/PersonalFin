@@ -6,6 +6,11 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.4.0\] --- 2026-09-25
+
+Credit Cards. Released to `main` and tagged `v0.4.0`; validated in
+SDD-028 (`docs/sdds/v0.4.0/SDD-028-validation-report.md`).
+
 ### Card Limit and Summary (SDD-027)
 
 -   The cards screen shows used and available limit per card, counting
