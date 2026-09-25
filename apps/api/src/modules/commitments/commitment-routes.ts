@@ -25,7 +25,12 @@ export function registerCommitmentRoutes(server: FastifyInstance, data: DataAcce
   server.get('/financial-spaces/:spaceId/commitments', async (request): Promise<Commitments> => {
     const user = requireAuthenticatedUser(request);
     const { spaceId } = parseInput(spaceParamsSchema, request.params);
-    const space = await requireAccessibleSpace(data.repositories.financialSpaces, user.id, spaceId);
+    const space = await requireAccessibleSpace(
+      data.repositories.financialSpaces,
+      user.id,
+      spaceId,
+      'view',
+    );
     const { from, days } = parseInput(commitmentsQuerySchema, request.query);
     const through = addDays(from, days - 1);
     const sections = {

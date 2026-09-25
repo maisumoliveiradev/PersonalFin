@@ -2,9 +2,9 @@
 
 ## Current Version
 
-`v0.5.0`, released on 2026-09-25 (`main`, tag `v0.5.0`). SDD-001 to
-SDD-033 implemented and validated
-(`docs/sdds/v0.5.0/SDD-033-validation-report.md`).
+`v0.6.0`, released on 2026-09-25 (`main`, tag `v0.6.0`). SDD-001 to
+SDD-039 implemented and validated
+(`docs/sdds/v0.6.0/SDD-039-validation-report.md`).
 
 ## Implemented Product Capabilities
 
@@ -14,11 +14,18 @@ SDD-033 implemented and validated
     verification, password recovery, social login, MFA, or device/session
     management.
 
+-   **Shared access (SDD-034):** spaces may have members with permission
+    sets checked on every endpoint (ADR-0015, DR-087); the UI hides
+    actions without permission. People join through single-use
+    invitation links (SDD-035, DR-086); links are not emailed (TD-011).
+    Managers change permissions and remove members; members can leave
+    (SDD-036); the Owner can transfer ownership to a member (SDD-037,
+    DR-087); members with `view_audit` see the space's audit history
+    (SDD-038).
 -   **Financial Spaces (SDD-003):** an authenticated user creates spaces
     by name, becomes their single Owner, and lists, selects, and enters
-    them. Only the Owner can access a space (ADR-0010). Spaces are always
-    Active; there is no rename, archive, deletion, sharing, or
-    invitation. The selected space is carried in the URL
+    them. The Owner and members can access a space (ADR-0015). Spaces are always
+    Active; there is no rename, archive, or deletion. The selected space is carried in the URL
     (`/spaces/{spaceId}`), not persisted as a preference.
 
 -   **Categories (SDD-004, SDD-011):** each new space receives the default
@@ -62,7 +69,7 @@ SDD-033 implemented and validated
     income/expenses (7, 30, or 90 days) with exact totals. There are no
     notifications.
 -   **Cards (SDD-023):** cards with name, closing and due days, and an
-    append-only limit history with effective dates (DR-084); archive and
+    append-only limit history with effective dates (DR-085); archive and
     reactivate.
 -   **Card purchases and invoices (SDD-024):** expenses paid with a card
     are assigned to an invoice (suggested from the closing day,
@@ -131,8 +138,8 @@ SDD-033 implemented and validated
 
 ## Active Target
 
-`v0.6.0` --- Collaboration (`docs/product/ROADMAP.md`). No SDD drafted
-yet.
+`v0.7.0` --- Mobile Resilience (`docs/product/ROADMAP.md`). No SDD
+drafted yet.
 
 ## Important Constraint
 
@@ -141,7 +148,8 @@ implemented and must not be treated as available.
 
 ## Next Action
 
-Draft the v0.6.0 SDDs (Collaboration) from the roadmap. Domain decisions
+Owner decision pending on invitation email delivery (TD-011). Then draft
+the v0.7.0 SDDs (Mobile Resilience). Domain decisions
 taken under delegation await owner review (`docs/sdds/v0.2.0/README.md`,
-`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, DR-072 to
+`docs/sdds/v0.3.0/README.md`, `docs/sdds/v0.4.0/README.md`, `docs/sdds/v0.5.0/README.md`, `docs/sdds/v0.6.0/README.md`, DR-072 to
 DR-078).

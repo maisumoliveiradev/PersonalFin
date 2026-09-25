@@ -10,6 +10,7 @@ import { BalanceSummary } from '../../../../features/balance/BalanceSummary';
 import { BalanceUpdatePrompt } from '../../../../features/balance/BalanceUpdatePrompt';
 import { MonthlyDashboard } from '../../../../features/dashboard/MonthlyDashboard';
 import { ProjectionSeries } from '../../../../features/dashboard/ProjectionSeries';
+import { can, roleLabel } from '../../../../features/financial-spaces/permissions';
 import { MonthNavigator } from '../../../../features/transactions/MonthNavigator';
 import { TransactionFiltersPanel } from '../../../../features/transactions/TransactionFiltersPanel';
 import { TransactionList } from '../../../../features/transactions/TransactionList';
@@ -84,21 +85,25 @@ export default function FinancialSpaceHomeScreen() {
   return (
     <Screen>
       <Title>{space.data.name}</Title>
-      <BodyText muted>{messages.spaces.ownerRole}</BodyText>
+      <BodyText muted>{roleLabel(space.data)}</BodyText>
       {saved === 'created' && <StatusMessage>{messages.transactions.saved}</StatusMessage>}
       {saved === 'updated' && <StatusMessage>{messages.transactions.updated}</StatusMessage>}
       {saved === 'deleted' && <StatusMessage>{messages.transactions.deleted}</StatusMessage>}
       {saved === 'recurrence' && (
         <StatusMessage>{messages.recurrences.created(Number(params.count ?? 0))}</StatusMessage>
       )}
-      <BalanceUpdatePrompt spaceId={space.data.id} />
-      {sections.observedBalance && <BalanceSummary spaceId={space.data.id} />}
-      <Button
-        label={messages.transactions.newAction}
-        onPress={() =>
-          router.push({ pathname: '/spaces/[spaceId]/transactions/new', params: { spaceId } })
-        }
-      />
+      {can(space.data, 'record') && <BalanceUpdatePrompt spaceId={space.data.id} />}
+      {sections.observedBalance && (
+        <BalanceSummary spaceId={space.data.id} canRecord={can(space.data, 'record')} />
+      )}
+      {can(space.data, 'record') && (
+        <Button
+          label={messages.transactions.newAction}
+          onPress={() =>
+            router.push({ pathname: '/spaces/[spaceId]/transactions/new', params: { spaceId } })
+          }
+        />
+      )}
       <MonthNavigator
         month={month}
         onChange={(nextMonth) => changeFilters({ ...filters, month: nextMonth })}
@@ -132,7 +137,11 @@ export default function FinancialSpaceHomeScreen() {
           onPress={() => setOptionalFilters({})}
         />
       )}
-      <TransactionList spaceId={space.data.id} filters={filters} />
+      <TransactionList
+        spaceId={space.data.id}
+        filters={filters}
+        canRecord={can(space.data, 'record')}
+      />
       <Button
         label={messages.transactions.trashAction}
         variant="link"
@@ -170,6 +179,18 @@ export default function FinancialSpaceHomeScreen() {
           router.push({ pathname: '/spaces/[spaceId]/recurrences', params: { spaceId } })
         }
       />
+      <Button
+        label={messages.members.action}
+        variant="link"
+        onPress={() => router.push({ pathname: '/spaces/[spaceId]/members', params: { spaceId } })}
+      />
+      {can(space.data, 'view_audit') && (
+        <Button
+          label={messages.audit.action}
+          variant="link"
+          onPress={() => router.push({ pathname: '/spaces/[spaceId]/audit', params: { spaceId } })}
+        />
+      )}
       <Button
         label={messages.preferences.action}
         variant="link"

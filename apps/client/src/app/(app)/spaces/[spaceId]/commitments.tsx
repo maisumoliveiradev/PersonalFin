@@ -10,7 +10,9 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useCommitments } from '../../../../api/commitments';
+import { useFinancialSpace } from '../../../../api/financial-spaces';
 import { useChangeTransactionStatus } from '../../../../api/transactions';
+import { can } from '../../../../features/financial-spaces/permissions';
 import { TransactionRow } from '../../../../features/transactions/TransactionList';
 import { statusToggle } from '../../../../features/transactions/transaction-presentation';
 import { messages } from '../../../../i18n/messages';
@@ -62,6 +64,7 @@ export default function CommitmentsScreen() {
   const [today] = useState(() => financialDateFromLocalClock(new Date()));
   const commitments = useCommitments(spaceId, today, Number(period));
   const changeStatus = useChangeTransactionStatus(spaceId);
+  const space = useFinancialSpace(spaceId);
 
   if (commitments.isPending) {
     return <LoadingScreen />;
@@ -97,6 +100,7 @@ export default function CommitmentsScreen() {
             key={transaction.id}
             spaceId={spaceId}
             transaction={transaction}
+            canChangeStatus={can(space.data, 'record')}
             changingStatus={
               changeStatus.isPending && changeStatus.variables?.transactionId === transaction.id
             }

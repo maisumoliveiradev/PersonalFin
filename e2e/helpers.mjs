@@ -41,10 +41,14 @@ export function localDate(daysFromToday = 0) {
   }).format(new Date(Date.now() + daysFromToday * 86_400_000));
 }
 
-export async function signUp(page, name) {
+export async function signUp(
+  page,
+  name,
+  email = uniqueEmail(name.replace(/\s/g, '.').toLowerCase()),
+) {
   await page.goto(`${BASE}/sign-up`, { waitUntil: 'networkidle' });
   await field(page, 'Nome').fill(name);
-  await field(page, 'E-mail').fill(uniqueEmail(name.replace(/\s/g, '.').toLowerCase()));
+  await field(page, 'E-mail').fill(email);
   await field(page, 'Senha').fill('senha-segura-123');
   await page.getByRole('button', { name: 'Criar conta', exact: true }).click();
 }

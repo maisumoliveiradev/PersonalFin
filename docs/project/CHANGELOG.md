@@ -6,6 +6,63 @@ The project follows incremental semantic-style product versions.
 
 ## \[Unreleased\]
 
+## \[0.6.0\] --- 2026-09-25
+
+Collaboration. Released to `main` and tagged `v0.6.0`; validated in
+SDD-039 (`docs/sdds/v0.6.0/SDD-039-validation-report.md`).
+
+### Space Audit History (SDD-038)
+
+-   "Histórico de alterações": members with `view_audit` see who created,
+    changed, or removed data in the space, newest first, with field
+    changes; the history is read-only and paged.
+-   Membership, invitation, permission, and ownership changes are
+    audited (SDD-034 to SDD-037).
+-   `GET .../audit-events`; migration `0021_audit_history_index`.
+
+### Ownership Transfer (SDD-037)
+
+-   The Owner transfers ownership to a member from "Membros" after
+    confirmation; the previous Owner stays as Administrator and may then
+    leave (DR-087). Audited.
+-   `POST .../ownership-transfer`.
+
+### Member Management (SDD-036)
+
+-   "Membros" lists the Owner and members for everyone in the space;
+    managers change a member's permissions (checkboxes) and remove
+    members; members can leave. Records they created stay in the space
+    (DR-007, DR-008); the Owner cannot leave or be removed (DR-009).
+-   Changes are version-checked and audited.
+-   `GET .../members`, `PATCH`/`DELETE .../members/{userId}`,
+    `POST .../leave`.
+
+### Invitations (SDD-035)
+
+-   "Membros" screen: invite a person by email as Visualizador,
+    Colaborador, or Administrador; the single-use link (valid 7 days) is
+    shown once to be shared; pending invitations can be cancelled
+    (DR-086).
+-   Invitation screen at `/invite/{token}`: shows the space and access,
+    and only the account of the invited email can accept.
+-   Invitation links are not emailed yet (TD-011).
+-   `GET`/`POST .../invitations`, `DELETE .../invitations/{id}`,
+    `GET /invitations/{token}`, `POST /invitations/{token}/accept`;
+    migration `0020_space_invitations`.
+
+### Membership and Permissions (SDD-034)
+
+-   Spaces can have members with permission sets (Viewer, Contributor,
+    Administrator, or custom; DR-085). Every space endpoint checks the
+    permission of its action; members without it receive
+    `403 PERMISSION_DENIED`, non-members still receive 404 (ADR-0015,
+    superseding ADR-0010).
+-   Space responses include the caller's `role` and `permissions`; the
+    space list and screen show "Proprietário" or "Membro", and actions
+    the member cannot perform are hidden.
+-   Migration `0019_space_members`. Adding members arrives with
+    invitations (SDD-035).
+
 ## \[0.5.0\] --- 2026-09-25
 
 Analytics. Released to `main` and tagged `v0.5.0`; validated in SDD-033

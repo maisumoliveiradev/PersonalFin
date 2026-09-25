@@ -96,7 +96,12 @@ export function registerCardRoutes(server: FastifyInstance, data: DataAccess): v
   server.get('/financial-spaces/:spaceId/cards', async (request): Promise<CardList> => {
     const user = requireAuthenticatedUser(request);
     const { spaceId } = parseInput(spaceParamsSchema, request.params);
-    const space = await requireAccessibleSpace(data.repositories.financialSpaces, user.id, spaceId);
+    const space = await requireAccessibleSpace(
+      data.repositories.financialSpaces,
+      user.id,
+      spaceId,
+      'view',
+    );
     const [cards, limits] = await Promise.all([
       data.repositories.cards.listForSpace(space.id),
       data.repositories.cards.listLimitChanges(space.id),
@@ -107,7 +112,12 @@ export function registerCardRoutes(server: FastifyInstance, data: DataAccess): v
   server.post('/financial-spaces/:spaceId/cards', async (request, reply): Promise<CardResponse> => {
     const user = requireAuthenticatedUser(request);
     const { spaceId } = parseInput(spaceParamsSchema, request.params);
-    const space = await requireAccessibleSpace(data.repositories.financialSpaces, user.id, spaceId);
+    const space = await requireAccessibleSpace(
+      data.repositories.financialSpaces,
+      user.id,
+      spaceId,
+      'plan',
+    );
     const input = parseInput(createCardSchema, request.body);
     const { card, limits } = await createCard(data, {
       financialSpaceId: space.id,
@@ -125,6 +135,7 @@ export function registerCardRoutes(server: FastifyInstance, data: DataAccess): v
       data.repositories.financialSpaces,
       user.id,
       params.spaceId,
+      'view',
     );
     const cardId = requireCardId(params.cardId);
     const card = await data.repositories.cards.findInSpace(space.id, cardId);
@@ -143,6 +154,7 @@ export function registerCardRoutes(server: FastifyInstance, data: DataAccess): v
         data.repositories.financialSpaces,
         user.id,
         params.spaceId,
+        'plan',
       );
       const input = parseInput(updateCardSchema, request.body);
       const card = await updateCard(data, {
@@ -171,6 +183,7 @@ export function registerCardRoutes(server: FastifyInstance, data: DataAccess): v
         data.repositories.financialSpaces,
         user.id,
         params.spaceId,
+        'plan',
       );
       const input = parseInput(limitChangeSchema, request.body);
       const { card, limits } = await recordCardLimit(data, {
@@ -187,7 +200,12 @@ export function registerCardRoutes(server: FastifyInstance, data: DataAccess): v
   server.get('/financial-spaces/:spaceId/card-limits', async (request): Promise<CardLimits> => {
     const user = requireAuthenticatedUser(request);
     const { spaceId } = parseInput(spaceParamsSchema, request.params);
-    const space = await requireAccessibleSpace(data.repositories.financialSpaces, user.id, spaceId);
+    const space = await requireAccessibleSpace(
+      data.repositories.financialSpaces,
+      user.id,
+      spaceId,
+      'view',
+    );
     const { on } = parseInput(onQuerySchema, request.query);
     const [cards, limits, used] = await Promise.all([
       data.repositories.cards.listForSpace(space.id),

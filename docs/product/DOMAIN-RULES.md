@@ -59,6 +59,28 @@ preferences belong to one user and one space: an experience profile
 (Basic, Intermediate, or Advanced; default Advanced) and per-section
 overrides. They change only what is displayed, never any value.
 
+**DR-085** *(SDD-034; decided under delegation.)* Space permissions are
+`view`, `record` (transactions, balance snapshots, invoice payments,
+installment cancellation), `plan` (recurrences, cards, invoice dates),
+`classify` (categories and tags), `manage_members`, and `view_audit`;
+`view` is always included. Presets: Viewer (view), Contributor (view,
+record), Administrator (all). Personal settings need only `view`. The
+Owner holds every permission (ADR-0015).
+
+**DR-086** *(SDD-035; decided under delegation.)* An invitation names
+one email address and a permission set, is valid for 7 days, and is
+used through a single-use secret link whose token is stored only as a
+hash. Only a signed-in account with the invited email can accept it;
+accepting creates one membership. Invitations can be cancelled; people
+who already have access cannot be invited, and one email has at most one
+pending invitation per space. Email delivery is pending (TD-011).
+
+**DR-087** *(SDD-037; decided under delegation.)* Only the Owner can
+transfer ownership, and only to an active member. In one transaction the
+new Owner's membership ends, ownership moves, and the previous Owner
+becomes a member with every permission (Administrator). The Owner
+cannot leave or be removed until ownership is transferred (DR-009).
+
 **DR-014** Split transactions are outside the initial model.
 
 **DR-015** A transaction uses one primary financial calendar date. The

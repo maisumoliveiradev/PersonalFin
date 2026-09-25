@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import type { DatabasePool } from '../../src/database/pool.ts';
+import { OWNER_ACCESS } from '../../src/modules/financial-spaces/financial-space.ts';
 import { createPostgresFinancialSpaceRepository } from '../../src/modules/financial-spaces/postgres-financial-space-repository.ts';
 import { createMigratedTestPool } from './database.ts';
 import { insertUser } from './fixtures.ts';
@@ -30,8 +31,11 @@ describe('PostgreSQL financial space repository', () => {
     });
 
     expect(space).toMatchObject({ name: 'Pessoal', ownerUserId: owner, lifecycleState: 'active' });
-    expect(await repository.listAccessibleTo(owner)).toEqual([space]);
-    expect(await repository.findAccessibleTo(owner, space.id)).toEqual(space);
+    expect(await repository.listAccessibleTo(owner)).toEqual([{ ...space, access: OWNER_ACCESS }]);
+    expect(await repository.findAccessibleTo(owner, space.id)).toEqual({
+      ...space,
+      access: OWNER_ACCESS,
+    });
     expect(await repository.listAccessibleTo(stranger)).toEqual([]);
     expect(await repository.findAccessibleTo(stranger, space.id)).toBeNull();
   });

@@ -85,6 +85,7 @@ export function currentLimitLabel(card: Card, today: FinancialDate): string {
 }
 
 const CARD_ERROR_MESSAGES: Record<string, string> = {
+  PERMISSION_DENIED: messages.common.permissionDenied,
   CARD_NAME_TAKEN: messages.cards.errors.nameTaken,
   VERSION_CONFLICT: messages.cards.errors.conflict,
 };

@@ -50,6 +50,9 @@ function statusOptions(type: TransactionType): Option<TransactionStatus>[] {
 const ACCOUNT = 'account';
 
 function describeSubmitError(error: Error): string {
+  if (error instanceof ApiRequestError && error.code === 'PERMISSION_DENIED') {
+    return messages.common.permissionDenied;
+  }
   if (error instanceof ApiRequestError && error.code === 'TAG_NOT_AVAILABLE') {
     return messages.tags.errors.notAvailable;
   }

@@ -26,6 +26,7 @@ export function registerCardInstallmentRoutes(server: FastifyInstance, data: Dat
         data.repositories.financialSpaces,
         user.id,
         params.spaceId,
+        'record',
       );
       if (!isUuid(params.purchaseId)) {
         throw new InstallmentPurchaseNotFoundError();

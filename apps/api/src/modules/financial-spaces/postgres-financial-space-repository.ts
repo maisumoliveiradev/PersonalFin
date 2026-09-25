@@ -1,5 +1,12 @@
+import type { SpacePermission } from '@personalfin/domain';
+
 import type { Queryable } from '../../database/pool.ts';
-import type { FinancialSpace, FinancialSpaceLifecycleState } from './financial-space.ts';
+import {
+  type AccessibleSpace,
+  type FinancialSpace,
+  type FinancialSpaceLifecycleState,
+  OWNER_ACCESS,
+} from './financial-space.ts';
 import type { FinancialSpaceRepository } from './financial-space-repository.ts';
 
 interface FinancialSpaceRow {
@@ -10,7 +17,16 @@ interface FinancialSpaceRow {
   created_at: Date;
 }
 
+type AccessibleSpaceRow = FinancialSpaceRow & { member_permissions: SpacePermission[] | null };
+
 const COLUMNS = 'id, name, owner_user_id, lifecycle_state, created_at';
+
+const ACCESSIBLE_SELECT = `SELECT s.id, s.name, s.owner_user_id, s.lifecycle_state, s.created_at,
+         m.permissions AS member_permissions
+       FROM financial_space s
+       LEFT JOIN financial_space_member m
+         ON m.financial_space_id = s.id AND m.user_id = $1 AND m.removed_at IS NULL
+       WHERE (s.owner_user_id = $1 OR m.id IS NOT NULL)`;
 
 function toFinancialSpace(row: FinancialSpaceRow): FinancialSpace {
   return {
@@ -19,6 +35,16 @@ function toFinancialSpace(row: FinancialSpaceRow): FinancialSpace {
     ownerUserId: row.owner_user_id,
     lifecycleState: row.lifecycle_state,
     createdAt: row.created_at,
+  };
+}
+
+function toAccessibleSpace(row: AccessibleSpaceRow, userId: string): AccessibleSpace {
+  return {
+    ...toFinancialSpace(row),
+    access:
+      row.owner_user_id === userId || row.member_permissions === null
+        ? OWNER_ACCESS
+        : { role: 'member', permissions: row.member_permissions },
   };
 }
 
@@ -39,23 +65,28 @@ export function createPostgresFinancialSpaceRepository(db: Queryable): Financial
     },
 
     async listAccessibleTo(userId) {
-      const { rows } = await db.query<FinancialSpaceRow>(
-        `SELECT ${COLUMNS} FROM financial_space
-         WHERE owner_user_id = $1
-         ORDER BY created_at, id`,
+      const { rows } = await db.query<AccessibleSpaceRow>(
+        `${ACCESSIBLE_SELECT} ORDER BY s.created_at, s.id`,
         [userId],
       );
-      return rows.map(toFinancialSpace);
+      return rows.map((row) => toAccessibleSpace(row, userId));
     },
 
     async findAccessibleTo(userId, spaceId) {
-      const { rows } = await db.query<FinancialSpaceRow>(
-        `SELECT ${COLUMNS} FROM financial_space
-         WHERE id = $1 AND owner_user_id = $2`,
-        [spaceId, userId],
-      );
+      const { rows } = await db.query<AccessibleSpaceRow>(`${ACCESSIBLE_SELECT} AND s.id = $2`, [
+        userId,
+        spaceId,
+      ]);
       const [row] = rows;
-      return row === undefined ? null : toFinancialSpace(row);
+      return row === undefined ? null : toAccessibleSpace(row, userId);
+    },
+
+    async transferOwnership(spaceId, fromUserId, toUserId) {
+      const result = await db.query(
+        'UPDATE financial_space SET owner_user_id = $3 WHERE id = $1 AND owner_user_id = $2',
+        [spaceId, fromUserId, toUserId],
+      );
+      return result.rowCount === 1;
     },
   };
 }

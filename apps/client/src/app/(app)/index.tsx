@@ -6,6 +6,7 @@ import { queryClient } from '../../api/query-client';
 import { useCurrentUser } from '../../api/use-current-user';
 import { authClient } from '../../auth/auth-client';
 import { CreateFinancialSpaceForm } from '../../features/financial-spaces/CreateFinancialSpaceForm';
+import { roleLabel } from '../../features/financial-spaces/permissions';
 import { messages } from '../../i18n/messages';
 import { BodyText } from '../../ui/BodyText';
 import { Button } from '../../ui/Button';
@@ -73,7 +74,7 @@ export default function FinancialSpacesScreen() {
         <ListItem
           key={space.id}
           title={space.name}
-          subtitle={messages.spaces.ownerRole}
+          subtitle={roleLabel(space)}
           accessibilityHint={messages.spaces.openSpaceHint}
           onPress={() => openSpace(space)}
         />

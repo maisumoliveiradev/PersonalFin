@@ -21,6 +21,7 @@ import {
 interface TransactionRowProps {
   spaceId: string;
   transaction: Transaction;
+  canChangeStatus?: boolean;
   changingStatus: boolean;
   onToggleStatus: () => void;
 }
@@ -28,6 +29,7 @@ interface TransactionRowProps {
 export function TransactionRow({
   spaceId,
   transaction,
+  canChangeStatus = true,
   changingStatus,
   onToggleStatus,
 }: TransactionRowProps) {
@@ -100,7 +102,7 @@ export function TransactionRow({
           </Text>
         </View>
       </Pressable>
-      {transaction.cardPurchase === null && (
+      {canChangeStatus && transaction.cardPurchase === null && (
         <Button
           label={toggle.label}
           accessibilityLabel={messages.transactions.statusActionLabel(
@@ -119,9 +121,10 @@ export function TransactionRow({
 interface TransactionListProps {
   spaceId: string;
   filters: TransactionFilters;
+  canRecord: boolean;
 }
 
-export function TransactionList({ spaceId, filters }: TransactionListProps) {
+export function TransactionList({ spaceId, filters, canRecord }: TransactionListProps) {
   const palette = usePalette();
   const transactions = useTransactions(spaceId, filters);
   const changeStatus = useChangeTransactionStatus(spaceId);
@@ -151,6 +154,7 @@ export function TransactionList({ spaceId, filters }: TransactionListProps) {
             key={transaction.id}
             spaceId={spaceId}
             transaction={transaction}
+            canChangeStatus={canRecord}
             changingStatus={
               changeStatus.isPending && changeStatus.variables?.transactionId === transaction.id
             }

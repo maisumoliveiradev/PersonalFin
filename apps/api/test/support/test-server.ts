@@ -13,6 +13,7 @@ import { createInMemoryDashboardPreferenceRepository } from './in-memory-dashboa
 import { createInMemoryDashboardRepository } from './in-memory-dashboard-repository.ts';
 import { createInMemoryFinancialSpaceRepository } from './in-memory-financial-space-repository.ts';
 import { createInMemoryInstallmentRepository } from './in-memory-installment-repository.ts';
+import { createInMemoryMemberRepository } from './in-memory-member-repository.ts';
 import { createInMemoryRecurrenceRepository } from './in-memory-recurrence-repository.ts';
 import { createInMemoryTagRepository } from './in-memory-tag-repository.ts';
 import { createInMemoryTransactionRepository } from './in-memory-transaction-repository.ts';
@@ -68,8 +69,10 @@ export function createInMemoryRepositories() {
     (invoiceId) => cardInvoices.hasPayment(invoiceId),
   );
   const balanceSnapshots = createInMemoryBalanceSnapshotRepository();
+  const financialSpaces = createInMemoryFinancialSpaceRepository();
   return {
-    financialSpaces: createInMemoryFinancialSpaceRepository(),
+    financialSpaces,
+    members: createInMemoryMemberRepository(financialSpaces.spaces, financialSpaces.members),
     categories,
     transactions,
     audit: createInMemoryAuditRepository(),
